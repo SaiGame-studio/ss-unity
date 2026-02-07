@@ -29,6 +29,44 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space(5);
 
+            GUI.backgroundColor = new Color(0.5f, 0.8f, 1f);
+            if (GUILayout.Button("Refresh Token", GUILayout.Height(25)))
+            {
+                if (saiAuth.IsAuthenticated)
+                {
+                    saiAuth.RefreshAuthToken(
+                        response => Debug.Log($"Token refreshed successfully! New token expires in: {response.expires_in}s"),
+                        error => Debug.LogError($"Refresh token failed: {error}")
+                    );
+                }
+                else
+                {
+                    Debug.LogWarning("Not authenticated! Please login first.");
+                }
+            }
+            GUI.backgroundColor = Color.white;
+
+            EditorGUILayout.Space(5);
+
+            GUI.backgroundColor = new Color(0.3f, 0.9f, 0.5f);
+            if (GUILayout.Button("Get Me", GUILayout.Height(23)))
+            {
+                if (saiAuth.IsAuthenticated)
+                {
+                    saiAuth.GetMyProfile(
+                        userData => Debug.Log($"Profile retrieved: {userData.username} ({userData.email}), Active: {userData.is_active}, Verified: {userData.is_verified}"),
+                        error => Debug.LogError($"Get profile failed: {error}")
+                    );
+                }
+                else
+                {
+                    Debug.LogWarning("Not authenticated! Please login first.");
+                }
+            }
+            GUI.backgroundColor = Color.white;
+
+            EditorGUILayout.Space(5);
+
             GUI.backgroundColor = new Color(1f, 0.7f, 0.3f);
             if (GUILayout.Button("Logout", GUILayout.Height(25)))
             {
@@ -36,39 +74,6 @@ namespace SaiGame.Services
                 Debug.Log("Logged out and cleared all auth data");
             }
             GUI.backgroundColor = Color.white;
-
-            EditorGUILayout.Space(5);
-
-            if (GUILayout.Button("Test Connection", GUILayout.Height(25)))
-            {
-                SerializedProperty saiServiceProp = serializedObject.FindProperty("saiService");
-                SaiService saiService = saiServiceProp.objectReferenceValue as SaiService;
-                if (saiService != null)
-                {
-                    saiService.TestConnection(success =>
-                    {
-                        if (success)
-                            Debug.Log("✓ Connection test passed!");
-                        else
-                            Debug.LogError("✗ Connection test failed!");
-                    });
-                }
-            }
-
-            EditorGUILayout.Space(5);
-
-            if (GUILayout.Button("Show Service Info", GUILayout.Height(25)))
-            {
-                SerializedProperty saiServiceProp = serializedObject.FindProperty("saiService");
-                SaiService saiService = saiServiceProp.objectReferenceValue as SaiService;
-                if (saiService != null)
-                {
-                    SerializedProperty usernameProp = serializedObject.FindProperty("userData.username");
-                    bool hasUser = !string.IsNullOrEmpty(usernameProp.stringValue);
-                    string userInfo = hasUser ? $"User: {usernameProp.stringValue}" : "No user";
-                    Debug.Log($"Base URL: {saiService.BaseUrl}, Authenticated: {saiService.IsAuthenticated}, {userInfo}");
-                }
-            }
         }
     }
 }

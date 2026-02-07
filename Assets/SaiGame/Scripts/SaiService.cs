@@ -6,28 +6,61 @@ using UnityEngine.Networking;
 
 namespace SaiGame.Services
 {
+    public enum DomainOption
+    {
+        Local,
+        Production
+    }
+
     public class SaiService : SaiBehaviour
     {
+        public const string PACKAGE_VERSION = "0.0.1";
+        public const string PACKAGE_NAME = "SaiGame Services";
+        
         [SerializeField] protected SaiAuth saiAuth;
 
         [Header("Server Configuration")]
-        [SerializeField] protected string domain = "local-api.saigame.studio";
-        [SerializeField] protected int port = 82;
+        [SerializeField] protected DomainOption domainOption = DomainOption.Local;
+        [SerializeField] protected int port = 80;
         [SerializeField] protected bool useHttps = false;
+
+        private string Domain
+        {
+            get
+            {
+                switch (domainOption)
+                {
+                    case DomainOption.Production:
+                        return "api.saigame.studio";
+                    case DomainOption.Local:
+                        return "local-api.saigame.studio";
+                    default:
+                        return "api.saigame.studio";
+                }
+            }
+        }
+
+        [Header("Game Configuration")]
+        [SerializeField] protected string gameId = "d344f07a-ee5c-4b6e-b6a0-60b15a0d6eac";
 
 
 
         [Header("API Settings")]
         [SerializeField] protected int requestTimeout = 30;
 
+        [Header("Debug Settings")]
+        [SerializeField] protected bool showDebug = true;
+
         public event Action<string> OnTokenRefreshed;
+
+        public bool ShowDebug => showDebug;
 
         public string BaseUrl
         {
             get
             {
                 string protocol = useHttps ? "https" : "http";
-                return $"{protocol}://{domain}:{port}";
+                return $"{protocol}://{Domain}:{port}";
             }
         }
 
@@ -40,6 +73,8 @@ namespace SaiGame.Services
         public int ExpiresIn => saiAuth?.ExpiresIn ?? 0;
 
         public UserData CurrentUser => saiAuth?.CurrentUser;
+
+        public string GameId => gameId;
 
         public void SetAccessToken(string token)
         {
@@ -88,7 +123,8 @@ namespace SaiGame.Services
                 }
                 else
                 {
-                    string errorMsg = $"GET {endpoint} failed: {request.error}";
+                    string rawResponse = request.downloadHandler?.text ?? "No response data";
+                    string errorMsg = $"GET {endpoint} failed: {request.error}\nResponse Code: {request.responseCode}\nRaw Data: {rawResponse}";
                     onError?.Invoke(errorMsg);
                 }
             }
@@ -110,15 +146,58 @@ namespace SaiGame.Services
                 }
                 else
                 {
-                    string errorMsg = $"POST {endpoint} failed: {request.error}";
+                    string rawResponse = request.downloadHandler?.text ?? "No response data";
+                    string errorMsg = $"POST {endpoint} failed: {request.error}\nResponse Code: {request.responseCode}\nRaw Data: {rawResponse}";
                     onError?.Invoke(errorMsg);
                 }
             }
         }
 
-        public void SetDomain(string newDomain)
+        public IEnumerator PatchRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)
         {
-            domain = newDomain;
+            using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "PATCH"))
+            {
+                byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
+                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                request.SetRequestHeader("Content-Type", "application/json");
+
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    onSuccess?.Invoke(request.downloadHandler.text);
+                }
+                else
+                {
+                    string rawResponse = request.downloadHandler?.text ?? "No response data";
+                    string errorMsg = $"PATCH {endpoint} failed: {request.error}\nResponse Code: {request.responseCode}\nRaw Data: {rawResponse}";
+                    onError?.Invoke(errorMsg);
+                }
+            }
+        }
+
+        public IEnumerator DeleteRequest(string endpoint, Action<string> onSuccess, Action<string> onError)
+        {
+            using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "DELETE"))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    onSuccess?.Invoke(request.downloadHandler.text);
+                }
+                else
+                {
+                    string rawResponse = request.downloadHandler?.text ?? "No response data";
+                    string errorMsg = $"DELETE {endpoint} failed: {request.error}\nResponse Code: {request.responseCode}\nRaw Data: {rawResponse}";
+                    onError?.Invoke(errorMsg);
+                }
+            }
+        }
+
+        public void SetDomain(DomainOption newDomain)
+        {
+            domainOption = newDomain;
         }
 
         public void SetPort(int newPort)
@@ -146,7 +225,7 @@ namespace SaiGame.Services
 
         private IEnumerator TestConnectionCoroutine(Action<bool> callback)
         {
-            string url = $"{BaseUrl}/api/v1/health";
+            string url = $"{BaseUrl}/health";
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {

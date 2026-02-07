@@ -443,6 +443,7 @@ GameObject:
   - component: {fileID: 1841590617}
   - component: {fileID: 1841590619}
   - component: {fileID: 1841590618}
+  - component: {fileID: 1841590620}
   m_Layer: 0
   m_Name: SaiService
   m_TagString: Untagged
@@ -482,7 +483,7 @@ MonoBehaviour:
   refreshToken: 
   expiresIn: 0
   userData:
-    _id: 
+    id: 
     email: 
     username: 
     display_name: 
@@ -503,22 +504,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd02fa001eb26e4fb50f22c4989cde1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiService
-  domain: local-api.saigame.studio
+  saiAuth: {fileID: 1841590618}
+  domainOption: 0
   port: 82
   useHttps: 0
-  accessToken: 
-  refreshToken: 
-  expiresIn: 0
-  isAuthenticated: 0
-  currentUser:
-    _id: 
-    email: 
-    username: 
-    display_name: 
-    is_active: 0
-    is_verified: 0
-    created_at: 0
+  gameId: d344f07a-ee5c-4b6e-b6a0-60b15a0d6eac
   requestTimeout: 30
+  showDebug: 1
+--- !u!114 &1841590620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1841590616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 955393e378c76224bb83c843d7a6411f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiGamerProgress
+  saiService: {fileID: 1841590619}
+  autoLoadOnLogin: 1
+  currentProgress:
+    id: 
+    user_id: 
+    game_id: 
+    level: 0
+    experience: 0
+    gold: 0
+    game_data: 
+    created_at: 0
+    updated_at: 0
+    version: 0
+  experienceDelta: 100
+  goldDelta: 50
+  gameData: '{}'
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
