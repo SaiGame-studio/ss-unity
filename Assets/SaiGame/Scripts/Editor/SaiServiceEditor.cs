@@ -8,6 +8,28 @@ namespace SaiGame.Services
     {
         public override void OnInspectorGUI()
         {
+            EditorGUILayout.Space(5);
+            
+            GUIStyle versionStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 12
+            };
+            
+            GUIStyle packageStyle = new GUIStyle(EditorStyles.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 10,
+                fontStyle = FontStyle.Italic
+            };
+            
+            EditorGUILayout.LabelField(SaiService.PACKAGE_NAME, packageStyle);
+            EditorGUILayout.LabelField($"v{SaiService.PACKAGE_VERSION}", versionStyle);
+            
+            EditorGUILayout.Space(5);
+            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+            EditorGUILayout.Space(5);
+            
             DrawDefaultInspector();
 
             SaiService saiService = (SaiService)target;

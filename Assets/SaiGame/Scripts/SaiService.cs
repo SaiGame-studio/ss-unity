@@ -8,12 +8,18 @@ namespace SaiGame.Services
 {
     public class SaiService : SaiBehaviour
     {
+        public const string PACKAGE_VERSION = "0.0.1";
+        public const string PACKAGE_NAME = "SaiGame Services";
+        
         [SerializeField] protected SaiAuth saiAuth;
 
         [Header("Server Configuration")]
         [SerializeField] protected string domain = "local-api.saigame.studio";
         [SerializeField] protected int port = 82;
         [SerializeField] protected bool useHttps = false;
+
+        [Header("Game Configuration")]
+        [SerializeField] protected string gameId = "d344f07a-ee5c-4b6e-b6a0-60b15a0d6eac";
 
 
 
@@ -40,6 +46,8 @@ namespace SaiGame.Services
         public int ExpiresIn => saiAuth?.ExpiresIn ?? 0;
 
         public UserData CurrentUser => saiAuth?.CurrentUser;
+
+        public string GameId => gameId;
 
         public void SetAccessToken(string token)
         {
@@ -88,7 +96,8 @@ namespace SaiGame.Services
                 }
                 else
                 {
-                    string errorMsg = $"GET {endpoint} failed: {request.error}";
+                    string rawResponse = request.downloadHandler?.text ?? "No response data";
+                    string errorMsg = $"GET {endpoint} failed: {request.error}\nResponse Code: {request.responseCode}\nRaw Data: {rawResponse}";
                     onError?.Invoke(errorMsg);
                 }
             }
@@ -110,7 +119,50 @@ namespace SaiGame.Services
                 }
                 else
                 {
-                    string errorMsg = $"POST {endpoint} failed: {request.error}";
+                    string rawResponse = request.downloadHandler?.text ?? "No response data";
+                    string errorMsg = $"POST {endpoint} failed: {request.error}\nResponse Code: {request.responseCode}\nRaw Data: {rawResponse}";
+                    onError?.Invoke(errorMsg);
+                }
+            }
+        }
+
+        public IEnumerator PatchRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)
+        {
+            using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "PATCH"))
+            {
+                byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
+                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                request.SetRequestHeader("Content-Type", "application/json");
+
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    onSuccess?.Invoke(request.downloadHandler.text);
+                }
+                else
+                {
+                    string rawResponse = request.downloadHandler?.text ?? "No response data";
+                    string errorMsg = $"PATCH {endpoint} failed: {request.error}\nResponse Code: {request.responseCode}\nRaw Data: {rawResponse}";
+                    onError?.Invoke(errorMsg);
+                }
+            }
+        }
+
+        public IEnumerator DeleteRequest(string endpoint, Action<string> onSuccess, Action<string> onError)
+        {
+            using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "DELETE"))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    onSuccess?.Invoke(request.downloadHandler.text);
+                }
+                else
+                {
+                    string rawResponse = request.downloadHandler?.text ?? "No response data";
+                    string errorMsg = $"DELETE {endpoint} failed: {request.error}\nResponse Code: {request.responseCode}\nRaw Data: {rawResponse}";
                     onError?.Invoke(errorMsg);
                 }
             }
