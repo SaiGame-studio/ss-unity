@@ -14,7 +14,7 @@ namespace SaiGame.Services
 
     public class SaiService : SaiBehaviour
     {
-        public const string PACKAGE_VERSION = "0.0.1";
+        public const string PACKAGE_VERSION = "0.0.3";
         public const string PACKAGE_NAME = "SaiGame Services";
         
         [SerializeField] protected SaiAuth saiAuth;

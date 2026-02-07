@@ -1,0 +1,115 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6479074095956393665
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 180087945614193938}
+  - component: {fileID: 4725543868841456537}
+  - component: {fileID: 7258247919436694246}
+  - component: {fileID: 308465429840233862}
+  m_Layer: 0
+  m_Name: SaiServiceP1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &180087945614193938
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6479074095956393665}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0, y: -0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4725543868841456537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6479074095956393665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cd02fa001eb26e4fb50f22c4989cde1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiService
+  saiAuth: {fileID: 7258247919436694246}
+  domainOption: 0
+  port: 82
+  useHttps: 0
+  gameId: d344f07a-ee5c-4b6e-b6a0-60b15a0d6eac
+  requestTimeout: 30
+  showDebug: 1
+--- !u!114 &7258247919436694246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6479074095956393665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb92c51d95c8cc142a356069c666972e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiAuth
+  saiService: {fileID: 4725543868841456537}
+  accessToken: 
+  refreshToken: 
+  expiresIn: 0
+  userData:
+    id: 
+    email: 
+    username: 
+    display_name: 
+    is_active: 0
+    is_verified: 0
+    created_at: 0
+  loginTime: 0
+  autoRefreshToken: 1
+  refreshBeforeExpire: 2
+  username: SimonSai@saigame.studio
+  password: 123qweasd
+  registerEmail: 
+  registerUsername: 
+  registerPassword: 
+--- !u!114 &308465429840233862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6479074095956393665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 955393e378c76224bb83c843d7a6411f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiGamerProgress
+  saiService: {fileID: 4725543868841456537}
+  autoLoadOnLogin: 1
+  currentProgress:
+    id: 
+    user_id: 
+    game_id: 
+    level: 0
+    experience: 0
+    gold: 0
+    game_data: 
+    created_at: 0
+    updated_at: 0
+    version: 0
+  experienceDelta: 1
+  goldDelta: 1
+  gameData: '{}'
