@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -6,6 +7,12 @@ namespace SaiGame.Services
     public class SaiAuth : SaiBehaviour
     {
         [SerializeField] protected SaiService saiService;
+
+        // Events for other classes to listen to
+        public event Action<LoginResponse> OnLoginSuccess;
+        public event Action<string> OnLoginFailure;
+        public event Action OnLogoutSuccess;
+        public event Action<string> OnLogoutFailure;
 
 
         [Header("Authentication Data")]
@@ -73,18 +80,57 @@ namespace SaiGame.Services
                         this.expiresIn = loginResponse.expires_in;
                         this.userData = loginResponse.user;
 
+                        OnLoginSuccess?.Invoke(loginResponse);
                         onSuccess?.Invoke(loginResponse);
                     }
                     catch (System.Exception e)
                     {
-                        onError?.Invoke($"Parse login response error: {e.Message}");
+                        string errorMsg = $"Parse login response error: {e.Message}";
+                        OnLoginFailure?.Invoke(errorMsg);
+                        onError?.Invoke(errorMsg);
                     }
                 },
-                error => onError?.Invoke(error)
+                error => 
+                {
+                    OnLoginFailure?.Invoke(error);
+                    onError?.Invoke(error);
+                }
             );
         }
 
         public void Logout()
+        {
+            StartCoroutine(LogoutCoroutine());
+        }
+
+        private IEnumerator LogoutCoroutine()
+        {
+            if (saiService != null && saiService.IsAuthenticated)
+            {
+                yield return StartCoroutine(saiService.PostRequest("/api/v1/auth/logout", "{}", 
+                    response => 
+                    {
+                        // Logout successful from server
+                        ClearAuthData();
+                        OnLogoutSuccess?.Invoke();
+                    },
+                    error => 
+                    {
+                        // Even if server logout fails, clear local data
+                        ClearAuthData();
+                        OnLogoutFailure?.Invoke(error);
+                    }
+                ));
+            }
+            else
+            {
+                // No authentication, just clear local data
+                ClearAuthData();
+                OnLogoutSuccess?.Invoke();
+            }
+        }
+
+        private void ClearAuthData()
         {
             if (saiService != null)
             {
