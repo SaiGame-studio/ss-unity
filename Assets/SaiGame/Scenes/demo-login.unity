@@ -505,11 +505,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiService
   saiAuth: {fileID: 1841590618}
-  domain: local-api.saigame.studio
-  port: 82
+  domainOption: 1
+  port: 80
   useHttps: 0
   gameId: d344f07a-ee5c-4b6e-b6a0-60b15a0d6eac
   requestTimeout: 30
+  showDebug: 1
 --- !u!114 &1841590620
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -523,6 +524,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiGamerProgress
   saiService: {fileID: 1841590619}
+  autoLoadOnLogin: 1
   currentProgress:
     id: 
     user_id: 

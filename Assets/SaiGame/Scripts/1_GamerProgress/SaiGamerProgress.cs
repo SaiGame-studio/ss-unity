@@ -16,6 +16,9 @@ namespace SaiGame.Services
         public event Action OnDeleteProgressSuccess;
         public event Action<string> OnDeleteProgressFailure;
 
+        [Header("Auto Load Settings")]
+        [SerializeField] protected bool autoLoadOnLogin = true;
+
         [Header("Current Progress Data")]
         [SerializeField] protected GamerProgress currentProgress;
         
@@ -31,12 +34,57 @@ namespace SaiGame.Services
         {
             base.LoadComponents();
             this.LoadSaiService();
+            this.RegisterLoginListener();
         }
 
         protected virtual void LoadSaiService()
         {
             if (this.saiService != null) return;
             this.saiService = GetComponent<SaiService>();
+        }
+
+        protected virtual void RegisterLoginListener()
+        {
+            if (this.saiService == null) return;
+            
+            SaiAuth saiAuth = this.saiService.GetComponent<SaiAuth>();
+            if (saiAuth != null)
+            {
+                saiAuth.OnLoginSuccess += HandleLoginSuccess;
+            }
+        }
+
+        protected virtual void OnDestroy()
+        {
+            if (this.saiService != null)
+            {
+                SaiAuth saiAuth = this.saiService.GetComponent<SaiAuth>();
+                if (saiAuth != null)
+                {
+                    saiAuth.OnLoginSuccess -= HandleLoginSuccess;
+                }
+            }
+        }
+
+        protected virtual void HandleLoginSuccess(LoginResponse response)
+        {
+            if (!autoLoadOnLogin) return;
+            
+            if (saiService != null && saiService.ShowDebug)
+                Debug.Log("Auto-loading progress after successful login...");
+            
+            GetProgress(
+                progress => 
+                {
+                    if (saiService != null && saiService.ShowDebug)
+                        Debug.Log($"Progress auto-loaded: Level {progress.level}, XP {progress.experience}, Gold {progress.gold}");
+                },
+                error => 
+                {
+                    if (saiService != null && saiService.ShowDebug)
+                        Debug.LogWarning($"Auto-load progress failed: {error}");
+                }
+            );
         }
 
         private string ExtractGameDataFromJson(string jsonResponse)
@@ -272,7 +320,8 @@ namespace SaiGame.Services
                             }
                         }
 
-                        Debug.Log($"Progress loaded: Level {progress.level}, XP {progress.experience}, Gold {progress.gold}, Game Data: {progress.game_data}");
+                        if (saiService != null && saiService.ShowDebug)
+                            Debug.Log($"Progress loaded: Level {progress.level}, XP {progress.experience}, Gold {progress.gold}, Game Data: {progress.game_data}");
 
                         OnGetProgressSuccess?.Invoke(progress);
                         onSuccess?.Invoke(progress);
@@ -320,8 +369,11 @@ namespace SaiGame.Services
     ""game_data"": {gameDataJson}
 }}";
 
-            Debug.Log($"Updating progress with deltas - XP: +{experienceDelta}, Gold: +{goldDelta}");
-            Debug.Log($"Request JSON: {jsonData}");
+            if (saiService != null && saiService.ShowDebug)
+            {
+                Debug.Log($"Updating progress with deltas - XP: +{experienceDelta}, Gold: +{goldDelta}");
+                Debug.Log($"Request JSON: {jsonData}");
+            }
 
             yield return saiService.PatchRequest(endpoint, jsonData,
                 response =>
@@ -336,7 +388,8 @@ namespace SaiGame.Services
                         if (this.currentProgress != null)
                             this.currentProgress.game_data = gameDataJson;
 
-                        Debug.Log($"Progress updated successfully! New values - Level: {updatedProgress.level}, XP: {updatedProgress.experience}, Gold: {updatedProgress.gold}");
+                        if (saiService != null && saiService.ShowDebug)
+                            Debug.Log($"Progress updated successfully! New values - Level: {updatedProgress.level}, XP: {updatedProgress.experience}, Gold: {updatedProgress.gold}");
 
                         onSuccess?.Invoke(updatedProgress);
                     }
@@ -362,7 +415,8 @@ namespace SaiGame.Services
             if (!saiService.IsAuthenticated)
             {
                 ClearLocalProgress();
-                Debug.Log("Progress data cleared locally (not authenticated)");
+                if (saiService != null && saiService.ShowDebug)
+                    Debug.Log("Progress data cleared locally (not authenticated)");
                 return;
             }
 
@@ -379,13 +433,15 @@ namespace SaiGame.Services
                 {
                     ClearLocalProgress();
                     OnDeleteProgressSuccess?.Invoke();
-                    Debug.Log("Progress deleted successfully from server and local data cleared");
+                    if (saiService != null && saiService.ShowDebug)
+                        Debug.Log("Progress deleted successfully from server and local data cleared");
                 },
                 error =>
                 {
                     ClearLocalProgress();
                     OnDeleteProgressFailure?.Invoke(error);
-                    Debug.LogError($"Delete progress failed but local data cleared: {error}");
+                    if (saiService != null && saiService.ShowDebug)
+                        Debug.LogError($"Delete progress failed but local data cleared: {error}");
                 }
             );
         }

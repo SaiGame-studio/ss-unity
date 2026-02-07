@@ -41,7 +41,8 @@ namespace SaiGame.Services
         {
             if (this.saiService != null) return;
             this.saiService = GetComponent<SaiService>();
-            Debug.Log(transform.name + ": LoadSaiService", gameObject);
+            if (this.saiService != null && this.saiService.ShowDebug)
+                Debug.Log(transform.name + ": LoadSaiService", gameObject);
         }
 
         public void Login(string username, string password, System.Action<LoginResponse> onSuccess = null, System.Action<string> onError = null)

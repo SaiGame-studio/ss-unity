@@ -6,6 +6,12 @@ using UnityEngine.Networking;
 
 namespace SaiGame.Services
 {
+    public enum DomainOption
+    {
+        Local,
+        Production
+    }
+
     public class SaiService : SaiBehaviour
     {
         public const string PACKAGE_VERSION = "0.0.1";
@@ -14,9 +20,25 @@ namespace SaiGame.Services
         [SerializeField] protected SaiAuth saiAuth;
 
         [Header("Server Configuration")]
-        [SerializeField] protected string domain = "local-api.saigame.studio";
-        [SerializeField] protected int port = 82;
+        [SerializeField] protected DomainOption domainOption = DomainOption.Local;
+        [SerializeField] protected int port = 80;
         [SerializeField] protected bool useHttps = false;
+
+        private string Domain
+        {
+            get
+            {
+                switch (domainOption)
+                {
+                    case DomainOption.Production:
+                        return "api.saigame.studio";
+                    case DomainOption.Local:
+                        return "local-api.saigame.studio";
+                    default:
+                        return "api.saigame.studio";
+                }
+            }
+        }
 
         [Header("Game Configuration")]
         [SerializeField] protected string gameId = "d344f07a-ee5c-4b6e-b6a0-60b15a0d6eac";
@@ -26,14 +48,19 @@ namespace SaiGame.Services
         [Header("API Settings")]
         [SerializeField] protected int requestTimeout = 30;
 
+        [Header("Debug Settings")]
+        [SerializeField] protected bool showDebug = true;
+
         public event Action<string> OnTokenRefreshed;
+
+        public bool ShowDebug => showDebug;
 
         public string BaseUrl
         {
             get
             {
                 string protocol = useHttps ? "https" : "http";
-                return $"{protocol}://{domain}:{port}";
+                return $"{protocol}://{Domain}:{port}";
             }
         }
 
@@ -168,9 +195,9 @@ namespace SaiGame.Services
             }
         }
 
-        public void SetDomain(string newDomain)
+        public void SetDomain(DomainOption newDomain)
         {
-            domain = newDomain;
+            domainOption = newDomain;
         }
 
         public void SetPort(int newPort)
