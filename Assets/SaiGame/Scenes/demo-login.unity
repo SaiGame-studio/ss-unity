@@ -505,8 +505,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiService
   saiAuth: {fileID: 1841590618}
-  domainOption: 1
-  port: 80
+  domainOption: 0
+  port: 82
   useHttps: 0
   gameId: d344f07a-ee5c-4b6e-b6a0-60b15a0d6eac
   requestTimeout: 30
