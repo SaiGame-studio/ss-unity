@@ -11,6 +11,8 @@ namespace SaiGame.Services
         // Events for other classes to listen to
         public event Action<LoginResponse> OnLoginSuccess;
         public event Action<string> OnLoginFailure;
+        public event Action<RegisterResponse> OnRegisterSuccess;
+        public event Action<string> OnRegisterFailure;
         public event Action<LoginResponse> OnRefreshTokenSuccess;
         public event Action<string> OnRefreshTokenFailure;
         public event Action<UserData> OnGetProfileSuccess;
@@ -33,6 +35,11 @@ namespace SaiGame.Services
         [Header("Login Inputs")]
         [SerializeField] protected string username = "SimonSai@saigame.studio";
         [SerializeField] protected string password = "123qweasd";
+
+        [Header("Register Inputs")]
+        [SerializeField] protected string registerEmail = "";
+        [SerializeField] protected string registerUsername = "";
+        [SerializeField] protected string registerPassword = "";
 
         public bool IsAuthenticated => !string.IsNullOrEmpty(accessToken);
         public string AccessToken => accessToken;
@@ -109,6 +116,58 @@ namespace SaiGame.Services
 
                 yield return new WaitForSeconds(1f);
             }
+        }
+
+        public void Register(string email, string username, string password, System.Action<RegisterResponse> onSuccess = null, System.Action<string> onError = null)
+        {
+            if (saiService == null)
+            {
+                onError?.Invoke("SaiService not found!");
+                return;
+            }
+
+            StartCoroutine(RegisterCoroutine(email, username, password, onSuccess, onError));
+        }
+
+        private IEnumerator RegisterCoroutine(string email, string username, string password, System.Action<RegisterResponse> onSuccess, System.Action<string> onError)
+        {
+            string endpoint = "/api/v1/auth/register";
+
+            RegisterRequest registerRequest = new RegisterRequest
+            {
+                email = email,
+                username = username,
+                password = password
+            };
+
+            string jsonData = JsonUtility.ToJson(registerRequest);
+
+            yield return saiService.PostRequest(endpoint, jsonData,
+                response =>
+                {
+                    try
+                    {
+                        RegisterResponse registerResponse = JsonUtility.FromJson<RegisterResponse>(response);
+
+                        if (saiService != null && saiService.ShowDebug)
+                            Debug.Log($"Registration successful! User: {registerResponse.user.username} ({registerResponse.user.email})");
+
+                        OnRegisterSuccess?.Invoke(registerResponse);
+                        onSuccess?.Invoke(registerResponse);
+                    }
+                    catch (System.Exception e)
+                    {
+                        string errorMsg = $"Parse register response error: {e.Message}";
+                        OnRegisterFailure?.Invoke(errorMsg);
+                        onError?.Invoke(errorMsg);
+                    }
+                },
+                error =>
+                {
+                    OnRegisterFailure?.Invoke(error);
+                    onError?.Invoke(error);
+                }
+            );
         }
 
         public void Login(string username, string password, System.Action<LoginResponse> onSuccess = null, System.Action<string> onError = null)

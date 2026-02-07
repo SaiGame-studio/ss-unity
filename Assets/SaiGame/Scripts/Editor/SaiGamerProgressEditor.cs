@@ -15,6 +15,7 @@ namespace SaiGame.Services
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Progress Actions", EditorStyles.boldLabel);
             
+            EditorGUILayout.BeginHorizontal();
             GUI.backgroundColor = Color.cyan;
             if (GUILayout.Button("Create Progress", GUILayout.Height(30)))
             {
@@ -25,10 +26,8 @@ namespace SaiGame.Services
             }
             GUI.backgroundColor = Color.white;
 
-            EditorGUILayout.Space(5);
-
             GUI.backgroundColor = Color.green;
-            if (GUILayout.Button("Get Progress", GUILayout.Height(25)))
+            if (GUILayout.Button("Get Progress", GUILayout.Height(30)))
             {
                 gamerProgress.GetProgress(
                     progress => Debug.Log($"Progress retrieved! Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}, Game Data: {progress.game_data}"),
@@ -36,6 +35,7 @@ namespace SaiGame.Services
                 );
             }
             GUI.backgroundColor = Color.white;
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(5);
 
