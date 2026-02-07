@@ -36,39 +36,6 @@ namespace SaiGame.Services
                 Debug.Log("Logged out and cleared all auth data");
             }
             GUI.backgroundColor = Color.white;
-
-            EditorGUILayout.Space(5);
-
-            if (GUILayout.Button("Test Connection", GUILayout.Height(25)))
-            {
-                SerializedProperty saiServiceProp = serializedObject.FindProperty("saiService");
-                SaiService saiService = saiServiceProp.objectReferenceValue as SaiService;
-                if (saiService != null)
-                {
-                    saiService.TestConnection(success =>
-                    {
-                        if (success)
-                            Debug.Log("✓ Connection test passed!");
-                        else
-                            Debug.LogError("✗ Connection test failed!");
-                    });
-                }
-            }
-
-            EditorGUILayout.Space(5);
-
-            if (GUILayout.Button("Show Service Info", GUILayout.Height(25)))
-            {
-                SerializedProperty saiServiceProp = serializedObject.FindProperty("saiService");
-                SaiService saiService = saiServiceProp.objectReferenceValue as SaiService;
-                if (saiService != null)
-                {
-                    SerializedProperty usernameProp = serializedObject.FindProperty("userData.username");
-                    bool hasUser = !string.IsNullOrEmpty(usernameProp.stringValue);
-                    string userInfo = hasUser ? $"User: {usernameProp.stringValue}" : "No user";
-                    Debug.Log($"Base URL: {saiService.BaseUrl}, Authenticated: {saiService.IsAuthenticated}, {userInfo}");
-                }
-            }
         }
     }
 }

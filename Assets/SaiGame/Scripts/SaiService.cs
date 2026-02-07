@@ -146,7 +146,7 @@ namespace SaiGame.Services
 
         private IEnumerator TestConnectionCoroutine(Action<bool> callback)
         {
-            string url = $"{BaseUrl}/api/v1/health";
+            string url = $"{BaseUrl}/health";
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
