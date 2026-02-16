@@ -12,9 +12,9 @@ namespace SaiGame.Services
         Production
     }
 
-    public class SaiService : SaiBehaviour
+    public class SaiService : SaiSingleton<SaiService>
     {
-        public const string PACKAGE_VERSION = "0.0.3";
+        public const string PACKAGE_VERSION = "0.0.4";
         public const string PACKAGE_NAME = "SaiGame Services";
         
         [SerializeField] protected SaiAuth saiAuth;
@@ -41,9 +41,9 @@ namespace SaiGame.Services
         }
 
         [Header("Game Configuration")]
-        [SerializeField] protected string gameId = "d344f07a-ee5c-4b6e-b6a0-60b15a0d6eac";
+        [SerializeField] protected string gameId = "";
 
-
+        private const string PREF_GAME_ID = "SaiGame_GameId";
 
         [Header("API Settings")]
         [SerializeField] protected int requestTimeout = 30;
@@ -209,6 +209,7 @@ namespace SaiGame.Services
         {
             base.LoadComponents();
             this.LoadSaiAuth();
+            this.LoadGameIdFromPlayerPrefs();
         }
 
         protected virtual void LoadSaiAuth()
@@ -216,6 +217,35 @@ namespace SaiGame.Services
             if (this.saiAuth != null) return;
             this.saiAuth = GetComponent<SaiAuth>();
             Debug.Log(transform.name + ": LoadSaiAuth", gameObject);
+        }
+
+        protected virtual void LoadGameIdFromPlayerPrefs()
+        {
+            if (PlayerPrefs.HasKey(PREF_GAME_ID))
+            {
+                this.gameId = PlayerPrefs.GetString(PREF_GAME_ID);
+                if (this.showDebug)
+                    Debug.Log($"Loaded Game ID from PlayerPrefs: {this.gameId}");
+            }
+        }
+
+        protected virtual void SaveGameIdToPlayerPrefs()
+        {
+            PlayerPrefs.SetString(PREF_GAME_ID, this.gameId);
+            PlayerPrefs.Save();
+            if (this.showDebug)
+                Debug.Log($"Saved Game ID to PlayerPrefs: {this.gameId}");
+        }
+
+        public void SetGameId(string newGameId)
+        {
+            this.gameId = newGameId;
+            this.SaveGameIdToPlayerPrefs();
+        }
+
+        public void ManualSaveGameId()
+        {
+            this.SaveGameIdToPlayerPrefs();
         }
 
         public void TestConnection(Action<bool> callback = null)

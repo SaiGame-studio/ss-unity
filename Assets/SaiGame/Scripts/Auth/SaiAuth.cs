@@ -33,13 +33,20 @@ namespace SaiGame.Services
         [SerializeField] protected int refreshBeforeExpire = 2;
 
         [Header("Login Inputs")]
-        [SerializeField] protected string username = "SimonSai@saigame.studio";
-        [SerializeField] protected string password = "123qweasd";
+        [SerializeField] protected string username = "";
+        [SerializeField] protected string password = "";
+        [SerializeField] protected bool saveEmail = false;
+        [SerializeField] protected bool savePassword = false;
 
         [Header("Register Inputs")]
         [SerializeField] protected string registerEmail = "";
         [SerializeField] protected string registerUsername = "";
         [SerializeField] protected string registerPassword = "";
+
+        private const string PREF_EMAIL = "SaiGame_SavedEmail";
+        private const string PREF_PASSWORD = "SaiGame_SavedPassword";
+        private const string PREF_SAVE_EMAIL_FLAG = "SaiGame_SaveEmailFlag";
+        private const string PREF_SAVE_PASSWORD_FLAG = "SaiGame_SavePasswordFlag";
 
         public bool IsAuthenticated => !string.IsNullOrEmpty(accessToken);
         public string AccessToken => accessToken;
@@ -53,6 +60,7 @@ namespace SaiGame.Services
         {
             base.LoadComponents();
             this.LoadSaiService();
+            this.LoadCredentialsFromPlayerPrefs();
         }
 
         protected virtual void LoadSaiService()
@@ -61,6 +69,58 @@ namespace SaiGame.Services
             this.saiService = GetComponent<SaiService>();
             if (this.saiService != null && this.saiService.ShowDebug)
                 Debug.Log(transform.name + ": LoadSaiService", gameObject);
+        }
+
+        protected virtual void LoadCredentialsFromPlayerPrefs()
+        {
+            this.saveEmail = PlayerPrefs.GetInt(PREF_SAVE_EMAIL_FLAG, 0) == 1;
+            this.savePassword = PlayerPrefs.GetInt(PREF_SAVE_PASSWORD_FLAG, 0) == 1;
+
+            if (this.saveEmail && PlayerPrefs.HasKey(PREF_EMAIL))
+            {
+                this.username = PlayerPrefs.GetString(PREF_EMAIL);
+                if (this.saiService != null && this.saiService.ShowDebug)
+                    Debug.Log($"Loaded email from PlayerPrefs: {this.username}");
+            }
+
+            if (this.savePassword && PlayerPrefs.HasKey(PREF_PASSWORD))
+            {
+                string encryptedPassword = PlayerPrefs.GetString(PREF_PASSWORD);
+                this.password = SaiEncryption.Decrypt(encryptedPassword);
+                if (this.saiService != null && this.saiService.ShowDebug)
+                    Debug.Log("Loaded password from PlayerPrefs");
+            }
+        }
+
+        protected virtual void SaveCredentialsToPlayerPrefs()
+        {
+            PlayerPrefs.SetInt(PREF_SAVE_EMAIL_FLAG, this.saveEmail ? 1 : 0);
+            PlayerPrefs.SetInt(PREF_SAVE_PASSWORD_FLAG, this.savePassword ? 1 : 0);
+
+            if (this.saveEmail)
+            {
+                PlayerPrefs.SetString(PREF_EMAIL, this.username);
+                if (this.saiService != null && this.saiService.ShowDebug)
+                    Debug.Log($"Saved email to PlayerPrefs: {this.username}");
+            }
+            else
+            {
+                PlayerPrefs.DeleteKey(PREF_EMAIL);
+            }
+
+            if (this.savePassword)
+            {
+                string encryptedPassword = SaiEncryption.Encrypt(this.password);
+                PlayerPrefs.SetString(PREF_PASSWORD, encryptedPassword);
+                if (this.saiService != null && this.saiService.ShowDebug)
+                    Debug.Log("Saved encrypted password to PlayerPrefs");
+            }
+            else
+            {
+                PlayerPrefs.DeleteKey(PREF_PASSWORD);
+            }
+
+            PlayerPrefs.Save();
         }
 
         protected virtual void OnDestroy()
@@ -206,6 +266,10 @@ namespace SaiGame.Services
                         this.expiresIn = loginResponse.expires_in;
                         this.userData = loginResponse.user;
                         this.loginTime = Time.time;
+                        
+                        this.username = username;
+                        this.password = password;
+                        this.SaveCredentialsToPlayerPrefs();
 
                         StartTokenExpirationCheck();
 
@@ -348,6 +412,16 @@ namespace SaiGame.Services
             this.expiresIn = 0;
             this.userData = null;
             this.loginTime = 0;
+            
+            if (!this.saveEmail)
+            {
+                this.username = "";
+            }
+            
+            if (!this.savePassword)
+            {
+                this.password = "";
+            }
         }
 
         public void GetMyProfile(System.Action<UserData> onSuccess = null, System.Action<string> onError = null)
@@ -405,6 +479,33 @@ namespace SaiGame.Services
             this.refreshToken = refresh;
             this.expiresIn = expires;
             this.userData = user;
+        }
+
+        public void SetSaveEmail(bool save)
+        {
+            this.saveEmail = save;
+            this.SaveCredentialsToPlayerPrefs();
+        }
+
+        public void SetSavePassword(bool save)
+        {
+            this.savePassword = save;
+            this.SaveCredentialsToPlayerPrefs();
+        }
+
+        public bool GetSaveEmail()
+        {
+            return this.saveEmail;
+        }
+
+        public bool GetSavePassword()
+        {
+            return this.savePassword;
+        }
+
+        public void ManualSaveCredentials()
+        {
+            this.SaveCredentialsToPlayerPrefs();
         }
     }
 }

@@ -37,6 +37,19 @@ namespace SaiGame.Services
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Service Actions", EditorStyles.boldLabel);
 
+            GUI.backgroundColor = new Color(0.3f, 0.9f, 0.5f);
+            if (GUILayout.Button("Save Game ID to PlayerPrefs", GUILayout.Height(30)))
+            {
+                if (saiService != null)
+                {
+                    saiService.ManualSaveGameId();
+                    Debug.Log("✓ Game ID saved to PlayerPrefs!");
+                }
+            }
+            GUI.backgroundColor = Color.white;
+
+            EditorGUILayout.Space(5);
+
             if (GUILayout.Button("Test Connection", GUILayout.Height(25)))
             {
                 if (saiService != null)

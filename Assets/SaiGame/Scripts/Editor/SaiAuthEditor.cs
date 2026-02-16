@@ -15,6 +15,16 @@ namespace SaiGame.Services
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Actions", EditorStyles.boldLabel);
             
+            GUI.backgroundColor = new Color(1f, 0.8f, 0.2f);
+            if (GUILayout.Button("Save Credentials to PlayerPrefs", GUILayout.Height(30)))
+            {
+                saiAuth.ManualSaveCredentials();
+                Debug.Log("✓ Credentials saved to PlayerPrefs!");
+            }
+            GUI.backgroundColor = Color.white;
+
+            EditorGUILayout.Space(5);
+
             GUI.backgroundColor = new Color(0.4f, 0.7f, 1f);
             if (GUILayout.Button("Register", GUILayout.Height(35)))
             {
