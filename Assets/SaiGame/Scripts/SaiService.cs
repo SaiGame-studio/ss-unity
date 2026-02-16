@@ -248,6 +248,18 @@ namespace SaiGame.Services
             this.SaveGameIdToPlayerPrefs();
         }
 
+        public void ManualClearGameId()
+        {
+            if (PlayerPrefs.HasKey(PREF_GAME_ID))
+            {
+                PlayerPrefs.DeleteKey(PREF_GAME_ID);
+                PlayerPrefs.Save();
+                this.gameId = string.Empty;
+                if (this.showDebug)
+                    Debug.Log("Cleared Game ID from PlayerPrefs");
+            }
+        }
+
         public void TestConnection(Action<bool> callback = null)
         {
             StartCoroutine(TestConnectionCoroutine(callback));

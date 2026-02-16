@@ -507,5 +507,22 @@ namespace SaiGame.Services
         {
             this.SaveCredentialsToPlayerPrefs();
         }
+
+        public void ManualClearCredentials()
+        {
+            PlayerPrefs.DeleteKey(PREF_EMAIL);
+            PlayerPrefs.DeleteKey(PREF_PASSWORD);
+            PlayerPrefs.DeleteKey(PREF_SAVE_EMAIL_FLAG);
+            PlayerPrefs.DeleteKey(PREF_SAVE_PASSWORD_FLAG);
+            PlayerPrefs.Save();
+            
+            this.username = string.Empty;
+            this.password = string.Empty;
+            this.saveEmail = false;
+            this.savePassword = false;
+            
+            if (this.saiService != null && this.saiService.ShowDebug)
+                Debug.Log("Cleared all credentials from PlayerPrefs");
+        }
     }
 }

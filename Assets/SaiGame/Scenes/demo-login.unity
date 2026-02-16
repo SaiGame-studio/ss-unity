@@ -432,7 +432,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &3144769537806511715
+--- !u!1001 &993421414
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -442,7 +442,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 180087945614193938, guid: 360197a33eca4b449a796a74a8312661, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0
+      value: 2.85258
       objectReference: {fileID: 0}
     - target: {fileID: 180087945614193938, guid: 360197a33eca4b449a796a74a8312661, type: 3}
       propertyPath: m_LocalPosition.y
@@ -450,7 +450,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 180087945614193938, guid: 360197a33eca4b449a796a74a8312661, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 2.96002
       objectReference: {fileID: 0}
     - target: {fileID: 180087945614193938, guid: 360197a33eca4b449a796a74a8312661, type: 3}
       propertyPath: m_LocalRotation.w
@@ -480,25 +480,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4725543868841456537, guid: 360197a33eca4b449a796a74a8312661, type: 3}
-      propertyPath: port
-      value: 80
-      objectReference: {fileID: 0}
-    - target: {fileID: 4725543868841456537, guid: 360197a33eca4b449a796a74a8312661, type: 3}
-      propertyPath: gameId
-      value: 
-      objectReference: {fileID: 0}
     - target: {fileID: 6479074095956393665, guid: 360197a33eca4b449a796a74a8312661, type: 3}
       propertyPath: m_Name
-      value: SaiService
-      objectReference: {fileID: 0}
-    - target: {fileID: 7258247919436694246, guid: 360197a33eca4b449a796a74a8312661, type: 3}
-      propertyPath: password
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7258247919436694246, guid: 360197a33eca4b449a796a74a8312661, type: 3}
-      propertyPath: username
-      value: 
+      value: SaiServiceP1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -512,4 +496,4 @@ SceneRoots:
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 832575519}
-  - {fileID: 3144769537806511715}
+  - {fileID: 993421414}

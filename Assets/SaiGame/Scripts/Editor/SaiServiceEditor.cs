@@ -37,6 +37,7 @@ namespace SaiGame.Services
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Service Actions", EditorStyles.boldLabel);
 
+            EditorGUILayout.BeginHorizontal();
             GUI.backgroundColor = new Color(0.3f, 0.9f, 0.5f);
             if (GUILayout.Button("Save Game ID to PlayerPrefs", GUILayout.Height(30)))
             {
@@ -46,10 +47,21 @@ namespace SaiGame.Services
                     Debug.Log("✓ Game ID saved to PlayerPrefs!");
                 }
             }
+            GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
+            if (GUILayout.Button("Clear PlayerPrefs", GUILayout.Height(30)))
+            {
+                if (saiService != null)
+                {
+                    saiService.ManualClearGameId();
+                    Debug.Log("✓ Game ID cleared from PlayerPrefs!");
+                }
+            }
             GUI.backgroundColor = Color.white;
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(5);
 
+            EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Test Connection", GUILayout.Height(25)))
             {
                 if (saiService != null)
@@ -64,8 +76,6 @@ namespace SaiGame.Services
                 }
             }
 
-            EditorGUILayout.Space(5);
-
             if (GUILayout.Button("Show Service Info", GUILayout.Height(25)))
             {
                 if (saiService != null)
@@ -75,6 +85,7 @@ namespace SaiGame.Services
                     Debug.Log($"Base URL: {saiService.BaseUrl}, Authenticated: {saiService.IsAuthenticated}, {userInfo}");
                 }
             }
+            EditorGUILayout.EndHorizontal();
         }
     }
 }
