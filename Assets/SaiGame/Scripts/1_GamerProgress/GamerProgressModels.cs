@@ -15,7 +15,7 @@ namespace SaiGame.Services
     [Serializable]
     public class CreateGamerProgressResponse
     {
-        public GamerProgress data;
+        public GamerProgressData data;
         public string message;
     }
 

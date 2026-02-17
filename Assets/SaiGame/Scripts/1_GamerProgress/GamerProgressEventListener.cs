@@ -3,22 +3,15 @@ using UnityEngine;
 namespace SaiGame.Services
 {
     /// <summary>
-    /// Example class showing how to listen to SaiGamerProgress events
+    /// Example class showing how to listen to GamerProgress events
     /// </summary>
     public class GamerProgressEventListener : SaiBehaviour
     {
-        [SerializeField] private SaiGamerProgress gamerProgress;
+        private GamerProgress gamerProgress => SaiService.Instance?.GamerProgress;
 
         protected override void LoadComponents()
         {
             base.LoadComponents();
-            this.LoadGamerProgress();
-        }
-
-        protected virtual void LoadGamerProgress()
-        {
-            if (this.gamerProgress != null) return;
-            this.gamerProgress = GetComponent<SaiGamerProgress>();
         }
 
         private void OnEnable()
@@ -49,7 +42,7 @@ namespace SaiGame.Services
             }
         }
 
-        private void HandleCreateProgressSuccess(GamerProgress progress)
+        private void HandleCreateProgressSuccess(GamerProgressData progress)
         {
             // Handle successful progress creation
             // Example: Show success message, update UI, etc.
@@ -61,7 +54,7 @@ namespace SaiGame.Services
             // Example: Show error message to user
         }
 
-        private void HandleGetProgressSuccess(GamerProgress progress)
+        private void HandleGetProgressSuccess(GamerProgressData progress)
         {
             // Handle successful progress retrieval
             // Example: Update UI with progress data
