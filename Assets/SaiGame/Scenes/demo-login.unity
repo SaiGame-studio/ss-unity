@@ -485,6 +485,10 @@ PrefabInstance:
       value: a06a14ef-0f66-449f-8414-ed387100de4f
       objectReference: {fileID: 0}
     - target: {fileID: 4725543868841456537, guid: 360197a33eca4b449a796a74a8312661, type: 3}
+      propertyPath: showDebug
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4725543868841456537, guid: 360197a33eca4b449a796a74a8312661, type: 3}
       propertyPath: serverEndpoint
       value: 0
       objectReference: {fileID: 0}

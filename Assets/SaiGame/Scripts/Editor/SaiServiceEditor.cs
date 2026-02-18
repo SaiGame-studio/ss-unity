@@ -106,6 +106,7 @@ namespace SaiGame.Services
             {
                 if (saiService != null)
                 {
+                    Debug.Log("<color=#FFCC00><b>[SaiService] ► Show Service Info</b></color>");
                     bool hasUser = saiService.CurrentUser != null && !string.IsNullOrEmpty(saiService.CurrentUser.username);
                     string userInfo = hasUser ? $"User: {saiService.CurrentUser.username}" : "No user";
                     Debug.Log($"Base URL: {saiService.BaseUrl}, Authenticated: {saiService.IsAuthenticated}, {userInfo}");

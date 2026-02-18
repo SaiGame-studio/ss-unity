@@ -20,13 +20,11 @@ namespace SaiGame.Services
             if (GUILayout.Button("Save Credentials to PlayerPrefs", GUILayout.Height(30)))
             {
                 saiAuth.ManualSaveCredentials();
-                Debug.Log("✓ Credentials saved to PlayerPrefs!");
             }
             GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
             if (GUILayout.Button("Clear PlayerPrefs", GUILayout.Height(30)))
             {
                 saiAuth.ManualClearCredentials();
-                Debug.Log("✓ Credentials cleared from PlayerPrefs!");
             }
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
@@ -63,7 +61,6 @@ namespace SaiGame.Services
             if (GUILayout.Button("Logout", GUILayout.Height(35)))
             {
                 saiAuth.Logout();
-                Debug.Log("Logged out and cleared all auth data");
             }
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
