@@ -12,35 +12,26 @@ namespace SaiGame.Services
         Production
     }
 
+    public enum ServerEndpointOption
+    {
+        LocalHttp,
+        ProductionHttps
+    }
+
     [DefaultExecutionOrder(-100)]
     public class SaiService : SaiSingleton<SaiService>
     {
-        public const string PACKAGE_VERSION = "0.0.5b4";
+        public const string PACKAGE_VERSION = "0.0.5b5";
         public const string PACKAGE_NAME = "SaiGame Services";
 
         [SerializeField] protected SaiAuth saiAuth;
         [SerializeField] protected GamerProgress gamerProgress;
 
         [Header("Server Configuration")]
-        [SerializeField] protected DomainOption domainOption = DomainOption.Local;
-        [SerializeField] protected int port = 80;
-        [SerializeField] protected bool useHttps = false;
-
-        private string Domain
-        {
-            get
-            {
-                switch (domainOption)
-                {
-                    case DomainOption.Production:
-                        return "api.saigame.studio";
-                    case DomainOption.Local:
-                        return "local-api.saigame.studio";
-                    default:
-                        return "api.saigame.studio";
-                }
-            }
-        }
+        [HideInInspector] [SerializeField] protected ServerEndpointOption serverEndpoint = ServerEndpointOption.LocalHttp;
+        [HideInInspector] [SerializeField] protected DomainOption domainOption = DomainOption.Local;
+        [HideInInspector] [SerializeField] protected int port = 80;
+        [HideInInspector] [SerializeField] protected bool useHttps = false;
 
         [Header("Game Configuration")]
         [SerializeField] protected string gameId = "";
@@ -61,8 +52,14 @@ namespace SaiGame.Services
         {
             get
             {
-                string protocol = useHttps ? "https" : "http";
-                return $"{protocol}://{Domain}:{port}";
+                switch (this.serverEndpoint)
+                {
+                    case ServerEndpointOption.ProductionHttps:
+                        return "https://api.saigame.studio";
+                    case ServerEndpointOption.LocalHttp:
+                    default:
+                        return "http://local-api.saigame.studio:82";
+                }
             }
         }
 
@@ -80,7 +77,38 @@ namespace SaiGame.Services
 
         public SaiAuth SaiAuth => saiAuth;
 
-        public string GameId => gameId;
+        public string GameId => this.NormalizeInput(this.gameId);
+
+        private string NormalizeInput(string value)
+        {
+            return string.IsNullOrEmpty(value) ? string.Empty : value.Trim();
+        }
+
+        private void SyncLegacyServerFieldsFromEndpoint()
+        {
+            switch (this.serverEndpoint)
+            {
+                case ServerEndpointOption.ProductionHttps:
+                    this.domainOption = DomainOption.Production;
+                    this.useHttps = true;
+                    this.port = 443;
+                    break;
+                case ServerEndpointOption.LocalHttp:
+                default:
+                    this.domainOption = DomainOption.Local;
+                    this.useHttps = false;
+                    this.port = 82;
+                    break;
+            }
+        }
+
+        private void SyncEndpointFromLegacyServerFields()
+        {
+            bool isProduction = this.domainOption == DomainOption.Production;
+            this.serverEndpoint = isProduction
+                ? ServerEndpointOption.ProductionHttps
+                : ServerEndpointOption.LocalHttp;
+        }
 
         public void SetAccessToken(string token)
         {
@@ -203,17 +231,23 @@ namespace SaiGame.Services
 
         public void SetDomain(DomainOption newDomain)
         {
-            domainOption = newDomain;
+            this.domainOption = newDomain;
+            this.SyncEndpointFromLegacyServerFields();
+            this.SyncLegacyServerFieldsFromEndpoint();
         }
 
         public void SetPort(int newPort)
         {
-            port = newPort;
+            this.port = newPort;
+            this.SyncEndpointFromLegacyServerFields();
+            this.SyncLegacyServerFieldsFromEndpoint();
         }
 
         protected override void LoadComponents()
         {
             base.LoadComponents();
+            this.SyncEndpointFromLegacyServerFields();
+            this.SyncLegacyServerFieldsFromEndpoint();
             this.LoadSaiAuth();
             this.LoadSaiGamerProgress();
             this.LoadGameIdFromPlayerPrefs();
@@ -237,14 +271,19 @@ namespace SaiGame.Services
         {
             if (PlayerPrefs.HasKey(PREF_GAME_ID))
             {
-                this.gameId = PlayerPrefs.GetString(PREF_GAME_ID);
+                this.gameId = this.NormalizeInput(PlayerPrefs.GetString(PREF_GAME_ID));
                 if (this.showDebug)
                     Debug.Log($"Loaded Game ID from PlayerPrefs: {this.gameId}");
+            }
+            else
+            {
+                this.gameId = this.NormalizeInput(this.gameId);
             }
         }
 
         protected virtual void SaveGameIdToPlayerPrefs()
         {
+            this.gameId = this.NormalizeInput(this.gameId);
             PlayerPrefs.SetString(PREF_GAME_ID, this.gameId);
             PlayerPrefs.Save();
             if (this.showDebug)
@@ -253,8 +292,15 @@ namespace SaiGame.Services
 
         public void SetGameId(string newGameId)
         {
-            this.gameId = newGameId;
+            this.gameId = this.NormalizeInput(newGameId);
             this.SaveGameIdToPlayerPrefs();
+        }
+
+        protected virtual void OnValidate()
+        {
+            this.SyncEndpointFromLegacyServerFields();
+            this.SyncLegacyServerFieldsFromEndpoint();
+            this.gameId = this.NormalizeInput(this.gameId);
         }
 
         public void ManualSaveGameId()

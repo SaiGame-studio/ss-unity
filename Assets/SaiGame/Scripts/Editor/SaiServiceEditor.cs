@@ -6,8 +6,16 @@ namespace SaiGame.Services
     [CustomEditor(typeof(SaiService))]
     public class SaiServiceEditor : Editor
     {
+        private static readonly string[] SERVER_ENDPOINT_OPTIONS =
+        {
+            "Local API (HTTP) - local-api.saigame.studio:82",
+            "Production API (HTTPS) - api.saigame.studio"
+        };
+
         public override void OnInspectorGUI()
         {
+            this.serializedObject.Update();
+
             EditorGUILayout.Space(5);
             
             GUIStyle versionStyle = new GUIStyle(EditorStyles.boldLabel)
@@ -29,8 +37,26 @@ namespace SaiGame.Services
             EditorGUILayout.Space(5);
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
             EditorGUILayout.Space(5);
-            
-            DrawDefaultInspector();
+
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("m_Script"));
+            }
+
+            EditorGUILayout.Space(5);
+            EditorGUILayout.LabelField("Server Configuration", EditorStyles.boldLabel);
+            SerializedProperty serverEndpointProperty = this.serializedObject.FindProperty("serverEndpoint");
+            int currentIndex = Mathf.Clamp(serverEndpointProperty.enumValueIndex, 0, SERVER_ENDPOINT_OPTIONS.Length - 1);
+            int newIndex = EditorGUILayout.Popup("Server Endpoint", currentIndex, SERVER_ENDPOINT_OPTIONS);
+            if (newIndex != currentIndex)
+            {
+                serverEndpointProperty.enumValueIndex = newIndex;
+            }
+
+            EditorGUILayout.Space(5);
+            DrawPropertiesExcluding(this.serializedObject, "m_Script", "serverEndpoint", "domainOption", "port", "useHttps");
+
+            this.serializedObject.ApplyModifiedProperties();
 
             SaiService saiService = (SaiService)target;
 
