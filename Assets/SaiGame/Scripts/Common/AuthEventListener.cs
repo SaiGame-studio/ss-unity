@@ -7,18 +7,11 @@ namespace SaiGame.Services
     /// </summary>
     public class AuthEventListener : SaiBehaviour
     {
-        [SerializeField] private SaiAuth saiAuth;
+        private SaiAuth saiAuth => SaiService.Instance?.GetComponent<SaiAuth>();
 
         protected override void LoadComponents()
         {
             base.LoadComponents();
-            this.LoadSaiAuth();
-        }
-
-        protected virtual void LoadSaiAuth()
-        {
-            if (this.saiAuth != null) return;
-            this.saiAuth = GetComponent<SaiAuth>();
         }
 
         private void OnEnable()

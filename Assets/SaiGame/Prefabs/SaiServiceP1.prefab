@@ -47,10 +47,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiService
   saiAuth: {fileID: 7258247919436694246}
+  gamerProgress: {fileID: 308465429840233862}
   domainOption: 0
-  port: 82
+  port: 80
   useHttps: 0
-  gameId: d344f07a-ee5c-4b6e-b6a0-60b15a0d6eac
+  gameId: a06a14ef-0f66-449f-8414-ed387100de4f
   requestTimeout: 30
   showDebug: 1
 --- !u!114 &7258247919436694246
@@ -80,8 +81,10 @@ MonoBehaviour:
   loginTime: 0
   autoRefreshToken: 1
   refreshBeforeExpire: 2
-  username: SimonSai@saigame.studio
-  password: 123qweasd
+  username: 
+  password: 
+  saveEmail: 0
+  savePassword: 0
   registerEmail: 
   registerUsername: 
   registerPassword: 

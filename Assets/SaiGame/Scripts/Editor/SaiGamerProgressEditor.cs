@@ -3,14 +3,14 @@ using UnityEditor;
 
 namespace SaiGame.Services
 {
-    [CustomEditor(typeof(SaiGamerProgress))]
+    [CustomEditor(typeof(GamerProgress))]
     public class SaiGamerProgressEditor : Editor
     {
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
 
-            SaiGamerProgress gamerProgress = (SaiGamerProgress)target;
+            GamerProgress gamerProgress = (GamerProgress)target;
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Progress Actions", EditorStyles.boldLabel);
