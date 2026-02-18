@@ -190,6 +190,7 @@ namespace SaiGame.Services
 
         public void Register(string email, string username, string password, System.Action<RegisterResponse> onSuccess = null, System.Action<string> onError = null)
         {
+            Debug.Log("<color=#66AAFF><b>[SaiAuth] ► Register</b></color>", gameObject);
             if (SaiService.Instance == null)
             {
                 onError?.Invoke("SaiService not found!");
@@ -245,6 +246,7 @@ namespace SaiGame.Services
 
         public void Login(string username, string password, System.Action<LoginResponse> onSuccess = null, System.Action<string> onError = null)
         {
+            Debug.Log("<color=#00FF88><b>[SaiAuth] ► Login</b></color>", gameObject);
             if (SaiService.Instance == null)
             {
                 onError?.Invoke("SaiService not found!");
@@ -309,6 +311,7 @@ namespace SaiGame.Services
 
         public void RefreshAuthToken(System.Action<LoginResponse> onSuccess = null, System.Action<string> onError = null)
         {
+            Debug.Log("<color=#66CCFF><b>[SaiAuth] ► Refresh Token</b></color>", gameObject);
             if (SaiService.Instance == null)
             {
                 onError?.Invoke("SaiService not found!");
@@ -384,6 +387,7 @@ namespace SaiGame.Services
 
         public void Logout()
         {
+            Debug.Log("<color=#FF9944><b>[SaiAuth] ► Logout</b></color>", gameObject);
             StartCoroutine(LogoutCoroutine());
         }
 
@@ -442,6 +446,7 @@ namespace SaiGame.Services
 
         public void GetMyProfile(System.Action<UserData> onSuccess = null, System.Action<string> onError = null)
         {
+            Debug.Log("<color=#AAFFAA><b>[SaiAuth] ► Get Me</b></color>", gameObject);
             if (SaiService.Instance == null || !SaiService.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
@@ -521,11 +526,13 @@ namespace SaiGame.Services
 
         public void ManualSaveCredentials()
         {
+            Debug.Log("<color=#FFD700><b>[SaiAuth] ► Save Credentials to PlayerPrefs</b></color>", gameObject);
             this.SaveCredentialsToPlayerPrefs();
         }
 
         public void ManualClearCredentials()
         {
+            Debug.Log("<color=#FF6666><b>[SaiAuth] ► Clear PlayerPrefs</b></color>", gameObject);
             PlayerPrefs.DeleteKey(PREF_EMAIL);
             PlayerPrefs.DeleteKey(PREF_PASSWORD);
             PlayerPrefs.DeleteKey(PREF_SAVE_EMAIL_FLAG);
