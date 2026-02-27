@@ -26,6 +26,7 @@ namespace SaiGame.Services
 
         [SerializeField] protected SaiAuth saiAuth;
         [SerializeField] protected GamerProgress gamerProgress;
+        [SerializeField] protected ItemContainer itemContainer;
 
         [Header("Server Configuration")]
         [HideInInspector][SerializeField] protected ServerEndpointOption serverEndpoint = ServerEndpointOption.LocalHttp;
@@ -74,6 +75,8 @@ namespace SaiGame.Services
         public UserData CurrentUser => saiAuth?.CurrentUser;
 
         public GamerProgress GamerProgress => gamerProgress;
+
+        public ItemContainer ItemContainer => itemContainer;
 
         public SaiAuth SaiAuth => saiAuth;
 

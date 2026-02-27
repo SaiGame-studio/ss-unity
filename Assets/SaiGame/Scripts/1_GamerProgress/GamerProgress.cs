@@ -16,7 +16,7 @@ namespace SaiGame.Services
         public event Action<string> OnDeleteProgressFailure;
 
         [Header("Auto Load Settings")]
-        [SerializeField] protected bool autoLoadOnLogin = true;
+        [SerializeField] protected bool autoLoadOnLogin = false;
 
         [Header("Current Progress Data")]
         [SerializeField] protected GamerProgressData currentProgress;
