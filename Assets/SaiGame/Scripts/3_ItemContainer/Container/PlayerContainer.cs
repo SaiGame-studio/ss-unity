@@ -221,6 +221,75 @@ namespace SaiGame.Services
             return result.ToArray();
         }
 
+        /// <summary>
+        /// Fetches all items inside a specific container.
+        /// Endpoint: GET /api/v1/containers/{container_id}/items?limit={limit}&amp;offset={offset}
+        /// </summary>
+        public void GetContainerItems(
+            string containerId,
+            int limit = 50,
+            int offset = 0,
+            System.Action<ContainerItemsResponse> onSuccess = null,
+            System.Action<string> onError = null)
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log($"<color=#00FFFF><b>[PlayerContainer] ► Get Container Items: {containerId}</b></color>", gameObject);
+
+            if (SaiService.Instance == null)
+            {
+                onError?.Invoke("SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            StartCoroutine(this.GetContainerItemsCoroutine(containerId, limit, offset, onSuccess, onError));
+        }
+
+        private IEnumerator GetContainerItemsCoroutine(
+            string containerId,
+            int limit,
+            int offset,
+            System.Action<ContainerItemsResponse> onSuccess,
+            System.Action<string> onError)
+        {
+            string endpoint = $"/api/v1/containers/{containerId}/items?limit={limit}&offset={offset}";
+
+            yield return SaiService.Instance.GetRequest(endpoint,
+                response =>
+                {
+                    try
+                    {
+                        ContainerItemsResponse itemsResponse = JsonUtility.FromJson<ContainerItemsResponse>(response);
+
+                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                            Debug.Log($"[PlayerContainer] Container items loaded: {itemsResponse.items?.Length ?? 0} items for container {containerId}");
+
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[PlayerContainer] GetContainerItems</color> → <b><color=#00FF88>onSuccess</color></b> callback | PlayerContainer.cs › GetContainerItemsCoroutine");
+                        onSuccess?.Invoke(itemsResponse);
+                    }
+                    catch (System.Exception e)
+                    {
+                        string errorMsg = $"Parse container items response error: {e.Message}";
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[PlayerContainer] GetContainerItems</color> → <b><color=#FF4444>onError</color></b> callback (parse) | PlayerContainer.cs › GetContainerItemsCoroutine | {errorMsg}");
+                        onError?.Invoke(errorMsg);
+                    }
+                },
+                error =>
+                {
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[PlayerContainer] GetContainerItems</color> → <b><color=#FF4444>onError</color></b> callback (network) | PlayerContainer.cs › GetContainerItemsCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
+            );
+        }
+
         // ── Inspector-exposed setters ──────────────────────────────────────────
 
         public void SetContainerLimit(int limit) => this.containerLimit = limit;

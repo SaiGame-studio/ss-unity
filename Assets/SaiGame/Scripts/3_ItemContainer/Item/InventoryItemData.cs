@@ -21,6 +21,9 @@ namespace SaiGame.Services
         public int level;
         // Raw JSON string – may be null/empty when the server returns null
         public string custom_properties;
+        // Used by container items endpoint (private_properties / public_properties)
+        public string private_properties;
+        public string public_properties;
         public string acquired_at;
         public string last_modified_at;
         public int version;
