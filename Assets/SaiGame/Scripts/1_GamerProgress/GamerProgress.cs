@@ -16,15 +16,15 @@ namespace SaiGame.Services
         public event Action<string> OnDeleteProgressFailure;
 
         [Header("Auto Load Settings")]
-        [SerializeField] protected bool autoLoadOnLogin = true;
+        [SerializeField] protected bool autoLoadOnLogin = false;
 
         [Header("Current Progress Data")]
         [SerializeField] protected GamerProgressData currentProgress;
-        
+
         [Header("Update Delta Values")]
         [SerializeField] protected int experienceDelta = 100;
         [SerializeField] protected int goldDelta = 50;
-        [SerializeField] [TextArea(3, 10)] protected string gameData = "{}";
+        [SerializeField][TextArea(3, 10)] protected string gameData = "{}";
 
         public GamerProgressData CurrentProgress => currentProgress;
         public bool HasProgress => currentProgress != null && !string.IsNullOrEmpty(currentProgress.id);
@@ -39,14 +39,14 @@ namespace SaiGame.Services
         protected virtual void RegisterLoginListener()
         {
             if (SaiService.Instance?.SaiAuth == null) return;
-            
+
             SaiService.Instance.SaiAuth.OnLoginSuccess += HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
             if (SaiService.Instance?.SaiAuth == null) return;
-            
+
             SaiService.Instance.SaiAuth.OnLogoutSuccess += HandleLogoutSuccess;
         }
 
@@ -62,17 +62,17 @@ namespace SaiGame.Services
         protected virtual void HandleLoginSuccess(LoginResponse response)
         {
             if (!autoLoadOnLogin) return;
-            
+
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                 Debug.Log("Auto-loading progress after successful login...");
-            
+
             GetProgress(
-                progress => 
+                progress =>
                 {
                     if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                         Debug.Log($"Progress auto-loaded: Level {progress.level}, XP {progress.experience}, Gold {progress.gold}");
                 },
-                error => 
+                error =>
                 {
                     if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                         Debug.LogWarning($"Auto-load progress failed: {error}");
@@ -84,9 +84,9 @@ namespace SaiGame.Services
         {
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                 Debug.Log("[GamerProgress] Logout successful, clearing progress data...");
-            
+
             ClearLocalProgress();
-            
+
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                 Debug.Log("[GamerProgress] Progress data cleared successfully");
         }
@@ -239,10 +239,10 @@ namespace SaiGame.Services
             string endpoint = $"/api/v1/games/{gameId}/gamer-progress";
 
             string userId = SaiService.Instance.CurrentUser?.id ?? "";
-            
+
             // Ensure game_data is valid JSON
             string gameDataJson = string.IsNullOrEmpty(this.gameData) ? "{}" : this.gameData;
-            
+
             // Manually construct JSON to avoid escaping game_data
             string jsonData = $@"{{
     ""user_id"": ""{userId}"",
@@ -258,26 +258,29 @@ namespace SaiGame.Services
                     try
                     {
                         string gameDataJson = ExtractGameDataFromJson(response);
-                        
+
                         CreateGamerProgressResponse progressResponse = JsonUtility.FromJson<CreateGamerProgressResponse>(response);
                         this.currentProgress = progressResponse.data;
-                        
+
                         if (this.currentProgress != null)
                             this.currentProgress.game_data = gameDataJson;
 
                         OnCreateProgressSuccess?.Invoke(progressResponse.data);
+                        Debug.Log("<color=#66CCFF>[GamerProgress] CreateProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › CreateProgressCoroutine");
                         onSuccess?.Invoke(progressResponse.data);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse create progress response error: {e.Message}";
                         OnCreateProgressFailure?.Invoke(errorMsg);
+                        Debug.LogWarning($"<color=#66CCFF>[GamerProgress] CreateProgress</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GamerProgress.cs › CreateProgressCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnCreateProgressFailure?.Invoke(error);
+                    Debug.LogWarning($"<color=#66CCFF>[GamerProgress] CreateProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › CreateProgressCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -312,14 +315,14 @@ namespace SaiGame.Services
                     try
                     {
                         string gameDataJson = ExtractGameDataFromJson(response);
-                        
+
                         GamerProgressData progress = JsonUtility.FromJson<GamerProgressData>(response);
                         this.currentProgress = progress;
-                        
+
                         if (this.currentProgress != null)
                         {
                             this.currentProgress.game_data = gameDataJson;
-                            
+
                             if (!string.IsNullOrEmpty(gameDataJson) && gameDataJson != "{}")
                             {
                                 this.gameData = FormatJsonString(gameDataJson);
@@ -330,18 +333,21 @@ namespace SaiGame.Services
                             Debug.Log($"Progress loaded: Level {progress.level}, XP {progress.experience}, Gold {progress.gold}, Game Data: {progress.game_data}");
 
                         OnGetProgressSuccess?.Invoke(progress);
+                        Debug.Log("<color=#66CCFF>[GamerProgress] GetProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › GetProgressCoroutine");
                         onSuccess?.Invoke(progress);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse get progress response error: {e.Message}";
                         OnGetProgressFailure?.Invoke(errorMsg);
+                        Debug.LogWarning($"<color=#66CCFF>[GamerProgress] GetProgress</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GamerProgress.cs › GetProgressCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnGetProgressFailure?.Invoke(error);
+                    Debug.LogWarning($"<color=#66CCFF>[GamerProgress] GetProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › GetProgressCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -366,9 +372,9 @@ namespace SaiGame.Services
             // Use provided newGameData, or fallback to Inspector gameData field, or use current progress data, or default to {}
             string gameDataJson = !string.IsNullOrEmpty(newGameData) ? newGameData :
                                   !string.IsNullOrEmpty(this.gameData) ? this.gameData :
-                                  !string.IsNullOrEmpty(currentProgress.game_data) ? currentProgress.game_data : 
+                                  !string.IsNullOrEmpty(currentProgress.game_data) ? currentProgress.game_data :
                                   "{}";
-            
+
             // Manually construct JSON to avoid escaping game_data
             string jsonData = $@"{{
     ""experience_delta"": {experienceDelta},
@@ -388,25 +394,31 @@ namespace SaiGame.Services
                     try
                     {
                         string gameDataJson = ExtractGameDataFromJson(response);
-                        
+
                         GamerProgressData updatedProgress = JsonUtility.FromJson<GamerProgressData>(response);
                         this.currentProgress = updatedProgress;
-                        
+
                         if (this.currentProgress != null)
                             this.currentProgress.game_data = gameDataJson;
 
                         if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                             Debug.Log($"Progress updated successfully! New values - Level: {updatedProgress.level}, XP: {updatedProgress.experience}, Gold: {updatedProgress.gold}");
 
+                        Debug.Log("<color=#66CCFF>[GamerProgress] UpdateProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › UpdateProgressCoroutine");
                         onSuccess?.Invoke(updatedProgress);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse update progress response error: {e.Message}";
+                        Debug.LogWarning($"<color=#66CCFF>[GamerProgress] UpdateProgress</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GamerProgress.cs › UpdateProgressCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
-                error => onError?.Invoke(error)
+                error =>
+                {
+                    Debug.LogWarning($"<color=#66CCFF>[GamerProgress] UpdateProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › UpdateProgressCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
             );
         }
 
