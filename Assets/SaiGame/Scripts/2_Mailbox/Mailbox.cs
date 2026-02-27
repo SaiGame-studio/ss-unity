@@ -38,14 +38,14 @@ namespace SaiGame.Services
         protected virtual void RegisterLoginListener()
         {
             if (SaiService.Instance?.SaiAuth == null) return;
-            
+
             SaiService.Instance.SaiAuth.OnLoginSuccess += HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
             if (SaiService.Instance?.SaiAuth == null) return;
-            
+
             SaiService.Instance.SaiAuth.OnLogoutSuccess += HandleLogoutSuccess;
         }
 
@@ -61,17 +61,17 @@ namespace SaiGame.Services
         protected virtual void HandleLoginSuccess(LoginResponse response)
         {
             if (!autoLoadOnLogin) return;
-            
+
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                 Debug.Log("Auto-loading mailbox after successful login...");
-            
+
             GetMessages(
-                onSuccess: mailBox => 
+                onSuccess: mailBox =>
                 {
                     if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                         Debug.Log($"Mailbox auto-loaded: {mailBox.messages.Length} messages, total: {mailBox.total}");
                 },
-                onError: error => 
+                onError: error =>
                 {
                     if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                         Debug.LogWarning($"Auto-load mailbox failed: {error}");
@@ -83,9 +83,9 @@ namespace SaiGame.Services
         {
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                 Debug.Log("[MailBox] Logout successful, clearing mailbox data...");
-            
+
             ClearLocalMailBox();
-            
+
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                 Debug.Log("[MailBox] Mailbox data cleared successfully");
         }
@@ -129,18 +129,21 @@ namespace SaiGame.Services
                             Debug.Log($"Mailbox loaded: {mailBoxResponse.messages.Length} messages, total: {mailBoxResponse.total}");
 
                         OnGetMessagesSuccess?.Invoke(mailBoxResponse);
+                        Debug.Log("<color=#66CCFF>[MailBox] GetMessages</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › GetMessagesCoroutine");
                         onSuccess?.Invoke(mailBoxResponse);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse get messages response error: {e.Message}";
                         OnGetMessagesFailure?.Invoke(errorMsg);
+                        Debug.LogWarning($"<color=#66CCFF>[MailBox] GetMessages</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › GetMessagesCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnGetMessagesFailure?.Invoke(error);
+                    Debug.LogWarning($"<color=#66CCFF>[MailBox] GetMessages</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › GetMessagesCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -175,7 +178,7 @@ namespace SaiGame.Services
                     try
                     {
                         MailboxMessage message = JsonUtility.FromJson<MailboxMessage>(response);
-                        
+
                         // Update the message in our local cache if it exists
                         if (this.currentMailBox != null && this.currentMailBox.messages != null)
                         {
@@ -193,18 +196,21 @@ namespace SaiGame.Services
                             Debug.Log($"Message {messageId} marked as read");
 
                         OnReadMessageSuccess?.Invoke(message);
+                        Debug.Log("<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ReadMessageCoroutine");
                         onSuccess?.Invoke(message);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse read message response error: {e.Message}";
                         OnReadMessageFailure?.Invoke(errorMsg);
+                        Debug.LogWarning($"<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › ReadMessageCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnReadMessageFailure?.Invoke(error);
+                    Debug.LogWarning($"<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › ReadMessageCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -239,7 +245,7 @@ namespace SaiGame.Services
                     try
                     {
                         MailboxMessage message = JsonUtility.FromJson<MailboxMessage>(response);
-                        
+
                         // Update the message in our local cache if it exists
                         if (this.currentMailBox != null && this.currentMailBox.messages != null)
                         {
@@ -257,18 +263,21 @@ namespace SaiGame.Services
                             Debug.Log($"Message {messageId} claimed successfully");
 
                         OnClaimMessageSuccess?.Invoke(message);
+                        Debug.Log("<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ClaimMessageCoroutine");
                         onSuccess?.Invoke(message);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse claim message response error: {e.Message}";
                         OnClaimMessageFailure?.Invoke(errorMsg);
+                        Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › ClaimMessageCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnClaimMessageFailure?.Invoke(error);
+                    Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › ClaimMessageCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -359,6 +368,7 @@ namespace SaiGame.Services
             {
                 MailboxMessage[] result = claimed.ToArray();
                 OnClaimAllMessagesSuccess?.Invoke(result);
+                Debug.Log("<color=#66CCFF>[MailBox] ClaimAllMessages</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ClaimAllMessagesCoroutine");
                 onSuccess?.Invoke(result);
 
                 if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
@@ -368,6 +378,7 @@ namespace SaiGame.Services
             {
                 string errorMsg = lastError ?? "Failed to claim any messages.";
                 OnClaimAllMessagesFailure?.Invoke(errorMsg);
+                Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimAllMessages</color> → <b><color=#FF4444>onError</color></b> callback | Mailbox.cs › ClaimAllMessagesCoroutine | {errorMsg}");
                 onError?.Invoke(errorMsg);
             }
         }
@@ -376,7 +387,7 @@ namespace SaiGame.Services
         {
             Debug.Log("<color=#FF6666><b>[MailBox] ► Clear Mailbox</b></color>", gameObject);
             ClearLocalMailBox();
-            
+
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                 Debug.Log("Mailbox data cleared locally");
         }

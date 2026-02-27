@@ -272,8 +272,7 @@ namespace SaiGame.Services
             if (PlayerPrefs.HasKey(PREF_GAME_ID))
             {
                 this.gameId = this.NormalizeInput(PlayerPrefs.GetString(PREF_GAME_ID));
-                if (this.showDebug)
-                    Debug.Log($"Loaded Game ID from PlayerPrefs: {this.gameId}");
+                Debug.Log($"Loaded Game ID from PlayerPrefs: {this.gameId}");
             }
             else
             {
@@ -286,8 +285,7 @@ namespace SaiGame.Services
             this.gameId = this.NormalizeInput(this.gameId);
             PlayerPrefs.SetString(PREF_GAME_ID, this.gameId);
             PlayerPrefs.Save();
-            if (this.showDebug)
-                Debug.Log($"Saved Game ID to PlayerPrefs: {this.gameId}");
+            Debug.Log($"Saved Game ID to PlayerPrefs: {this.gameId}");
         }
 
         public void SetGameId(string newGameId)
@@ -317,8 +315,7 @@ namespace SaiGame.Services
                 PlayerPrefs.DeleteKey(PREF_GAME_ID);
                 PlayerPrefs.Save();
                 this.gameId = string.Empty;
-                if (this.showDebug)
-                    Debug.Log("Cleared Game ID from PlayerPrefs");
+                Debug.Log("Cleared Game ID from PlayerPrefs");
             }
         }
 

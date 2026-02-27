@@ -227,18 +227,21 @@ namespace SaiGame.Services
                             Debug.Log($"Registration successful! User: {registerResponse.user.username} ({registerResponse.user.email})");
 
                         OnRegisterSuccess?.Invoke(registerResponse);
+                        Debug.Log("<color=#66CCFF>[SaiAuth] Register</color> → <b><color=#00FF88>onSuccess</color></b> callback | SaiAuth.cs › RegisterCoroutine");
                         onSuccess?.Invoke(registerResponse);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse register response error: {e.Message}";
                         OnRegisterFailure?.Invoke(errorMsg);
+                        Debug.LogWarning($"<color=#66CCFF>[SaiAuth] Register</color> → <b><color=#FF4444>onError</color></b> callback (parse) | SaiAuth.cs › RegisterCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnRegisterFailure?.Invoke(error);
+                    Debug.LogWarning($"<color=#66CCFF>[SaiAuth] Register</color> → <b><color=#FF4444>onError</color></b> callback (network) | SaiAuth.cs › RegisterCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -292,18 +295,21 @@ namespace SaiGame.Services
                         StartTokenExpirationCheck();
 
                         OnLoginSuccess?.Invoke(loginResponse);
+                        Debug.Log("<color=#66CCFF>[SaiAuth] Login</color> → <b><color=#00FF88>onSuccess</color></b> callback | SaiAuth.cs › LoginCoroutine");
                         onSuccess?.Invoke(loginResponse);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse login response error: {e.Message}";
                         OnLoginFailure?.Invoke(errorMsg);
+                        Debug.LogWarning($"<color=#66CCFF>[SaiAuth] Login</color> → <b><color=#FF4444>onError</color></b> callback (parse) | SaiAuth.cs › LoginCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnLoginFailure?.Invoke(error);
+                    Debug.LogWarning($"<color=#66CCFF>[SaiAuth] Login</color> → <b><color=#FF4444>onError</color></b> callback (network) | SaiAuth.cs › LoginCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -368,18 +374,21 @@ namespace SaiGame.Services
                         );
 
                         OnRefreshTokenSuccess?.Invoke(loginResponse);
+                        Debug.Log("<color=#66CCFF>[SaiAuth] RefreshToken</color> → <b><color=#00FF88>onSuccess</color></b> callback | SaiAuth.cs › RefreshTokenCoroutine");
                         onSuccess?.Invoke(loginResponse);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse refresh token response error: {e.Message}";
                         OnRefreshTokenFailure?.Invoke(errorMsg);
+                        Debug.LogWarning($"<color=#66CCFF>[SaiAuth] RefreshToken</color> → <b><color=#FF4444>onError</color></b> callback (parse) | SaiAuth.cs › RefreshTokenCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnRefreshTokenFailure?.Invoke(error);
+                    Debug.LogWarning($"<color=#66CCFF>[SaiAuth] RefreshToken</color> → <b><color=#FF4444>onError</color></b> callback (network) | SaiAuth.cs › RefreshTokenCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -472,18 +481,21 @@ namespace SaiGame.Services
                             Debug.Log($"Profile loaded: {userData.username} ({userData.email})");
 
                         OnGetProfileSuccess?.Invoke(userData);
+                        Debug.Log("<color=#66CCFF>[SaiAuth] GetMyProfile</color> → <b><color=#00FF88>onSuccess</color></b> callback | SaiAuth.cs › GetMyProfileCoroutine");
                         onSuccess?.Invoke(userData);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse get profile response error: {e.Message}";
                         OnGetProfileFailure?.Invoke(errorMsg);
+                        Debug.LogWarning($"<color=#66CCFF>[SaiAuth] GetMyProfile</color> → <b><color=#FF4444>onError</color></b> callback (parse) | SaiAuth.cs › GetMyProfileCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnGetProfileFailure?.Invoke(error);
+                    Debug.LogWarning($"<color=#66CCFF>[SaiAuth] GetMyProfile</color> → <b><color=#FF4444>onError</color></b> callback (network) | SaiAuth.cs › GetMyProfileCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
