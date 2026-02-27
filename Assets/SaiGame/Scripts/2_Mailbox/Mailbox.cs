@@ -92,7 +92,8 @@ namespace SaiGame.Services
 
         public void GetMessages(int? limit = null, int? offset = null, System.Action<MailBoxResponse> onSuccess = null, System.Action<string> onError = null)
         {
-            Debug.Log("<color=#00FFFF><b>[MailBox] ► Get Messages</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#00FFFF><b>[MailBox] ► Get Messages</b></color>", gameObject);
             if (SaiService.Instance == null)
             {
                 onError?.Invoke("SaiService not found!");
@@ -151,7 +152,8 @@ namespace SaiGame.Services
 
         public void ReadMessage(string messageId, System.Action<MailboxMessage> onSuccess = null, System.Action<string> onError = null)
         {
-            Debug.Log("<color=#00FF88><b>[MailBox] ► Read Message</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#00FF88><b>[MailBox] ► Read Message</b></color>", gameObject);
             if (SaiService.Instance == null)
             {
                 onError?.Invoke("SaiService not found!");
@@ -218,7 +220,8 @@ namespace SaiGame.Services
 
         public void ClaimMessage(string messageId, System.Action<MailboxMessage> onSuccess = null, System.Action<string> onError = null)
         {
-            Debug.Log("<color=#FFD700><b>[MailBox] ► Claim Message</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#FFD700><b>[MailBox] ► Claim Message</b></color>", gameObject);
             if (SaiService.Instance == null)
             {
                 onError?.Invoke("SaiService not found!");
@@ -285,7 +288,8 @@ namespace SaiGame.Services
 
         public void ClaimAllMessages(System.Action<MailboxMessage[]> onSuccess = null, System.Action<string> onError = null)
         {
-            Debug.Log("<color=#FFD700><b>[MailBox] ► Claim All Messages</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#FFD700><b>[MailBox] ► Claim All Messages</b></color>", gameObject);
             if (SaiService.Instance == null)
             {
                 onError?.Invoke("SaiService not found!");
@@ -318,7 +322,8 @@ namespace SaiGame.Services
                 if (msg.attachments == null || msg.attachments.Length == 0)
                     continue;
 
-                Debug.Log($"[MailBox] Claim message: \"{msg.subject}\" | ID: {msg.id}");
+                if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                    Debug.Log($"[MailBox] Claim message: \"{msg.subject}\" | ID: {msg.id}");
 
                 string gameId = SaiService.Instance.GameId;
                 string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{msg.id}/claim";
@@ -385,7 +390,8 @@ namespace SaiGame.Services
 
         public void ClearMailBox()
         {
-            Debug.Log("<color=#FF6666><b>[MailBox] ► Clear Mailbox</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#FF6666><b>[MailBox] ► Clear Mailbox</b></color>", gameObject);
             ClearLocalMailBox();
 
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)

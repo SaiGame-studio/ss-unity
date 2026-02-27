@@ -42,13 +42,13 @@ namespace SaiGame.Services
         [Header("API Settings")]
         [SerializeField] protected int requestTimeout = 30;
 
-        [SerializeField] protected bool showDebug = true;
         [SerializeField] protected bool showButtonsLog = true;
         [SerializeField] protected bool showCallbackLog = true;
+        [SerializeField] protected bool showDebugLog = true;
 
         public event Action<string> OnTokenRefreshed;
 
-        public bool ShowDebug => showDebug;
+        public bool ShowDebug => showDebugLog;
 
         public bool ShowButtonsLog => showButtonsLog;
 
@@ -311,25 +311,29 @@ namespace SaiGame.Services
 
         public void ManualSaveGameId()
         {
-            Debug.Log("<color=#00FF88><b>[SaiService] ► Save Game ID to PlayerPrefs</b></color>", gameObject);
+            if (this.showButtonsLog)
+                Debug.Log("<color=#00FF88><b>[SaiService] ► Save Game ID to PlayerPrefs</b></color>", gameObject);
             this.SaveGameIdToPlayerPrefs();
         }
 
         public void ManualClearGameId()
         {
-            Debug.Log("<color=#FF6666><b>[SaiService] ► Clear PlayerPrefs</b></color>", gameObject);
+            if (this.showButtonsLog)
+                Debug.Log("<color=#FF6666><b>[SaiService] ► Clear PlayerPrefs</b></color>", gameObject);
             if (PlayerPrefs.HasKey(PREF_GAME_ID))
             {
                 PlayerPrefs.DeleteKey(PREF_GAME_ID);
                 PlayerPrefs.Save();
                 this.gameId = string.Empty;
-                Debug.Log("Cleared Game ID from PlayerPrefs");
+                if (this.showButtonsLog)
+                    Debug.Log("Cleared Game ID from PlayerPrefs");
             }
         }
 
         public void TestConnection(Action<bool> callback = null)
         {
-            Debug.Log("<color=#66CCFF><b>[SaiService] ► Test Connection</b></color>", gameObject);
+            if (this.showButtonsLog)
+                Debug.Log("<color=#66CCFF><b>[SaiService] ► Test Connection</b></color>", gameObject);
             StartCoroutine(TestConnectionCoroutine(callback));
         }
 

@@ -217,7 +217,8 @@ namespace SaiGame.Services
 
         public void CreateProgress(System.Action<GamerProgressData> onSuccess = null, System.Action<string> onError = null)
         {
-            Debug.Log("<color=#00FFFF><b>[GamerProgress] ► Create Progress</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#00FFFF><b>[GamerProgress] ► Create Progress</b></color>", gameObject);
             if (SaiService.Instance == null)
             {
                 onError?.Invoke("SaiService not found!");
@@ -288,7 +289,8 @@ namespace SaiGame.Services
 
         public void GetProgress(System.Action<GamerProgressData> onSuccess = null, System.Action<string> onError = null)
         {
-            Debug.Log("<color=#00FF88><b>[GamerProgress] ► Get Progress</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#00FF88><b>[GamerProgress] ► Get Progress</b></color>", gameObject);
             if (SaiService.Instance == null)
             {
                 onError?.Invoke("SaiService not found!");
@@ -355,7 +357,8 @@ namespace SaiGame.Services
 
         public void UpdateProgress(int experienceDelta, int goldDelta, string newGameData = null, System.Action<GamerProgressData> onSuccess = null, System.Action<string> onError = null)
         {
-            Debug.Log("<color=#FFD700><b>[GamerProgress] ► Update Progress</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#FFD700><b>[GamerProgress] ► Update Progress</b></color>", gameObject);
             if (this.currentProgress == null)
             {
                 onError?.Invoke("No current progress found! Create or get progress first.");
@@ -424,7 +427,8 @@ namespace SaiGame.Services
 
         public void ClearProgress()
         {
-            Debug.Log("<color=#FF6666><b>[GamerProgress] ► Clear Progress</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#FF6666><b>[GamerProgress] ► Clear Progress</b></color>", gameObject);
             if (SaiService.Instance == null)
             {
                 ClearLocalProgress();

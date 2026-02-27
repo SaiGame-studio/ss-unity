@@ -63,9 +63,9 @@ namespace SaiGame.Services
             if (this.showDebugSettings)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showDebug"), new GUIContent("Show Debug"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showButtonsLog"), new GUIContent("Show Buttons Log"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showCallbackLog"), new GUIContent("Show Callback Log"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showDebugLog"), new GUIContent("Show Debug Log"));
                 EditorGUI.indentLevel--;
             }
 

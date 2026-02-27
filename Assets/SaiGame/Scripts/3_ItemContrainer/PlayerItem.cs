@@ -157,7 +157,8 @@ namespace SaiGame.Services
             System.Action<InventoryResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            Debug.Log("<color=#00FFFF><b>[ItemContainer] ► Get Items</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#00FFFF><b>[ItemContainer] ► Get Items</b></color>", gameObject);
 
             if (SaiService.Instance == null)
             {
@@ -228,7 +229,8 @@ namespace SaiGame.Services
         /// </summary>
         public void ClearInventory()
         {
-            Debug.Log("<color=#FF6666><b>[ItemContainer] ► Clear Inventory</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#FF6666><b>[ItemContainer] ► Clear Inventory</b></color>", gameObject);
             this.ClearLocalInventory();
 
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)

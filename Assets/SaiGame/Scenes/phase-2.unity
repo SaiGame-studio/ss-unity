@@ -495,7 +495,9 @@ MonoBehaviour:
   useHttps: 0
   gameId: 0e001bfc-ecb6-4aed-a6c5-109d6c87a1a1
   requestTimeout: 30
-  showDebug: 0
+  showButtonsLog: 0
+  showCallbackLog: 0
+  showDebugLog: 0
 --- !u!1 &6479074096609760935
 GameObject:
   m_ObjectHideFlags: 0
