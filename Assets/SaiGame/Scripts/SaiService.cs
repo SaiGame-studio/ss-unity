@@ -42,12 +42,17 @@ namespace SaiGame.Services
         [Header("API Settings")]
         [SerializeField] protected int requestTimeout = 30;
 
-        [Header("Debug Settings")]
         [SerializeField] protected bool showDebug = true;
+        [SerializeField] protected bool showButtonsLog = true;
+        [SerializeField] protected bool showCallbackLog = true;
 
         public event Action<string> OnTokenRefreshed;
 
         public bool ShowDebug => showDebug;
+
+        public bool ShowButtonsLog => showButtonsLog;
+
+        public bool ShowCallbackLog => showCallbackLog;
 
         public string BaseUrl
         {

@@ -6,6 +6,7 @@ namespace SaiGame.Services
     [CustomEditor(typeof(SaiService))]
     public class SaiServiceEditor : Editor
     {
+        private bool showDebugSettings = true;
         private static readonly string[] SERVER_ENDPOINT_OPTIONS =
         {
             "Local API (HTTP) - local-api.saigame.studio:82",
@@ -54,7 +55,19 @@ namespace SaiGame.Services
             }
 
             EditorGUILayout.Space(5);
-            DrawPropertiesExcluding(this.serializedObject, "m_Script", "serverEndpoint", "domainOption", "port", "useHttps");
+            DrawPropertiesExcluding(this.serializedObject, "m_Script", "serverEndpoint", "domainOption", "port", "useHttps", "showDebug", "showButtonsLog", "showCallbackLog");
+
+            // Debug Settings foldout
+            EditorGUILayout.Space(5);
+            this.showDebugSettings = EditorGUILayout.Foldout(this.showDebugSettings, "Debug Settings", true);
+            if (this.showDebugSettings)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showDebug"), new GUIContent("Show Debug"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showButtonsLog"), new GUIContent("Show Buttons Log"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showCallbackLog"), new GUIContent("Show Callback Log"));
+                EditorGUI.indentLevel--;
+            }
 
             this.serializedObject.ApplyModifiedProperties();
 
