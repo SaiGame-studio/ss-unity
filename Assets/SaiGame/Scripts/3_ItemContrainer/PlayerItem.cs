@@ -86,7 +86,11 @@ namespace SaiGame.Services
 
                     this.OnCategoriesLoaded?.Invoke(categories);
                 },
-                error => Debug.LogWarning($"[ItemContainer] Failed to fetch categories on startup: {error}")
+                error =>
+                {
+                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        Debug.LogWarning($"[ItemContainer] Failed to fetch categories on startup: {error}");
+                }
             ));
         }
 
@@ -157,7 +161,8 @@ namespace SaiGame.Services
             System.Action<InventoryResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            Debug.Log("<color=#00FFFF><b>[ItemContainer] ► Get Items</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#00FFFF><b>[ItemContainer] ► Get Items</b></color>", gameObject);
 
             if (SaiService.Instance == null)
             {
@@ -203,21 +208,24 @@ namespace SaiGame.Services
                             Debug.Log($"[ItemContainer] Inventory loaded: {inventoryResponse.items.Length} items, total: {inventoryResponse.total}");
 
                         this.OnGetItemsSuccess?.Invoke(inventoryResponse);
-                        Debug.Log("<color=#66CCFF>[ItemContainer] GetItems</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemContainer.cs › GetItemsCoroutine");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[ItemContainer] GetItems</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemContainer.cs › GetItemsCoroutine");
                         onSuccess?.Invoke(inventoryResponse);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse get items response error: {e.Message}";
                         this.OnGetItemsFailure?.Invoke(errorMsg);
-                        Debug.LogWarning($"<color=#66CCFF>[ItemContainer] GetItems</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemContainer.cs › GetItemsCoroutine | {errorMsg}");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[ItemContainer] GetItems</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemContainer.cs › GetItemsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     this.OnGetItemsFailure?.Invoke(error);
-                    Debug.LogWarning($"<color=#66CCFF>[ItemContainer] GetItems</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemContainer.cs › GetItemsCoroutine | {error}");
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[ItemContainer] GetItems</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemContainer.cs › GetItemsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -228,7 +236,8 @@ namespace SaiGame.Services
         /// </summary>
         public void ClearInventory()
         {
-            Debug.Log("<color=#FF6666><b>[ItemContainer] ► Clear Inventory</b></color>", gameObject);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#FF6666><b>[ItemContainer] ► Clear Inventory</b></color>", gameObject);
             this.ClearLocalInventory();
 
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)

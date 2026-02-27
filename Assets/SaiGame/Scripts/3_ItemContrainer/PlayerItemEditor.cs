@@ -248,13 +248,15 @@ namespace SaiGame.Services
                     isFetchingCategories = false;
                     this.RebuildDropdownOptions();
                     Repaint();
-                    Debug.Log($"[ItemContainerEditor] Reloaded {categories.Length} categories from server");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[ItemContainerEditor] Reloaded {categories.Length} categories from server");
                 },
                 onError: error =>
                 {
                     isFetchingCategories = false;
                     Repaint();
-                    Debug.LogError($"[ItemContainerEditor] Failed to load categories: {error}");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[ItemContainerEditor] Failed to load categories: {error}");
                 }
             );
         }
@@ -277,11 +279,13 @@ namespace SaiGame.Services
                 category: category,
                 onSuccess: response =>
                 {
-                    Debug.Log($"[ItemContainerEditor] Loaded {response.items.Length} items (total: {response.total})");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[ItemContainerEditor] Loaded {response.items.Length} items (total: {response.total})");
                 },
                 onError: error =>
                 {
-                    Debug.LogError($"[ItemContainerEditor] Failed to load items: {error}");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[ItemContainerEditor] Failed to load items: {error}");
                 }
             );
         }

@@ -21,12 +21,13 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiService : SaiSingleton<SaiService>
     {
-        public const string PACKAGE_VERSION = "0.0.6b1";
+        public const string PACKAGE_VERSION = "0.1.0b1";
         public const string PACKAGE_NAME = "SaiGame Services";
 
         [SerializeField] protected SaiAuth saiAuth;
         [SerializeField] protected GamerProgress gamerProgress;
-        [SerializeField] protected PlayerItem itemContainer;
+        [SerializeField] protected Mailbox mailbox;
+        [SerializeField] protected PlayerItem playerItem;
 
         [Header("Server Configuration")]
         [HideInInspector][SerializeField] protected ServerEndpointOption serverEndpoint = ServerEndpointOption.LocalHttp;
@@ -38,16 +39,22 @@ namespace SaiGame.Services
         [SerializeField] protected string gameId = "";
 
         private const string PREF_GAME_ID = "SaiGame_GameId";
+        private const string PREF_SERVER_ENDPOINT = "SaiGame_ServerEndpoint";
 
         [Header("API Settings")]
         [SerializeField] protected int requestTimeout = 30;
 
-        [Header("Debug Settings")]
-        [SerializeField] protected bool showDebug = true;
+        [SerializeField] protected bool showButtonsLog = true;
+        [SerializeField] protected bool showCallbackLog = true;
+        [SerializeField] protected bool showDebugLog = true;
 
         public event Action<string> OnTokenRefreshed;
 
-        public bool ShowDebug => showDebug;
+        public bool ShowDebug => showDebugLog;
+
+        public bool ShowButtonsLog => showButtonsLog;
+
+        public bool ShowCallbackLog => showCallbackLog;
 
         public string BaseUrl
         {
@@ -76,7 +83,7 @@ namespace SaiGame.Services
 
         public GamerProgress GamerProgress => gamerProgress;
 
-        public PlayerItem ItemContainer => itemContainer;
+        public PlayerItem PlayerItem => playerItem;
 
         public SaiAuth SaiAuth => saiAuth;
 
@@ -249,25 +256,75 @@ namespace SaiGame.Services
         protected override void LoadComponents()
         {
             base.LoadComponents();
-            this.SyncEndpointFromLegacyServerFields();
+            this.LoadServerEndpointFromPlayerPrefs();
             this.SyncLegacyServerFieldsFromEndpoint();
             this.LoadSaiAuth();
-            this.LoadSaiGamerProgress();
+            this.LoadGamerProgress();
+            this.LoadMailbox();
+            this.LoadPlayerItem();
             this.LoadGameIdFromPlayerPrefs();
         }
+
 
         protected virtual void LoadSaiAuth()
         {
             if (this.saiAuth != null) return;
             this.saiAuth = GetComponent<SaiAuth>();
-            Debug.Log(transform.name + ": LoadSaiAuth", gameObject);
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadSaiAuth", gameObject);
         }
 
-        protected virtual void LoadSaiGamerProgress()
+        protected virtual void LoadMailbox()
+        {
+            if (this.mailbox != null) return;
+            this.mailbox = GetComponent<Mailbox>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadMailbox", gameObject);
+        }
+
+        protected virtual void LoadGamerProgress()
         {
             if (this.gamerProgress != null) return;
             this.gamerProgress = GetComponent<GamerProgress>();
-            Debug.Log(transform.name + ": LoadSaiGamerProgress", gameObject);
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadSaiGamerProgress", gameObject);
+        }
+
+        protected virtual void LoadPlayerItem()
+        {
+            if (this.playerItem != null) return;
+            this.playerItem = GetComponent<PlayerItem>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadPlayerItem", gameObject);
+        }
+
+
+
+
+        protected virtual void LoadServerEndpointFromPlayerPrefs()
+        {
+            if (PlayerPrefs.HasKey(PREF_SERVER_ENDPOINT))
+            {
+                this.serverEndpoint = (ServerEndpointOption)PlayerPrefs.GetInt(PREF_SERVER_ENDPOINT);
+                this.SyncLegacyServerFieldsFromEndpoint();
+                if (this.showDebugLog)
+                    Debug.Log($"Loaded Server Endpoint from PlayerPrefs: {this.serverEndpoint}");
+            }
+        }
+
+        protected virtual void SaveServerEndpointToPlayerPrefs()
+        {
+            PlayerPrefs.SetInt(PREF_SERVER_ENDPOINT, (int)this.serverEndpoint);
+            PlayerPrefs.Save();
+            if (this.showDebugLog)
+                Debug.Log($"Saved Server Endpoint to PlayerPrefs: {this.serverEndpoint}");
+        }
+
+        public void ManualSaveServerEndpoint()
+        {
+            if (this.showButtonsLog)
+                Debug.Log("<color=#00FF88><b>[SaiService] ► Save Server Endpoint to PlayerPrefs</b></color>", gameObject);
+            this.SaveServerEndpointToPlayerPrefs();
         }
 
         protected virtual void LoadGameIdFromPlayerPrefs()
@@ -275,7 +332,8 @@ namespace SaiGame.Services
             if (PlayerPrefs.HasKey(PREF_GAME_ID))
             {
                 this.gameId = this.NormalizeInput(PlayerPrefs.GetString(PREF_GAME_ID));
-                Debug.Log($"Loaded Game ID from PlayerPrefs: {this.gameId}");
+                if (this.showDebugLog)
+                    Debug.Log($"Loaded Game ID from PlayerPrefs: {this.gameId}");
             }
             else
             {
@@ -288,7 +346,8 @@ namespace SaiGame.Services
             this.gameId = this.NormalizeInput(this.gameId);
             PlayerPrefs.SetString(PREF_GAME_ID, this.gameId);
             PlayerPrefs.Save();
-            Debug.Log($"Saved Game ID to PlayerPrefs: {this.gameId}");
+            if (this.showDebugLog)
+                Debug.Log($"Saved Game ID to PlayerPrefs: {this.gameId}");
         }
 
         public void SetGameId(string newGameId)
@@ -299,32 +358,42 @@ namespace SaiGame.Services
 
         protected virtual void OnValidate()
         {
-            this.SyncEndpointFromLegacyServerFields();
+            // serverEndpoint is the source of truth; sync legacy fields from it only.
             this.SyncLegacyServerFieldsFromEndpoint();
             this.gameId = this.NormalizeInput(this.gameId);
         }
 
         public void ManualSaveGameId()
         {
-            Debug.Log("<color=#00FF88><b>[SaiService] ► Save Game ID to PlayerPrefs</b></color>", gameObject);
+            if (this.showButtonsLog)
+                Debug.Log("<color=#00FF88><b>[SaiService] ► Save Game ID to PlayerPrefs</b></color>", gameObject);
             this.SaveGameIdToPlayerPrefs();
         }
 
         public void ManualClearGameId()
         {
-            Debug.Log("<color=#FF6666><b>[SaiService] ► Clear PlayerPrefs</b></color>", gameObject);
+            if (this.showButtonsLog)
+                Debug.Log("<color=#FF6666><b>[SaiService] ► Clear PlayerPrefs</b></color>", gameObject);
             if (PlayerPrefs.HasKey(PREF_GAME_ID))
             {
                 PlayerPrefs.DeleteKey(PREF_GAME_ID);
-                PlayerPrefs.Save();
                 this.gameId = string.Empty;
-                Debug.Log("Cleared Game ID from PlayerPrefs");
+                if (this.showButtonsLog)
+                    Debug.Log("Cleared Game ID from PlayerPrefs");
             }
+            if (PlayerPrefs.HasKey(PREF_SERVER_ENDPOINT))
+            {
+                PlayerPrefs.DeleteKey(PREF_SERVER_ENDPOINT);
+                if (this.showButtonsLog)
+                    Debug.Log("Cleared Server Endpoint from PlayerPrefs");
+            }
+            PlayerPrefs.Save();
         }
 
         public void TestConnection(Action<bool> callback = null)
         {
-            Debug.Log("<color=#66CCFF><b>[SaiService] ► Test Connection</b></color>", gameObject);
+            if (this.showButtonsLog)
+                Debug.Log("<color=#66CCFF><b>[SaiService] ► Test Connection</b></color>", gameObject);
             StartCoroutine(TestConnectionCoroutine(callback));
         }
 

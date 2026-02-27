@@ -20,8 +20,8 @@ namespace SaiGame.Services
             if (GUILayout.Button("Create Progress", GUILayout.Height(30)))
             {
                 gamerProgress.CreateProgress(
-                    progress => Debug.Log($"Progress created! ID: {progress.id}, Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}"),
-                    error => Debug.LogError($"Create progress failed: {error}")
+                    progress => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Progress created! ID: {progress.id}, Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}"); },
+                    error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Create progress failed: {error}"); }
                 );
             }
             GUI.backgroundColor = Color.white;
@@ -30,8 +30,8 @@ namespace SaiGame.Services
             if (GUILayout.Button("Get Progress", GUILayout.Height(30)))
             {
                 gamerProgress.GetProgress(
-                    progress => Debug.Log($"Progress retrieved! Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}, Game Data: {progress.game_data}"),
-                    error => Debug.LogError($"Get progress failed: {error}")
+                    progress => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Progress retrieved! Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}, Game Data: {progress.game_data}"); },
+                    error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Get progress failed: {error}"); }
                 );
             }
             GUI.backgroundColor = Color.white;
@@ -53,13 +53,14 @@ namespace SaiGame.Services
                         expDelta,
                         goldDelta,
                         null,
-                        progress => Debug.Log($"Progress updated! Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}"),
-                        error => Debug.LogError($"Update progress failed: {error}")
+                        progress => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Progress updated! Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}"); },
+                        error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Update progress failed: {error}"); }
                     );
                 }
                 else
                 {
-                    Debug.LogWarning("No progress found! Create progress first.");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogWarning("[Editor] No progress found! Create progress first.");
                 }
             }
             GUI.backgroundColor = Color.white;

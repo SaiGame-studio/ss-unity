@@ -107,7 +107,8 @@ namespace SaiGame.Services
                 if (GUILayout.Button("Unread Count", GUILayout.Height(25)))
                 {
                     var unread = mailBox.GetUnreadMessages();
-                    Debug.Log($"[MailBoxEditor] You have {unread.Length} unread messages");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[MailBoxEditor] You have {unread.Length} unread messages");
                 }
                 GUI.backgroundColor = Color.white;
 
@@ -115,7 +116,8 @@ namespace SaiGame.Services
                 if (GUILayout.Button("Unclaimed Count", GUILayout.Height(25)))
                 {
                     var unclaimed = mailBox.GetUnclaimedMessages();
-                    Debug.Log($"[MailBoxEditor] You have {unclaimed.Length} unclaimed messages");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[MailBoxEditor] You have {unclaimed.Length} unclaimed messages");
                 }
                 GUI.backgroundColor = Color.white;
                 EditorGUILayout.EndHorizontal();
@@ -199,11 +201,13 @@ namespace SaiGame.Services
             mailBox.GetMessages(
                 onSuccess: response =>
                 {
-                    Debug.Log($"[MailBoxEditor] Loaded {response.messages.Length} messages");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[MailBoxEditor] Loaded {response.messages.Length} messages");
                 },
                 onError: error =>
                 {
-                    Debug.LogError($"[MailBoxEditor] Failed to load messages: {error}");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[MailBoxEditor] Failed to load messages: {error}");
                 }
             );
         }
@@ -232,12 +236,14 @@ namespace SaiGame.Services
                 messageId,
                 onSuccess: result =>
                 {
-                    Debug.Log($"[MailBoxEditor] Message {result.id} claimed successfully");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[MailBoxEditor] Message {result.id} claimed successfully");
                     claimMessageId = "";
                 },
                 onError: error =>
                 {
-                    Debug.LogError($"[MailBoxEditor] Claim failed: {error}");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[MailBoxEditor] Claim failed: {error}");
                 }
             );
         }
@@ -259,11 +265,13 @@ namespace SaiGame.Services
             mailBox.ClaimAllMessages(
                 onSuccess: results =>
                 {
-                    Debug.Log($"[MailBoxEditor] Claimed {results.Length} messages successfully");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[MailBoxEditor] Claimed {results.Length} messages successfully");
                 },
                 onError: error =>
                 {
-                    Debug.LogError($"[MailBoxEditor] Claim all failed: {error}");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[MailBoxEditor] Claim all failed: {error}");
                 }
             );
         }
