@@ -490,6 +490,7 @@ MonoBehaviour:
   gamerProgress: {fileID: 308465430193499616}
   mailbox: {fileID: 7258247919315741313}
   playerItem: {fileID: 7258247919315741314}
+  playerContainer: {fileID: 7258247919315741315}
   serverEndpoint: 0
   domainOption: 0
   port: 82
@@ -513,6 +514,7 @@ GameObject:
   - component: {fileID: 308465430193499616}
   - component: {fileID: 7258247919315741313}
   - component: {fileID: 7258247919315741314}
+  - component: {fileID: 7258247919315741315}
   m_Layer: 0
   m_Name: SaiService
   m_TagString: Untagged
@@ -593,6 +595,26 @@ MonoBehaviour:
   itemLimit: 50
   itemOffset: 0
   categoryFilter: 
+--- !u!114 &7258247919315741315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6479074096609760935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6db983f2c2c1aa41811cf2f9bb125c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerContainer
+  autoLoadOnLogin: 0
+  currentContainers:
+    containers: []
+    has_more: 0
+    limit: 0
+    offset: 0
+  containerLimit: 50
+  containerOffset: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

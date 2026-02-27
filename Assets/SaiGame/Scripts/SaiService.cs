@@ -28,6 +28,7 @@ namespace SaiGame.Services
         [SerializeField] protected GamerProgress gamerProgress;
         [SerializeField] protected Mailbox mailbox;
         [SerializeField] protected PlayerItem playerItem;
+        [SerializeField] protected PlayerContainer playerContainer;
 
         [Header("Server Configuration")]
         [HideInInspector][SerializeField] protected ServerEndpointOption serverEndpoint = ServerEndpointOption.LocalHttp;
@@ -84,6 +85,8 @@ namespace SaiGame.Services
         public GamerProgress GamerProgress => gamerProgress;
 
         public PlayerItem PlayerItem => playerItem;
+
+        public PlayerContainer PlayerContainer => playerContainer;
 
         public SaiAuth SaiAuth => saiAuth;
 
@@ -262,6 +265,7 @@ namespace SaiGame.Services
             this.LoadGamerProgress();
             this.LoadMailbox();
             this.LoadPlayerItem();
+            this.LoadPlayerContainer();
             this.LoadGameIdFromPlayerPrefs();
         }
 
@@ -296,6 +300,14 @@ namespace SaiGame.Services
             this.playerItem = GetComponent<PlayerItem>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadPlayerItem", gameObject);
+        }
+
+        protected virtual void LoadPlayerContainer()
+        {
+            if (this.playerContainer != null) return;
+            this.playerContainer = GetComponent<PlayerContainer>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadPlayerContainer", gameObject);
         }
 
 
