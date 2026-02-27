@@ -181,6 +181,26 @@ namespace SaiGame.Services
                 }
             }
 
+            bool isClaimed = !string.IsNullOrEmpty(message.claimed_at);
+            bool isRead = !string.IsNullOrEmpty(message.read_at);
+
+            EditorGUILayout.BeginHorizontal();
+            GUI.enabled = !isClaimed;
+            GUI.backgroundColor = isClaimed ? Color.gray : new Color(1f, 0.6f, 0f);
+            if (GUILayout.Button(isClaimed ? "Claimed" : "Claim", GUILayout.Height(24)))
+            {
+                ClaimSpecificMessage(message.id);
+            }
+            GUI.enabled = !isRead;
+            GUI.backgroundColor = isRead ? Color.gray : new Color(0.4f, 0.8f, 1f);
+            if (GUILayout.Button(isRead ? "Read" : "Read", GUILayout.Height(24)))
+            {
+                ReadSpecificMessage(message.id);
+            }
+            GUI.enabled = true;
+            GUI.backgroundColor = Color.white;
+            EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.EndVertical();
         }
 
@@ -272,6 +292,64 @@ namespace SaiGame.Services
                 {
                     if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
                         Debug.LogError($"[MailBoxEditor] Claim all failed: {error}");
+                }
+            );
+        }
+
+        private void ClaimSpecificMessage(string messageId)
+        {
+            if (SaiService.Instance == null)
+            {
+                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
+                return;
+            }
+
+            mailBox.ClaimMessage(
+                messageId,
+                onSuccess: result =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[MailBoxEditor] Message {result.id} claimed successfully");
+                },
+                onError: error =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[MailBoxEditor] Claim failed: {error}");
+                }
+            );
+        }
+
+        private void ReadSpecificMessage(string messageId)
+        {
+            if (SaiService.Instance == null)
+            {
+                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
+                return;
+            }
+
+            mailBox.ReadMessage(
+                messageId,
+                onSuccess: result =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[MailBoxEditor] Message {result.id} marked as read");
+                },
+                onError: error =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[MailBoxEditor] Read failed: {error}");
                 }
             );
         }

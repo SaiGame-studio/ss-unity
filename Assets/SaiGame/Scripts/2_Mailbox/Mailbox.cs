@@ -182,10 +182,10 @@ namespace SaiGame.Services
                 {
                     try
                     {
-                        MailboxMessage message = JsonUtility.FromJson<MailboxMessage>(response);
+                        MailboxMessage message = this.ParseMailboxMessage(response);
 
                         // Update the message in our local cache if it exists
-                        if (this.currentMailBox != null && this.currentMailBox.messages != null)
+                        if (message != null && !string.IsNullOrEmpty(message.id) && this.currentMailBox != null && this.currentMailBox.messages != null)
                         {
                             for (int i = 0; i < this.currentMailBox.messages.Length; i++)
                             {
@@ -253,28 +253,29 @@ namespace SaiGame.Services
                 {
                     try
                     {
-                        MailboxMessage message = JsonUtility.FromJson<MailboxMessage>(response);
+                        ClaimMessageResponse parsed = JsonUtility.FromJson<ClaimMessageResponse>(response);
 
-                        // Update the message in our local cache if it exists
+                        // API returns rewards, not the updated message — update claimed_at locally
                         if (this.currentMailBox != null && this.currentMailBox.messages != null)
                         {
                             for (int i = 0; i < this.currentMailBox.messages.Length; i++)
                             {
                                 if (this.currentMailBox.messages[i].id == messageId)
                                 {
-                                    this.currentMailBox.messages[i] = message;
+                                    this.currentMailBox.messages[i].claimed_at = DateTime.UtcNow.ToString("o");
                                     break;
                                 }
                             }
                         }
 
+                        MailboxMessage cached = this.GetMessageById(messageId);
                         if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                             Debug.Log($"Message {messageId} claimed successfully");
 
-                        OnClaimMessageSuccess?.Invoke(message);
+                        OnClaimMessageSuccess?.Invoke(cached);
                         if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ClaimMessageCoroutine");
-                        onSuccess?.Invoke(message);
+                        onSuccess?.Invoke(cached);
                     }
                     catch (System.Exception e)
                     {
@@ -343,24 +344,24 @@ namespace SaiGame.Services
                     {
                         try
                         {
-                            MailboxMessage updated = JsonUtility.FromJson<MailboxMessage>(response);
+                            JsonUtility.FromJson<ClaimMessageResponse>(response);
 
+                            // API returns rewards — update claimed_at locally
                             if (this.currentMailBox != null && this.currentMailBox.messages != null)
                             {
                                 for (int i = 0; i < this.currentMailBox.messages.Length; i++)
                                 {
-                                    if (this.currentMailBox.messages[i].id == updated.id)
+                                    if (this.currentMailBox.messages[i].id == msg.id)
                                     {
-                                        this.currentMailBox.messages[i] = updated;
+                                        this.currentMailBox.messages[i].claimed_at = DateTime.UtcNow.ToString("o");
+                                        claimed.Add(this.currentMailBox.messages[i]);
                                         break;
                                     }
                                 }
                             }
 
-                            claimed.Add(updated);
-
                             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                                Debug.Log($"Message {updated.id} claimed successfully");
+                                Debug.Log($"Message {msg.id} claimed successfully");
                         }
                         catch (System.Exception e)
                         {
@@ -448,6 +449,22 @@ namespace SaiGame.Services
                 if (message.id == messageId)
                     return message;
             }
+
+            return null;
+        }
+
+        // Tries to parse a MailboxMessage from a response that may be a wrapper object or a direct message.
+        private MailboxMessage ParseMailboxMessage(string json)
+        {
+            // Try wrapped format first: { "message": {...}, "message_text": "..." }
+            ReadMessageResponse wrapped = JsonUtility.FromJson<ReadMessageResponse>(json);
+            if (wrapped != null && wrapped.message != null && !string.IsNullOrEmpty(wrapped.message.id))
+                return wrapped.message;
+
+            // Fall back to direct MailboxMessage format
+            MailboxMessage direct = JsonUtility.FromJson<MailboxMessage>(json);
+            if (direct != null && !string.IsNullOrEmpty(direct.id))
+                return direct;
 
             return null;
         }
