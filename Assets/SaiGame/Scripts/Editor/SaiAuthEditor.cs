@@ -6,9 +6,27 @@ namespace SaiGame.Services
     [CustomEditor(typeof(SaiAuth))]
     public class SaiAuthEditor : Editor
     {
-        private bool showAutoRefreshSettings = true;
-        private bool showLoginInputs = true;
-        private bool showRegisterInputs = true;
+        private const string PREF_AUTO_REFRESH = "SaiAuthEditor.showAutoRefreshSettings";
+        private const string PREF_LOGIN_INPUTS = "SaiAuthEditor.showLoginInputs";
+        private const string PREF_REGISTER_INPUTS = "SaiAuthEditor.showRegisterInputs";
+
+        private bool showAutoRefreshSettings
+        {
+            get => EditorPrefs.GetBool(PREF_AUTO_REFRESH, true);
+            set => EditorPrefs.SetBool(PREF_AUTO_REFRESH, value);
+        }
+
+        private bool showLoginInputs
+        {
+            get => EditorPrefs.GetBool(PREF_LOGIN_INPUTS, true);
+            set => EditorPrefs.SetBool(PREF_LOGIN_INPUTS, value);
+        }
+
+        private bool showRegisterInputs
+        {
+            get => EditorPrefs.GetBool(PREF_REGISTER_INPUTS, true);
+            set => EditorPrefs.SetBool(PREF_REGISTER_INPUTS, value);
+        }
 
         public override void OnInspectorGUI()
         {
@@ -27,7 +45,8 @@ namespace SaiGame.Services
             EditorGUILayout.Space();
 
             // Auto Refresh Settings (collapsible)
-            this.showAutoRefreshSettings = EditorGUILayout.Foldout(this.showAutoRefreshSettings, "Auto Refresh Settings", true);
+            bool autoRefresh = EditorGUILayout.Foldout(this.showAutoRefreshSettings, "Auto Refresh Settings", true);
+            if (autoRefresh != this.showAutoRefreshSettings) this.showAutoRefreshSettings = autoRefresh;
             if (this.showAutoRefreshSettings)
             {
                 EditorGUI.indentLevel++;
@@ -39,7 +58,8 @@ namespace SaiGame.Services
             EditorGUILayout.Space();
 
             // Login Inputs (collapsible)
-            this.showLoginInputs = EditorGUILayout.Foldout(this.showLoginInputs, "Login Inputs", true);
+            bool loginInputs = EditorGUILayout.Foldout(this.showLoginInputs, "Login Inputs", true);
+            if (loginInputs != this.showLoginInputs) this.showLoginInputs = loginInputs;
             if (this.showLoginInputs)
             {
                 EditorGUI.indentLevel++;
@@ -53,7 +73,8 @@ namespace SaiGame.Services
             EditorGUILayout.Space();
 
             // Register Inputs (collapsible)
-            this.showRegisterInputs = EditorGUILayout.Foldout(this.showRegisterInputs, "Register Inputs", true);
+            bool registerInputs = EditorGUILayout.Foldout(this.showRegisterInputs, "Register Inputs", true);
+            if (registerInputs != this.showRegisterInputs) this.showRegisterInputs = registerInputs;
             if (this.showRegisterInputs)
             {
                 EditorGUI.indentLevel++;
