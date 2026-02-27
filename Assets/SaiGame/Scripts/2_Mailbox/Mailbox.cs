@@ -14,6 +14,8 @@ namespace SaiGame.Services
         public event Action<string> OnReadMessageFailure;
         public event Action<MailboxMessage> OnClaimMessageSuccess;
         public event Action<string> OnClaimMessageFailure;
+        public event Action<MailboxMessage[]> OnClaimAllMessagesSuccess;
+        public event Action<string> OnClaimAllMessagesFailure;
 
         [Header("Auto Load Settings")]
         [SerializeField] protected bool autoLoadOnLogin = false;
@@ -179,7 +181,7 @@ namespace SaiGame.Services
                         {
                             for (int i = 0; i < this.currentMailBox.messages.Length; i++)
                             {
-                                if (this.currentMailBox.messages[i].ID == messageId)
+                                if (this.currentMailBox.messages[i].id == messageId)
                                 {
                                     this.currentMailBox.messages[i] = message;
                                     break;
@@ -243,7 +245,7 @@ namespace SaiGame.Services
                         {
                             for (int i = 0; i < this.currentMailBox.messages.Length; i++)
                             {
-                                if (this.currentMailBox.messages[i].ID == messageId)
+                                if (this.currentMailBox.messages[i].id == messageId)
                                 {
                                     this.currentMailBox.messages[i] = message;
                                     break;
@@ -270,6 +272,104 @@ namespace SaiGame.Services
                     onError?.Invoke(error);
                 }
             );
+        }
+
+        public void ClaimAllMessages(System.Action<MailboxMessage[]> onSuccess = null, System.Action<string> onError = null)
+        {
+            Debug.Log("<color=#FFD700><b>[MailBox] ► Claim All Messages</b></color>", gameObject);
+            if (SaiService.Instance == null)
+            {
+                onError?.Invoke("SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            MailboxMessage[] unclaimed = this.GetUnclaimedMessages();
+            if (unclaimed == null || unclaimed.Length == 0)
+            {
+                onError?.Invoke("No unclaimed messages found.");
+                return;
+            }
+
+            StartCoroutine(ClaimAllMessagesCoroutine(unclaimed, onSuccess, onError));
+        }
+
+        private System.Collections.IEnumerator ClaimAllMessagesCoroutine(MailboxMessage[] unclaimed, System.Action<MailboxMessage[]> onSuccess, System.Action<string> onError)
+        {
+            var claimed = new System.Collections.Generic.List<MailboxMessage>();
+            string lastError = null;
+
+            foreach (MailboxMessage msg in unclaimed)
+            {
+                if (msg.attachments == null || msg.attachments.Length == 0)
+                    continue;
+
+                Debug.Log($"[MailBox] Claim message: \"{msg.subject}\" | ID: {msg.id}");
+
+                string gameId = SaiService.Instance.GameId;
+                string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{msg.id}/claim";
+                bool done = false;
+
+                yield return SaiService.Instance.PostRequest(endpoint, "{}",
+                    response =>
+                    {
+                        try
+                        {
+                            MailboxMessage updated = JsonUtility.FromJson<MailboxMessage>(response);
+
+                            if (this.currentMailBox != null && this.currentMailBox.messages != null)
+                            {
+                                for (int i = 0; i < this.currentMailBox.messages.Length; i++)
+                                {
+                                    if (this.currentMailBox.messages[i].id == updated.id)
+                                    {
+                                        this.currentMailBox.messages[i] = updated;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            claimed.Add(updated);
+
+                            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                                Debug.Log($"Message {updated.id} claimed successfully");
+                        }
+                        catch (System.Exception e)
+                        {
+                            lastError = $"Parse claim message response error: {e.Message}";
+                        }
+                        done = true;
+                    },
+                    error =>
+                    {
+                        lastError = error;
+                        done = true;
+                    }
+                );
+
+                yield return new WaitUntil(() => done);
+            }
+
+            if (claimed.Count > 0)
+            {
+                MailboxMessage[] result = claimed.ToArray();
+                OnClaimAllMessagesSuccess?.Invoke(result);
+                onSuccess?.Invoke(result);
+
+                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    Debug.Log($"[MailBox] Claimed {result.Length}/{unclaimed.Length} messages");
+            }
+            else
+            {
+                string errorMsg = lastError ?? "Failed to claim any messages.";
+                OnClaimAllMessagesFailure?.Invoke(errorMsg);
+                onError?.Invoke(errorMsg);
+            }
         }
 
         public void ClearMailBox()
@@ -317,7 +417,7 @@ namespace SaiGame.Services
 
             foreach (var message in this.currentMailBox.messages)
             {
-                if (message.ID == messageId)
+                if (message.id == messageId)
                     return message;
             }
 
@@ -332,7 +432,7 @@ namespace SaiGame.Services
             var unreadMessages = new System.Collections.Generic.List<MailboxMessage>();
             foreach (var message in this.currentMailBox.messages)
             {
-                if (message.Status == "unread")
+                if (message.status == "unread")
                     unreadMessages.Add(message);
             }
 
@@ -347,7 +447,7 @@ namespace SaiGame.Services
             var unclaimedMessages = new System.Collections.Generic.List<MailboxMessage>();
             foreach (var message in this.currentMailBox.messages)
             {
-                if (message.Status == "unread" || message.Status == "read")
+                if (message.status == "unread" || message.status == "read")
                     unclaimedMessages.Add(message);
             }
 

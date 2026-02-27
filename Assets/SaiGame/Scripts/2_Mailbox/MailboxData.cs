@@ -8,17 +8,17 @@ namespace SaiGame.Services
     [Serializable]
     public class MailboxMessage
     {
-        public string ID;
-        public string SenderID;
-        public string Subject;
-        public string Body;
-        public string MessageType;
-        public string Status;
-        public MailBoxAttachment[] Attachments;
-        public string ExpiresAt;
-        public string ReadAt;
-        public string ClaimedAt;
-        public string CreatedAt;
+        public string id;
+        public string sender_id;
+        public string subject;
+        public string body;
+        public string message_type;
+        public string status;
+        public MailBoxAttachment[] attachments;
+        public string expires_at;
+        public string read_at;
+        public string claimed_at;
+        public string created_at;
     }
 
     /// <summary>
@@ -27,11 +27,9 @@ namespace SaiGame.Services
     [Serializable]
     public class MailBoxAttachment
     {
-        public string AttachmentType;
-        public string ItemDefinitionID;
-        public int Quantity;
-        public string ItemName;
-        public int CoinAmount;
+        public string type;
+        public string definition_id;
+        public int quantity;
     }
 
     /// <summary>

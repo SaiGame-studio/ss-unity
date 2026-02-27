@@ -18,6 +18,7 @@ namespace SaiGame.Services
         private bool showCurrentMailBox = true;
         private bool showMessageList = true;
         private bool showUtilityButtons = true;
+        private string claimMessageId = "";
 
         private void OnEnable()
         {
@@ -52,15 +53,13 @@ namespace SaiGame.Services
             if (showCurrentMailBox)
             {
                 EditorGUI.indentLevel++;
-                
-                EditorGUILayout.PropertyField(currentMailBox);
-                
+
                 if (mailBox.CurrentMailBox != null)
                 {
                     EditorGUILayout.LabelField("Summary", EditorStyles.boldLabel);
                     EditorGUILayout.LabelField($"Total Messages: {mailBox.CurrentMailBox.total}");
                     EditorGUILayout.LabelField($"Loaded Messages: {mailBox.CurrentMailBox.messages?.Length ?? 0}");
-                    
+
                     if (mailBox.CurrentMailBox.messages != null && mailBox.CurrentMailBox.messages.Length > 0)
                     {
                         showMessageList = EditorGUILayout.Foldout(showMessageList, "Message List", true);
@@ -75,7 +74,7 @@ namespace SaiGame.Services
                         }
                     }
                 }
-                
+
                 EditorGUI.indentLevel--;
             }
 
@@ -103,25 +102,50 @@ namespace SaiGame.Services
                 GUI.backgroundColor = Color.white;
                 EditorGUILayout.EndHorizontal();
 
-                EditorGUILayout.Space(5);
-
+                EditorGUILayout.BeginHorizontal();
                 GUI.backgroundColor = Color.yellow;
-                if (GUILayout.Button("Get Unread Messages Count", GUILayout.Height(25)))
+                if (GUILayout.Button("Unread Count", GUILayout.Height(25)))
                 {
                     var unread = mailBox.GetUnreadMessages();
                     Debug.Log($"[MailBoxEditor] You have {unread.Length} unread messages");
                 }
                 GUI.backgroundColor = Color.white;
 
-                EditorGUILayout.Space(5);
-
                 GUI.backgroundColor = Color.magenta;
-                if (GUILayout.Button("Get Unclaimed Messages Count", GUILayout.Height(25)))
+                if (GUILayout.Button("Unclaimed Count", GUILayout.Height(25)))
                 {
                     var unclaimed = mailBox.GetUnclaimedMessages();
                     Debug.Log($"[MailBoxEditor] You have {unclaimed.Length} unclaimed messages");
                 }
                 GUI.backgroundColor = Color.white;
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.BeginHorizontal();
+                GUIStyle placeholderStyle = new GUIStyle(EditorStyles.textField);
+                placeholderStyle.normal.textColor = Color.gray;
+                if (string.IsNullOrEmpty(claimMessageId))
+                {
+                    string input = EditorGUILayout.TextField("message id", placeholderStyle, GUILayout.Height(30));
+                    if (input != "message id")
+                        claimMessageId = input;
+                }
+                else
+                {
+                    claimMessageId = EditorGUILayout.TextField(claimMessageId, GUILayout.Height(30));
+                }
+                GUI.backgroundColor = new Color(1f, 0.6f, 0f);
+                if (GUILayout.Button("Claim Message", GUILayout.Height(30)))
+                {
+                    ClaimSingleMessage(claimMessageId);
+                }
+                GUI.backgroundColor = new Color(1f, 0.84f, 0f);
+
+                if (GUILayout.Button("Claim All", GUILayout.Height(30)))
+                {
+                    ClaimAllMessages();
+                }
+                GUI.backgroundColor = Color.white;
+                EditorGUILayout.EndHorizontal();
 
                 EditorGUI.indentLevel--;
             }
@@ -136,25 +160,25 @@ namespace SaiGame.Services
         private void DrawMessageSummary(MailboxMessage message)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField($"ID: {message.ID}", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField($"Subject: {message.Subject}");
-            EditorGUILayout.LabelField($"Status: {message.Status}");
-            EditorGUILayout.LabelField($"Type: {message.MessageType}");
-            EditorGUILayout.LabelField($"Created: {message.CreatedAt}");
-            if (!string.IsNullOrEmpty(message.ReadAt))
-                EditorGUILayout.LabelField($"Read: {message.ReadAt}");
-            if (!string.IsNullOrEmpty(message.ClaimedAt))
-                EditorGUILayout.LabelField($"Claimed: {message.ClaimedAt}");
-            
-            if (message.Attachments != null && message.Attachments.Length > 0)
+            EditorGUILayout.LabelField($"ID: {message.id}", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField($"Subject: {message.subject}");
+            EditorGUILayout.LabelField($"Status: {message.status}");
+            EditorGUILayout.LabelField($"Type: {message.message_type}");
+            EditorGUILayout.LabelField($"Created: {message.created_at}");
+            if (!string.IsNullOrEmpty(message.read_at))
+                EditorGUILayout.LabelField($"Read: {message.read_at}");
+            if (!string.IsNullOrEmpty(message.claimed_at))
+                EditorGUILayout.LabelField($"Claimed: {message.claimed_at}");
+
+            if (message.attachments != null && message.attachments.Length > 0)
             {
-                EditorGUILayout.LabelField($"Attachments: {message.Attachments.Length}");
-                foreach (var attachment in message.Attachments)
+                EditorGUILayout.LabelField($"Attachments: {message.attachments.Length}");
+                foreach (var attachment in message.attachments)
                 {
-                    EditorGUILayout.LabelField($"  - {attachment.ItemName} x{attachment.Quantity} (Coins: {attachment.CoinAmount})");
+                    EditorGUILayout.LabelField($"  - {attachment.definition_id} x{attachment.quantity}");
                 }
             }
-            
+
             EditorGUILayout.EndVertical();
         }
 
@@ -180,6 +204,66 @@ namespace SaiGame.Services
                 onError: error =>
                 {
                     Debug.LogError($"[MailBoxEditor] Failed to load messages: {error}");
+                }
+            );
+        }
+
+        private void ClaimSingleMessage(string messageId)
+        {
+            if (string.IsNullOrEmpty(messageId))
+            {
+                Debug.LogWarning("[MailBoxEditor] Please enter a valid message ID.");
+                return;
+            }
+
+            if (SaiService.Instance == null)
+            {
+                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
+                return;
+            }
+
+            mailBox.ClaimMessage(
+                messageId,
+                onSuccess: result =>
+                {
+                    Debug.Log($"[MailBoxEditor] Message {result.id} claimed successfully");
+                    claimMessageId = "";
+                },
+                onError: error =>
+                {
+                    Debug.LogError($"[MailBoxEditor] Claim failed: {error}");
+                }
+            );
+        }
+
+        private void ClaimAllMessages()
+        {
+            if (SaiService.Instance == null)
+            {
+                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
+                return;
+            }
+
+            mailBox.ClaimAllMessages(
+                onSuccess: results =>
+                {
+                    Debug.Log($"[MailBoxEditor] Claimed {results.Length} messages successfully");
+                },
+                onError: error =>
+                {
+                    Debug.LogError($"[MailBoxEditor] Claim all failed: {error}");
                 }
             );
         }
