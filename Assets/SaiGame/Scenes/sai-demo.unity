@@ -488,16 +488,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiService
   saiAuth: {fileID: 7258247919315741312}
   gamerProgress: {fileID: 308465430193499616}
-  itemContainer: {fileID: 0}
+  mailbox: {fileID: 7258247919315741313}
+  playerItem: {fileID: 7258247919315741314}
   serverEndpoint: 0
   domainOption: 0
   port: 82
   useHttps: 0
-  gameId: 0e001bfc-ecb6-4aed-a6c5-109d6c87a1a1
+  gameId: 1a625a14-d4ef-42b9-8070-604e7c1e350a
   requestTimeout: 30
-  showButtonsLog: 0
-  showCallbackLog: 0
-  showDebugLog: 0
+  showButtonsLog: 1
+  showCallbackLog: 1
+  showDebugLog: 1
 --- !u!1 &6479074096609760935
 GameObject:
   m_ObjectHideFlags: 0
@@ -513,7 +514,7 @@ GameObject:
   - component: {fileID: 7258247919315741313}
   - component: {fileID: 7258247919315741314}
   m_Layer: 0
-  m_Name: SaiServiceP2
+  m_Name: SaiService
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

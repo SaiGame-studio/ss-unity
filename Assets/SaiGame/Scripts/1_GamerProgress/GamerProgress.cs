@@ -267,21 +267,24 @@ namespace SaiGame.Services
                             this.currentProgress.game_data = gameDataJson;
 
                         OnCreateProgressSuccess?.Invoke(progressResponse.data);
-                        Debug.Log("<color=#66CCFF>[GamerProgress] CreateProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › CreateProgressCoroutine");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[GamerProgress] CreateProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › CreateProgressCoroutine");
                         onSuccess?.Invoke(progressResponse.data);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse create progress response error: {e.Message}";
                         OnCreateProgressFailure?.Invoke(errorMsg);
-                        Debug.LogWarning($"<color=#66CCFF>[GamerProgress] CreateProgress</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GamerProgress.cs › CreateProgressCoroutine | {errorMsg}");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[GamerProgress] CreateProgress</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GamerProgress.cs › CreateProgressCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnCreateProgressFailure?.Invoke(error);
-                    Debug.LogWarning($"<color=#66CCFF>[GamerProgress] CreateProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › CreateProgressCoroutine | {error}");
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[GamerProgress] CreateProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › CreateProgressCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -335,21 +338,24 @@ namespace SaiGame.Services
                             Debug.Log($"Progress loaded: Level {progress.level}, XP {progress.experience}, Gold {progress.gold}, Game Data: {progress.game_data}");
 
                         OnGetProgressSuccess?.Invoke(progress);
-                        Debug.Log("<color=#66CCFF>[GamerProgress] GetProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › GetProgressCoroutine");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[GamerProgress] GetProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › GetProgressCoroutine");
                         onSuccess?.Invoke(progress);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse get progress response error: {e.Message}";
                         OnGetProgressFailure?.Invoke(errorMsg);
-                        Debug.LogWarning($"<color=#66CCFF>[GamerProgress] GetProgress</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GamerProgress.cs › GetProgressCoroutine | {errorMsg}");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[GamerProgress] GetProgress</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GamerProgress.cs › GetProgressCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnGetProgressFailure?.Invoke(error);
-                    Debug.LogWarning($"<color=#66CCFF>[GamerProgress] GetProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › GetProgressCoroutine | {error}");
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[GamerProgress] GetProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › GetProgressCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -407,19 +413,22 @@ namespace SaiGame.Services
                         if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                             Debug.Log($"Progress updated successfully! New values - Level: {updatedProgress.level}, XP: {updatedProgress.experience}, Gold: {updatedProgress.gold}");
 
-                        Debug.Log("<color=#66CCFF>[GamerProgress] UpdateProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › UpdateProgressCoroutine");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[GamerProgress] UpdateProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › UpdateProgressCoroutine");
                         onSuccess?.Invoke(updatedProgress);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse update progress response error: {e.Message}";
-                        Debug.LogWarning($"<color=#66CCFF>[GamerProgress] UpdateProgress</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GamerProgress.cs › UpdateProgressCoroutine | {errorMsg}");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[GamerProgress] UpdateProgress</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GamerProgress.cs › UpdateProgressCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
-                    Debug.LogWarning($"<color=#66CCFF>[GamerProgress] UpdateProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › UpdateProgressCoroutine | {error}");
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[GamerProgress] UpdateProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › UpdateProgressCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );

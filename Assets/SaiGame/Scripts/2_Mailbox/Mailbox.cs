@@ -130,21 +130,24 @@ namespace SaiGame.Services
                             Debug.Log($"Mailbox loaded: {mailBoxResponse.messages.Length} messages, total: {mailBoxResponse.total}");
 
                         OnGetMessagesSuccess?.Invoke(mailBoxResponse);
-                        Debug.Log("<color=#66CCFF>[MailBox] GetMessages</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › GetMessagesCoroutine");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[MailBox] GetMessages</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › GetMessagesCoroutine");
                         onSuccess?.Invoke(mailBoxResponse);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse get messages response error: {e.Message}";
                         OnGetMessagesFailure?.Invoke(errorMsg);
-                        Debug.LogWarning($"<color=#66CCFF>[MailBox] GetMessages</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › GetMessagesCoroutine | {errorMsg}");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[MailBox] GetMessages</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › GetMessagesCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnGetMessagesFailure?.Invoke(error);
-                    Debug.LogWarning($"<color=#66CCFF>[MailBox] GetMessages</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › GetMessagesCoroutine | {error}");
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[MailBox] GetMessages</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › GetMessagesCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -198,21 +201,24 @@ namespace SaiGame.Services
                             Debug.Log($"Message {messageId} marked as read");
 
                         OnReadMessageSuccess?.Invoke(message);
-                        Debug.Log("<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ReadMessageCoroutine");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ReadMessageCoroutine");
                         onSuccess?.Invoke(message);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse read message response error: {e.Message}";
                         OnReadMessageFailure?.Invoke(errorMsg);
-                        Debug.LogWarning($"<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › ReadMessageCoroutine | {errorMsg}");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › ReadMessageCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnReadMessageFailure?.Invoke(error);
-                    Debug.LogWarning($"<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › ReadMessageCoroutine | {error}");
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › ReadMessageCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -266,21 +272,24 @@ namespace SaiGame.Services
                             Debug.Log($"Message {messageId} claimed successfully");
 
                         OnClaimMessageSuccess?.Invoke(message);
-                        Debug.Log("<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ClaimMessageCoroutine");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ClaimMessageCoroutine");
                         onSuccess?.Invoke(message);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse claim message response error: {e.Message}";
                         OnClaimMessageFailure?.Invoke(errorMsg);
-                        Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › ClaimMessageCoroutine | {errorMsg}");
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › ClaimMessageCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
                     OnClaimMessageFailure?.Invoke(error);
-                    Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › ClaimMessageCoroutine | {error}");
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › ClaimMessageCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -373,7 +382,8 @@ namespace SaiGame.Services
             {
                 MailboxMessage[] result = claimed.ToArray();
                 OnClaimAllMessagesSuccess?.Invoke(result);
-                Debug.Log("<color=#66CCFF>[MailBox] ClaimAllMessages</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ClaimAllMessagesCoroutine");
+                if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    Debug.Log("<color=#66CCFF>[MailBox] ClaimAllMessages</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ClaimAllMessagesCoroutine");
                 onSuccess?.Invoke(result);
 
                 if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
@@ -383,7 +393,8 @@ namespace SaiGame.Services
             {
                 string errorMsg = lastError ?? "Failed to claim any messages.";
                 OnClaimAllMessagesFailure?.Invoke(errorMsg);
-                Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimAllMessages</color> → <b><color=#FF4444>onError</color></b> callback | Mailbox.cs › ClaimAllMessagesCoroutine | {errorMsg}");
+                if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimAllMessages</color> → <b><color=#FF4444>onError</color></b> callback | Mailbox.cs › ClaimAllMessagesCoroutine | {errorMsg}");
                 onError?.Invoke(errorMsg);
             }
         }

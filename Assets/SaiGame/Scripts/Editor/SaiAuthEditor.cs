@@ -39,8 +39,8 @@ namespace SaiGame.Services
                     serializedObject.FindProperty("registerEmail").stringValue,
                     serializedObject.FindProperty("registerUsername").stringValue,
                     serializedObject.FindProperty("registerPassword").stringValue,
-                    response => Debug.Log($"Registration success! User: {response.user.username} ({response.user.email}), Active: {response.user.is_active}, Verified: {response.user.is_verified}"),
-                    error => Debug.LogError($"Registration failed: {error}")
+                    response => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Registration success! User: {response.user.username} ({response.user.email}), Active: {response.user.is_active}, Verified: {response.user.is_verified}"); },
+                    error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Registration failed: {error}"); }
                 );
             }
             GUI.backgroundColor = Color.white;
@@ -51,8 +51,8 @@ namespace SaiGame.Services
                 saiAuth.Login(
                     serializedObject.FindProperty("username").stringValue,
                     serializedObject.FindProperty("password").stringValue,
-                    response => Debug.Log($"Login success! User: {response.user.username}, Token expires in: {response.expires_in}s"),
-                    error => Debug.LogError($"Login failed: {error}")
+                    response => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Login success! User: {response.user.username}, Token expires in: {response.expires_in}s"); },
+                    error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Login failed: {error}"); }
                 );
             }
             GUI.backgroundColor = Color.white;
@@ -74,13 +74,14 @@ namespace SaiGame.Services
                 if (saiAuth.IsAuthenticated)
                 {
                     saiAuth.RefreshAuthToken(
-                        response => Debug.Log($"Token refreshed successfully! New token expires in: {response.expires_in}s"),
-                        error => Debug.LogError($"Refresh token failed: {error}")
+                        response => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Token refreshed successfully! New token expires in: {response.expires_in}s"); },
+                        error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Refresh token failed: {error}"); }
                     );
                 }
                 else
                 {
-                    Debug.LogWarning("Not authenticated! Please login first.");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogWarning("[Editor] Not authenticated! Please login first.");
                 }
             }
             GUI.backgroundColor = Color.white;
@@ -91,13 +92,14 @@ namespace SaiGame.Services
                 if (saiAuth.IsAuthenticated)
                 {
                     saiAuth.GetMyProfile(
-                        userData => Debug.Log($"Profile retrieved: {userData.username} ({userData.email}), Active: {userData.is_active}, Verified: {userData.is_verified}"),
-                        error => Debug.LogError($"Get profile failed: {error}")
+                        userData => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Profile retrieved: {userData.username} ({userData.email}), Active: {userData.is_active}, Verified: {userData.is_verified}"); },
+                        error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Get profile failed: {error}"); }
                     );
                 }
                 else
                 {
-                    Debug.LogWarning("Not authenticated! Please login first.");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogWarning("[Editor] Not authenticated! Please login first.");
                 }
             }
             GUI.backgroundColor = Color.white;

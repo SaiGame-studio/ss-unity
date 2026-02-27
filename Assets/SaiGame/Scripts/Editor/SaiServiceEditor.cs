@@ -52,10 +52,13 @@ namespace SaiGame.Services
             if (newIndex != currentIndex)
             {
                 serverEndpointProperty.enumValueIndex = newIndex;
+                this.serializedObject.ApplyModifiedProperties();
+                SaiService svc = (SaiService)this.target;
+                if (svc != null) svc.ManualSaveServerEndpoint();
             }
 
             EditorGUILayout.Space(5);
-            DrawPropertiesExcluding(this.serializedObject, "m_Script", "serverEndpoint", "domainOption", "port", "useHttps", "showDebug", "showButtonsLog", "showCallbackLog");
+            DrawPropertiesExcluding(this.serializedObject, "m_Script", "serverEndpoint", "domainOption", "port", "useHttps", "showDebugLog", "showButtonsLog", "showCallbackLog");
 
             // Debug Settings foldout
             EditorGUILayout.Space(5);
@@ -83,7 +86,8 @@ namespace SaiGame.Services
                 if (saiService != null)
                 {
                     saiService.ManualSaveGameId();
-                    Debug.Log("✓ Game ID saved to PlayerPrefs!");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log("✓ Game ID saved to PlayerPrefs!");
                 }
             }
             GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
@@ -92,7 +96,8 @@ namespace SaiGame.Services
                 if (saiService != null)
                 {
                     saiService.ManualClearGameId();
-                    Debug.Log("✓ Game ID cleared from PlayerPrefs!");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log("✓ Game ID cleared from PlayerPrefs!");
                 }
             }
             GUI.backgroundColor = Color.white;
@@ -108,9 +113,15 @@ namespace SaiGame.Services
                     saiService.TestConnection(success =>
                     {
                         if (success)
-                            Debug.Log("✓ Connection test passed!");
+                        {
+                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                                Debug.Log("✓ Connection test passed!");
+                        }
                         else
-                            Debug.LogError("✗ Connection test failed!");
+                        {
+                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                                Debug.LogError("✗ Connection test failed!");
+                        }
                     });
                 }
             }
@@ -119,10 +130,13 @@ namespace SaiGame.Services
             {
                 if (saiService != null)
                 {
-                    Debug.Log("<color=#FFCC00><b>[SaiService] ► Show Service Info</b></color>");
-                    bool hasUser = saiService.CurrentUser != null && !string.IsNullOrEmpty(saiService.CurrentUser.username);
-                    string userInfo = hasUser ? $"User: {saiService.CurrentUser.username}" : "No user";
-                    Debug.Log($"Base URL: {saiService.BaseUrl}, Authenticated: {saiService.IsAuthenticated}, {userInfo}");
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    {
+                        Debug.Log("<color=#FFCC00><b>[SaiService] ► Show Service Info</b></color>");
+                        bool hasUser = saiService.CurrentUser != null && !string.IsNullOrEmpty(saiService.CurrentUser.username);
+                        string userInfo = hasUser ? $"User: {saiService.CurrentUser.username}" : "No user";
+                        Debug.Log($"Base URL: {saiService.BaseUrl}, Authenticated: {saiService.IsAuthenticated}, {userInfo}");
+                    }
                 }
             }
             EditorGUILayout.EndHorizontal();
