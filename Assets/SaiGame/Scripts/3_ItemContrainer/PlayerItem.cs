@@ -5,7 +5,7 @@ using UnityEngine;
 namespace SaiGame.Services
 {
     [DefaultExecutionOrder(-99)]
-    public class ItemContainer : SaiBehaviour
+    public class PlayerItem : SaiBehaviour
     {
         // Events for other classes to listen to
         public event Action<InventoryResponse> OnGetItemsSuccess;

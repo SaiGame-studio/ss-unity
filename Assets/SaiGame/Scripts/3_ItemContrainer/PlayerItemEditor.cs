@@ -3,11 +3,11 @@ using UnityEngine;
 
 namespace SaiGame.Services
 {
-    [CustomEditor(typeof(ItemContainer))]
+    [CustomEditor(typeof(PlayerItem))]
     [CanEditMultipleObjects]
-    public class ItemContainerEditor : Editor
+    public class PlayerItemEditor : Editor
     {
-        private ItemContainer itemContainer;
+        private PlayerItem itemContainer;
         private SerializedProperty autoLoadOnLogin;
         private SerializedProperty autoLoadCategory;
         private SerializedProperty itemLimit;
@@ -26,7 +26,7 @@ namespace SaiGame.Services
 
         private void OnEnable()
         {
-            this.itemContainer = (ItemContainer)target;
+            this.itemContainer = (PlayerItem)target;
             this.autoLoadOnLogin = serializedObject.FindProperty("autoLoadOnLogin");
             this.autoLoadCategory = serializedObject.FindProperty("autoLoadCategory");
             this.itemLimit = serializedObject.FindProperty("itemLimit");
@@ -36,7 +36,7 @@ namespace SaiGame.Services
             // Restore dropdown from PlayerPrefs cache (no network call needed)
             if (cachedCategories == null)
             {
-                string[] prefsCache = ItemContainer.LoadCategoriesFromPrefs();
+                string[] prefsCache = PlayerItem.LoadCategoriesFromPrefs();
                 if (prefsCache != null)
                 {
                     cachedCategories = prefsCache;

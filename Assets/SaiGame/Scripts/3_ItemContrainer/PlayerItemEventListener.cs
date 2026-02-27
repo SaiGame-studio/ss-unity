@@ -5,9 +5,9 @@ namespace SaiGame.Services
     /// <summary>
     /// Example class showing how to listen to ItemContainer events.
     /// </summary>
-    public class ItemContainerEventListener : SaiBehaviour
+    public class PlayerItemEventListener : SaiBehaviour
     {
-        private ItemContainer itemContainer => SaiService.Instance?.ItemContainer;
+        private PlayerItem itemContainer => SaiService.Instance?.ItemContainer;
 
         protected override void LoadComponents()
         {
