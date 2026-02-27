@@ -175,9 +175,9 @@ namespace SaiGame.Services
         private IEnumerator ReadMessageCoroutine(string messageId, System.Action<MailboxMessage> onSuccess, System.Action<string> onError)
         {
             string gameId = SaiService.Instance.GameId;
-            string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{messageId}/read";
+            string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{messageId}";
 
-            yield return SaiService.Instance.PostRequest(endpoint, "{}",
+            yield return SaiService.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try

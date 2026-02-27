@@ -18,7 +18,6 @@ namespace SaiGame.Services
         private bool showCurrentMailBox = true;
         private bool showMessageList = true;
         private bool showUtilityButtons = true;
-        private string claimMessageId = "";
 
         private void OnEnable()
         {
@@ -122,32 +121,12 @@ namespace SaiGame.Services
                 GUI.backgroundColor = Color.white;
                 EditorGUILayout.EndHorizontal();
 
-                EditorGUILayout.BeginHorizontal();
-                GUIStyle placeholderStyle = new GUIStyle(EditorStyles.textField);
-                placeholderStyle.normal.textColor = Color.gray;
-                if (string.IsNullOrEmpty(claimMessageId))
-                {
-                    string input = EditorGUILayout.TextField("message id", placeholderStyle, GUILayout.Height(30));
-                    if (input != "message id")
-                        claimMessageId = input;
-                }
-                else
-                {
-                    claimMessageId = EditorGUILayout.TextField(claimMessageId, GUILayout.Height(30));
-                }
-                GUI.backgroundColor = new Color(1f, 0.6f, 0f);
-                if (GUILayout.Button("Claim Message", GUILayout.Height(30)))
-                {
-                    ClaimSingleMessage(claimMessageId);
-                }
                 GUI.backgroundColor = new Color(1f, 0.84f, 0f);
-
                 if (GUILayout.Button("Claim All", GUILayout.Height(30)))
                 {
                     ClaimAllMessages();
                 }
                 GUI.backgroundColor = Color.white;
-                EditorGUILayout.EndHorizontal();
 
                 EditorGUI.indentLevel--;
             }
@@ -228,42 +207,6 @@ namespace SaiGame.Services
                 {
                     if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
                         Debug.LogError($"[MailBoxEditor] Failed to load messages: {error}");
-                }
-            );
-        }
-
-        private void ClaimSingleMessage(string messageId)
-        {
-            if (string.IsNullOrEmpty(messageId))
-            {
-                Debug.LogWarning("[MailBoxEditor] Please enter a valid message ID.");
-                return;
-            }
-
-            if (SaiService.Instance == null)
-            {
-                Debug.LogError("[MailBoxEditor] SaiService not found!");
-                return;
-            }
-
-            if (!SaiService.Instance.IsAuthenticated)
-            {
-                Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
-                return;
-            }
-
-            mailBox.ClaimMessage(
-                messageId,
-                onSuccess: result =>
-                {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                        Debug.Log($"[MailBoxEditor] Message {result.id} claimed successfully");
-                    claimMessageId = "";
-                },
-                onError: error =>
-                {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                        Debug.LogError($"[MailBoxEditor] Claim failed: {error}");
                 }
             );
         }
