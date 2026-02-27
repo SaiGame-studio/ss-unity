@@ -42,6 +42,9 @@ namespace SaiGame.Services
         private const string PREF_GAME_ID = "SaiGame_GameId";
         private const string PREF_SERVER_ENDPOINT = "SaiGame_ServerEndpoint";
 
+        // Tracks the last value written to PlayerPrefs so we only save on actual change
+        private string lastSavedGameId = null;
+
         [Header("API Settings")]
         [SerializeField] protected int requestTimeout = 30;
 
@@ -351,11 +354,14 @@ namespace SaiGame.Services
             {
                 this.gameId = this.NormalizeInput(this.gameId);
             }
+
+            this.lastSavedGameId = this.gameId;
         }
 
         protected virtual void SaveGameIdToPlayerPrefs()
         {
             this.gameId = this.NormalizeInput(this.gameId);
+            this.lastSavedGameId = this.gameId;
             PlayerPrefs.SetString(PREF_GAME_ID, this.gameId);
             PlayerPrefs.Save();
             if (this.showDebugLog)
@@ -372,7 +378,19 @@ namespace SaiGame.Services
         {
             // serverEndpoint is the source of truth; sync legacy fields from it only.
             this.SyncLegacyServerFieldsFromEndpoint();
-            this.gameId = this.NormalizeInput(this.gameId);
+
+            string normalized = this.NormalizeInput(this.gameId);
+            this.gameId = normalized;
+
+            // Auto-save whenever the Game ID value actually changes
+            if (this.lastSavedGameId != normalized)
+            {
+                this.lastSavedGameId = normalized;
+                PlayerPrefs.SetString(PREF_GAME_ID, normalized);
+                PlayerPrefs.Save();
+                if (this.showDebugLog)
+                    Debug.Log($"[SaiService] Game ID auto-saved to PlayerPrefs: {normalized}");
+            }
         }
 
         public void ManualSaveGameId()

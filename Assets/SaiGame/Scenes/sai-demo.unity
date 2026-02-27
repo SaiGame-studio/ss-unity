@@ -495,7 +495,7 @@ MonoBehaviour:
   domainOption: 0
   port: 82
   useHttps: 0
-  gameId: 1a625a14-d4ef-42b9-8070-604e7c1e350a
+  gameId: f68d6b0a-7ab1-4de0-99ca-b1ce19dc99a7
   requestTimeout: 30
   showButtonsLog: 1
   showCallbackLog: 1
