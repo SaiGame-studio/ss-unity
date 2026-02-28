@@ -28,6 +28,7 @@ namespace SaiGame.Services
         [SerializeField] protected GamerProgress gamerProgress;
         [SerializeField] protected Mailbox mailbox;
         [SerializeField] protected PlayerItem playerItem;
+        [SerializeField] protected PlayerContainer playerContainer;
 
         [Header("Server Configuration")]
         [HideInInspector][SerializeField] protected ServerEndpointOption serverEndpoint = ServerEndpointOption.LocalHttp;
@@ -40,6 +41,9 @@ namespace SaiGame.Services
 
         private const string PREF_GAME_ID = "SaiGame_GameId";
         private const string PREF_SERVER_ENDPOINT = "SaiGame_ServerEndpoint";
+
+        // Tracks the last value written to PlayerPrefs so we only save on actual change
+        private string lastSavedGameId = null;
 
         [Header("API Settings")]
         [SerializeField] protected int requestTimeout = 30;
@@ -84,6 +88,8 @@ namespace SaiGame.Services
         public GamerProgress GamerProgress => gamerProgress;
 
         public PlayerItem PlayerItem => playerItem;
+
+        public PlayerContainer PlayerContainer => playerContainer;
 
         public SaiAuth SaiAuth => saiAuth;
 
@@ -262,6 +268,7 @@ namespace SaiGame.Services
             this.LoadGamerProgress();
             this.LoadMailbox();
             this.LoadPlayerItem();
+            this.LoadPlayerContainer();
             this.LoadGameIdFromPlayerPrefs();
         }
 
@@ -296,6 +303,14 @@ namespace SaiGame.Services
             this.playerItem = GetComponent<PlayerItem>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadPlayerItem", gameObject);
+        }
+
+        protected virtual void LoadPlayerContainer()
+        {
+            if (this.playerContainer != null) return;
+            this.playerContainer = GetComponent<PlayerContainer>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadPlayerContainer", gameObject);
         }
 
 
@@ -339,11 +354,14 @@ namespace SaiGame.Services
             {
                 this.gameId = this.NormalizeInput(this.gameId);
             }
+
+            this.lastSavedGameId = this.gameId;
         }
 
         protected virtual void SaveGameIdToPlayerPrefs()
         {
             this.gameId = this.NormalizeInput(this.gameId);
+            this.lastSavedGameId = this.gameId;
             PlayerPrefs.SetString(PREF_GAME_ID, this.gameId);
             PlayerPrefs.Save();
             if (this.showDebugLog)
@@ -360,7 +378,19 @@ namespace SaiGame.Services
         {
             // serverEndpoint is the source of truth; sync legacy fields from it only.
             this.SyncLegacyServerFieldsFromEndpoint();
-            this.gameId = this.NormalizeInput(this.gameId);
+
+            string normalized = this.NormalizeInput(this.gameId);
+            this.gameId = normalized;
+
+            // Auto-save whenever the Game ID value actually changes
+            if (this.lastSavedGameId != normalized)
+            {
+                this.lastSavedGameId = normalized;
+                PlayerPrefs.SetString(PREF_GAME_ID, normalized);
+                PlayerPrefs.Save();
+                if (this.showDebugLog)
+                    Debug.Log($"[SaiService] Game ID auto-saved to PlayerPrefs: {normalized}");
+            }
         }
 
         public void ManualSaveGameId()

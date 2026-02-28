@@ -432,167 +432,67 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &180087946267827572
-Transform:
+--- !u!1001 &8872317261903600714
+PrefabInstance:
   m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6479074096609760935}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.85258, y: -0, z: 2.96002}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &308465430193499616
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6479074096609760935}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 955393e378c76224bb83c843d7a6411f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiGamerProgress
-  autoLoadOnLogin: 1
-  currentProgress:
-    id: 
-    user_id: 
-    game_id: 
-    level: 0
-    experience: 0
-    gold: 0
-    game_data: 
-    created_at: 0
-    updated_at: 0
-    version: 0
-  experienceDelta: 1
-  goldDelta: 1
-  gameData: '{}'
---- !u!114 &4725543869027425279
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6479074096609760935}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0cd02fa001eb26e4fb50f22c4989cde1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiService
-  saiAuth: {fileID: 7258247919315741312}
-  gamerProgress: {fileID: 308465430193499616}
-  mailbox: {fileID: 7258247919315741313}
-  playerItem: {fileID: 7258247919315741314}
-  serverEndpoint: 0
-  domainOption: 0
-  port: 82
-  useHttps: 0
-  gameId: 1a625a14-d4ef-42b9-8070-604e7c1e350a
-  requestTimeout: 30
-  showButtonsLog: 1
-  showCallbackLog: 1
-  showDebugLog: 1
---- !u!1 &6479074096609760935
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 180087946267827572}
-  - component: {fileID: 4725543869027425279}
-  - component: {fileID: 7258247919315741312}
-  - component: {fileID: 308465430193499616}
-  - component: {fileID: 7258247919315741313}
-  - component: {fileID: 7258247919315741314}
-  m_Layer: 0
-  m_Name: SaiService
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &7258247919315741312
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6479074096609760935}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb92c51d95c8cc142a356069c666972e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiAuth
-  accessToken: 
-  refreshToken: 
-  expiresIn: 0
-  userData:
-    id: 
-    email: 
-    username: 
-    display_name: 
-    is_active: 0
-    is_verified: 0
-    created_at: 0
-  loginTime: 0
-  autoRefreshToken: 1
-  refreshBeforeExpire: 2
-  username: 
-  password: 
-  saveEmail: 0
-  savePassword: 0
-  registerEmail: 
-  registerUsername: 
-  registerPassword: 
---- !u!114 &7258247919315741313
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6479074096609760935}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 758266cf2b48d774c9c79233eb6a4e91, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.Mailbox
-  autoLoadOnLogin: 0
-  currentMailBox:
-    messages: []
-    total: 0
-  messageLimit: 20
-  messageOffset: 0
---- !u!114 &7258247919315741314
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6479074096609760935}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27b40b3f397144a45a96173283e22f3c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemContainer
-  autoLoadOnLogin: 0
-  autoLoadCategory: 
-  currentInventory:
-    items: []
-    limit: 0
-    offset: 0
-    total: 0
-  itemLimit: 50
-  itemOffset: 0
-  categoryFilter: 
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: m_Name
+      value: SaiService
+      objectReference: {fileID: 0}
+    - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 2.85258
+      objectReference: {fileID: 0}
+    - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 2.96002
+      objectReference: {fileID: 0}
+    - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: gameId
+      value: f68d6b0a-7ab1-4de0-99ca-b1ce19dc99a7
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -600,4 +500,4 @@ SceneRoots:
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 832575519}
-  - {fileID: 180087946267827572}
+  - {fileID: 8872317261903600714}
