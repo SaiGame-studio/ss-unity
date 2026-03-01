@@ -21,6 +21,8 @@ namespace SaiGame.Services
         private readonly Dictionary<string, InventoryItemData[]> containerItems = new Dictionary<string, InventoryItemData[]>();
         private readonly Dictionary<string, bool> showItemsFoldout = new Dictionary<string, bool>();
         private readonly HashSet<string> loadingContainerItems = new HashSet<string>();
+        // Per-item gacha loading state (keyed by item.id)
+        private readonly HashSet<string> loadingGachaItems = new HashSet<string>();
 
         private void OnEnable()
         {
@@ -169,7 +171,7 @@ namespace SaiGame.Services
                     {
                         foreach (InventoryItemData item in items)
                         {
-                            this.DrawItemSummary(item);
+                            this.DrawItemSummary(item, container.id);
                         }
                     }
                     EditorGUI.indentLevel--;
@@ -179,7 +181,7 @@ namespace SaiGame.Services
             EditorGUILayout.EndVertical();
         }
 
-        private void DrawItemSummary(InventoryItemData item)
+        private void DrawItemSummary(InventoryItemData item, string containerId)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
@@ -193,7 +195,80 @@ namespace SaiGame.Services
 
             EditorGUILayout.LabelField($"Qty: {item.quantity}  |  Level: {item.level}  |  Pos: ({item.grid_x}, {item.grid_y})");
 
+            // Show Gacha button only when metadata contains a gacha_pack_id
+            string gachaPackId = this.GetGachaPackIdFromMetadata(item.definition);
+            if (!string.IsNullOrEmpty(gachaPackId))
+            {
+                EditorGUILayout.Space(2);
+                bool isGachaLoading = this.loadingGachaItems.Contains(item.id);
+                GUI.backgroundColor = isGachaLoading ? Color.gray : new Color(1f, 0.85f, 0.1f);
+                EditorGUI.BeginDisabledGroup(isGachaLoading);
+                if (GUILayout.Button(isGachaLoading ? "Opening..." : "Gacha", GUILayout.Height(22)))
+                {
+                    this.OpenGachaPack(item.id, gachaPackId, containerId);
+                }
+                EditorGUI.EndDisabledGroup();
+                GUI.backgroundColor = Color.white;
+            }
+
             EditorGUILayout.EndVertical();
+        }
+
+        private void OpenGachaPack(string itemId, string gachaPackId, string containerId)
+        {
+            if (SaiService.Instance == null)
+            {
+                Debug.LogError("[PlayerContainerEditor] SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                Debug.LogError("[PlayerContainerEditor] Not authenticated! Please login first.");
+                return;
+            }
+
+            this.loadingGachaItems.Add(itemId);
+            Repaint();
+
+            this.playerContainer.OpenGachaPack(
+                gachaPackDefId: gachaPackId,
+                containerId: containerId,
+                onSuccess: response =>
+                {
+                    this.loadingGachaItems.Remove(itemId);
+
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    {
+                        int count = response.items_granted?.Length ?? 0;
+                        Debug.Log($"[PlayerContainerEditor] Gacha opened! {count} item(s) granted. Transaction: {response.transaction_id}");
+                    }
+
+                    Repaint();
+                },
+                onError: error =>
+                {
+                    this.loadingGachaItems.Remove(itemId);
+
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[PlayerContainerEditor] Failed to open gacha pack: {error}");
+
+                    Repaint();
+                }
+            );
+        }
+
+        /// <summary>
+        /// Returns gacha_pack_id from the definition's metadata if present, otherwise null.
+        /// </summary>
+        private string GetGachaPackIdFromMetadata(ItemDefinitionData definition)
+        {
+            if (definition == null || definition.metadata == null)
+                return null;
+
+            return string.IsNullOrEmpty(definition.metadata.gacha_pack_id)
+                ? null
+                : definition.metadata.gacha_pack_id;
         }
 
         private void LoadContainerItems(string containerId)

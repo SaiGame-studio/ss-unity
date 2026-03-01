@@ -290,6 +290,79 @@ namespace SaiGame.Services
             );
         }
 
+        /// <summary>
+        /// Opens a gacha pack item and claims the granted rewards.
+        /// Endpoint: POST /api/v1/games/{game_id}/gacha/{gacha_pack_id}
+        /// </summary>
+        /// <param name="gachaPackDefId">The item_definition_id of the gacha pack (used as gacha_pack_id in URL).</param>
+        /// <param name="containerId">The container_id where the pack resides (sent in request body).</param>
+        public void OpenGachaPack(
+            string gachaPackDefId,
+            string containerId,
+            System.Action<GachaResponse> onSuccess = null,
+            System.Action<string> onError = null)
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log($"<color=#FFD700><b>[PlayerContainer] ► Open Gacha Pack: {gachaPackDefId}</b></color>", gameObject);
+
+            if (SaiService.Instance == null)
+            {
+                onError?.Invoke("SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            StartCoroutine(this.OpenGachaPackCoroutine(gachaPackDefId, containerId, onSuccess, onError));
+        }
+
+        private IEnumerator OpenGachaPackCoroutine(
+            string gachaPackDefId,
+            string containerId,
+            System.Action<GachaResponse> onSuccess,
+            System.Action<string> onError)
+        {
+            string gameId = SaiService.Instance.GameId;
+            string endpoint = $"/api/v1/games/{gameId}/gacha/{gachaPackDefId}";
+            string idempotencyKey = $"{UnityEngine.Random.Range(1000000, 9999999)}-{UnityEngine.Random.Range(1000000, 9999999)}-{UnityEngine.Random.Range(1000000, 9999999)}";
+            string body = $"{{\"idempotency_key\":\"{idempotencyKey}\",\"container_id\":\"{containerId}\"}}";
+
+            yield return SaiService.Instance.PostRequest(endpoint, body,
+                response =>
+                {
+                    try
+                    {
+                        GachaResponse gachaResponse = JsonUtility.FromJson<GachaResponse>(response);
+
+                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                            Debug.Log($"[PlayerContainer] Gacha pack opened: {gachaResponse.items_granted?.Length ?? 0} items granted (duplicate={gachaResponse.is_duplicate})");
+
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#FFD700>[PlayerContainer] OpenGachaPack</color> → <b><color=#00FF88>onSuccess</color></b> callback | PlayerContainer.cs › OpenGachaPackCoroutine");
+
+                        onSuccess?.Invoke(gachaResponse);
+                    }
+                    catch (System.Exception e)
+                    {
+                        string errorMsg = $"Parse gacha response error: {e.Message}";
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#FFD700>[PlayerContainer] OpenGachaPack</color> → <b><color=#FF4444>onError</color></b> callback (parse) | PlayerContainer.cs › OpenGachaPackCoroutine | {errorMsg}");
+                        onError?.Invoke(errorMsg);
+                    }
+                },
+                error =>
+                {
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#FFD700>[PlayerContainer] OpenGachaPack</color> → <b><color=#FF4444>onError</color></b> callback (network) | PlayerContainer.cs › OpenGachaPackCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
+            );
+        }
+
         // ── Inspector-exposed setters ──────────────────────────────────────────
 
         public void SetContainerLimit(int limit) => this.containerLimit = limit;
