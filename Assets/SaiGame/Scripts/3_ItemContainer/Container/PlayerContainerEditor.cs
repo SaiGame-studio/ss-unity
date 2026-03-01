@@ -24,6 +24,12 @@ namespace SaiGame.Services
         // Per-item gacha loading state (keyed by item.id)
         private readonly HashSet<string> loadingGachaItems = new HashSet<string>();
 
+        // Per-container filter state
+        private readonly Dictionary<string, ItemFilterOptions> containerFilters = new Dictionary<string, ItemFilterOptions>();
+        private readonly Dictionary<string, bool> showFilterPanel = new Dictionary<string, bool>();
+        // Cached filtered results so we only recalculate when the filter changes
+        private readonly Dictionary<string, InventoryItemData[]> filteredItems = new Dictionary<string, InventoryItemData[]>();
+
         private void OnEnable()
         {
             this.playerContainer = (PlayerContainer)target;
@@ -155,21 +161,114 @@ namespace SaiGame.Services
                 if (!this.showItemsFoldout.ContainsKey(container.id))
                     this.showItemsFoldout[container.id] = true;
 
+                // ── Filter panel ──────────────────────────────────────────────
+                if (!this.containerFilters.ContainsKey(container.id))
+                    this.containerFilters[container.id] = new ItemFilterOptions();
+                if (!this.showFilterPanel.ContainsKey(container.id))
+                    this.showFilterPanel[container.id] = false;
+
+                ItemFilterOptions filter = this.containerFilters[container.id];
+
+                EditorGUILayout.BeginHorizontal();
+                this.showFilterPanel[container.id] = EditorGUILayout.Foldout(
+                    this.showFilterPanel[container.id], "Filter Items", true);
+                if (!filter.IsEmpty)
+                {
+                    GUI.backgroundColor = new Color(1f, 0.6f, 0.1f);
+                    if (GUILayout.Button("✕ Clear", GUILayout.Width(60), GUILayout.Height(16)))
+                    {
+                        filter.Clear();
+                        this.filteredItems.Remove(container.id);
+                    }
+                    GUI.backgroundColor = Color.white;
+                }
+                EditorGUILayout.EndHorizontal();
+
+                if (this.showFilterPanel[container.id])
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+                    // Name search
+                    EditorGUI.BeginChangeCheck();
+                    string newName = EditorGUILayout.TextField(
+                        new GUIContent("Name", "Substring search on item name (case-insensitive)"),
+                        filter.nameSearch);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        filter.nameSearch = newName;
+                        this.filteredItems.Remove(container.id);
+                    }
+
+                    // Category
+                    EditorGUI.BeginChangeCheck();
+                    string newCat = EditorGUILayout.TextField(
+                        new GUIContent("Category", "Exact category match, e.g. weapon / gacha_pack (empty = any)"),
+                        filter.category);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        filter.category = newCat;
+                        this.filteredItems.Remove(container.id);
+                    }
+
+                    // Rarity
+                    EditorGUI.BeginChangeCheck();
+                    string newRarity = EditorGUILayout.TextField(
+                        new GUIContent("Rarity", "Exact rarity match, e.g. common / rare (empty = any)"),
+                        filter.rarity);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        filter.rarity = newRarity;
+                        this.filteredItems.Remove(container.id);
+                    }
+
+                    // Stackable only
+                    EditorGUI.BeginChangeCheck();
+                    bool newStackable = EditorGUILayout.Toggle(
+                        new GUIContent("Stackable Only", "Show only items where is_stackable is true"),
+                        filter.stackableOnly);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        filter.stackableOnly = newStackable;
+                        this.filteredItems.Remove(container.id);
+                    }
+
+                    // Apply button
+                    EditorGUILayout.Space(2);
+                    GUI.backgroundColor = new Color(0.3f, 0.8f, 1f);
+                    if (GUILayout.Button("Apply Filter", GUILayout.Height(22)))
+                    {
+                        this.filteredItems[container.id] = this.playerContainer.FilterItems(items, filter);
+                        this.showItemsFoldout[container.id] = true;
+                    }
+                    GUI.backgroundColor = Color.white;
+
+                    EditorGUILayout.EndVertical();
+                    EditorGUI.indentLevel--;
+                }
+
+                // Determine display list
+                InventoryItemData[] displayItems = this.filteredItems.TryGetValue(container.id, out InventoryItemData[] cached)
+                    ? cached
+                    : items;
+
+                string foldoutLabel = filter.IsEmpty
+                    ? $"Items ({displayItems.Length})"
+                    : $"Items ({displayItems.Length} / {items.Length} filtered)";
+
                 this.showItemsFoldout[container.id] = EditorGUILayout.Foldout(
-                    this.showItemsFoldout[container.id],
-                    $"Items ({items.Length})",
-                    true);
+                    this.showItemsFoldout[container.id], foldoutLabel, true);
 
                 if (this.showItemsFoldout[container.id])
                 {
                     EditorGUI.indentLevel++;
-                    if (items.Length == 0)
+                    if (displayItems.Length == 0)
                     {
-                        EditorGUILayout.LabelField("No items in this container.", EditorStyles.miniLabel);
+                        EditorGUILayout.LabelField("No items match the current filter.", EditorStyles.miniLabel);
                     }
                     else
                     {
-                        foreach (InventoryItemData item in items)
+                        foreach (InventoryItemData item in displayItems)
                         {
                             this.DrawItemSummary(item, container.id);
                         }

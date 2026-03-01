@@ -222,6 +222,73 @@ namespace SaiGame.Services
         }
 
         /// <summary>
+        /// Filters an item array locally using independent criteria from <see cref="ItemFilterOptions"/>.
+        /// Each active criterion is ANDed together. Empty/default fields are skipped.
+        /// Logs a coloured summary so developers can trace the call in the Console.
+        /// </summary>
+        public InventoryItemData[] FilterItems(InventoryItemData[] items, ItemFilterOptions filter)
+        {
+            if (items == null)   return new InventoryItemData[0];
+            if (filter == null || filter.IsEmpty)
+            {
+                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    Debug.Log("<color=#00FFDD><b>[PlayerContainer] ► FilterItems</b></color> | no active filters – returning all items | <i>PlayerContainer.cs › FilterItems</i>", gameObject);
+                return items;
+            }
+
+            var result = new System.Collections.Generic.List<InventoryItemData>();
+
+            foreach (InventoryItemData item in items)
+            {
+                // ── name search (case-insensitive substring) ───────────────────
+                if (!string.IsNullOrEmpty(filter.nameSearch))
+                {
+                    string itemName = item.definition?.name ?? "";
+                    if (itemName.IndexOf(filter.nameSearch, System.StringComparison.OrdinalIgnoreCase) < 0)
+                        continue;
+                }
+
+                // ── category (exact, case-insensitive) ────────────────────────
+                if (!string.IsNullOrEmpty(filter.category))
+                {
+                    string itemCat = item.definition?.category ?? "";
+                    if (!string.Equals(itemCat, filter.category, System.StringComparison.OrdinalIgnoreCase))
+                        continue;
+                }
+
+                // ── rarity (exact, case-insensitive) ──────────────────────────
+                if (!string.IsNullOrEmpty(filter.rarity))
+                {
+                    string itemRarity = item.definition?.rarity ?? "";
+                    if (!string.Equals(itemRarity, filter.rarity, System.StringComparison.OrdinalIgnoreCase))
+                        continue;
+                }
+
+                // ── stackable only ─────────────────────────────────────────────
+                if (filter.stackableOnly && item.definition != null && !item.definition.is_stackable)
+                    continue;
+
+                result.Add(item);
+            }
+
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            {
+                string nameLabel     = string.IsNullOrEmpty(filter.nameSearch) ? "*"        : $"'{filter.nameSearch}'";
+                string catLabel      = string.IsNullOrEmpty(filter.category)   ? "*"        : $"'{filter.category}'";
+                string rarityLabel   = string.IsNullOrEmpty(filter.rarity)     ? "*"        : $"'{filter.rarity}'";
+                string stackLabel    = filter.stackableOnly                    ? "yes"      : "*";
+                Debug.Log(
+                    $"<color=#00FFDD><b>[PlayerContainer] ► FilterItems</b></color> | " +
+                    $"name={nameLabel}  category={catLabel}  rarity={rarityLabel}  stackable={stackLabel} " +
+                    $"→ <b>{result.Count}/{items.Length}</b> items | " +
+                    $"<i>PlayerContainer.cs › FilterItems</i>",
+                    gameObject);
+            }
+
+            return result.ToArray();
+        }
+
+        /// <summary>
         /// Fetches all items inside a specific container.
         /// Endpoint: GET /api/v1/containers/{container_id}/items?limit={limit}&amp;offset={offset}
         /// </summary>
