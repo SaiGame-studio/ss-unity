@@ -4,7 +4,7 @@ namespace SaiGame.Services
 {
     /// <summary>
     /// Represents the item definition (template/blueprint) for an inventory item.
-    /// base_stats and metadata are raw JSON strings to support arbitrary game-defined schemas.
+    /// base_stats is a raw JSON string. metadata is a typed object deserialized by JsonUtility.
     /// </summary>
     [Serializable]
     public class ItemDefinitionData
@@ -18,8 +18,8 @@ namespace SaiGame.Services
         public string rarity;
         // Raw JSON string – parse with your own deserializer as needed
         public string base_stats;
-        // Raw JSON string – parse with your own deserializer as needed
-        public string metadata;
+        // Typed object – fields unknown to JsonUtility are silently ignored
+        public ItemDefinitionMetadata metadata;
         public bool is_stackable;
         public int max_stack_size;
         public int grid_width;

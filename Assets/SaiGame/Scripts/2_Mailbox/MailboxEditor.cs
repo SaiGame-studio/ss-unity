@@ -18,6 +18,7 @@ namespace SaiGame.Services
         private bool showCurrentMailBox = true;
         private bool showMessageList = true;
         private bool showUtilityButtons = true;
+        private MailboxStatusFilter statusFilter = MailboxStatusFilter.All;
 
         private void OnEnable()
         {
@@ -61,13 +62,31 @@ namespace SaiGame.Services
 
                     if (mailBox.CurrentMailBox.messages != null && mailBox.CurrentMailBox.messages.Length > 0)
                     {
-                        showMessageList = EditorGUILayout.Foldout(showMessageList, "Message List", true);
+                        // Status filter
+                        EditorGUILayout.Space(2);
+                        this.statusFilter = (MailboxStatusFilter)EditorGUILayout.EnumPopup(
+                            new GUIContent("Filter by Status", "Show only messages matching this status"),
+                            this.statusFilter);
+
+                        MailboxMessage[] filtered = mailBox.GetMessagesByStatus(this.statusFilter);
+                        showMessageList = EditorGUILayout.Foldout(showMessageList,
+                            this.statusFilter == MailboxStatusFilter.All
+                                ? $"Message List ({filtered.Length})"
+                                : $"Message List ({filtered.Length} {this.statusFilter.ToString().ToLower()})",
+                            true);
                         if (showMessageList)
                         {
                             EditorGUI.indentLevel++;
-                            foreach (var message in mailBox.CurrentMailBox.messages)
+                            if (filtered.Length == 0)
                             {
-                                DrawMessageSummary(message);
+                                EditorGUILayout.LabelField($"No {this.statusFilter.ToString().ToLower()} messages.", EditorStyles.miniLabel);
+                            }
+                            else
+                            {
+                                foreach (var message in filtered)
+                                {
+                                    DrawMessageSummary(message);
+                                }
                             }
                             EditorGUI.indentLevel--;
                         }

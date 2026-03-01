@@ -498,5 +498,36 @@ namespace SaiGame.Services
 
             return unclaimedMessages.ToArray();
         }
+
+        /// <summary>
+        /// Returns locally cached messages filtered by the given status.
+        /// MailboxStatusFilter.All returns every message.
+        /// </summary>
+        public MailboxMessage[] GetMessagesByStatus(MailboxStatusFilter filter)
+        {
+            if (this.currentMailBox == null || this.currentMailBox.messages == null)
+                return new MailboxMessage[0];
+
+            if (filter == MailboxStatusFilter.All)
+                return this.currentMailBox.messages;
+
+            string statusKey;
+            switch (filter)
+            {
+                case MailboxStatusFilter.Unread:  statusKey = "unread";  break;
+                case MailboxStatusFilter.Read:    statusKey = "read";    break;
+                case MailboxStatusFilter.Claimed: statusKey = "claimed"; break;
+                default: return this.currentMailBox.messages;
+            }
+
+            var result = new System.Collections.Generic.List<MailboxMessage>();
+            foreach (MailboxMessage message in this.currentMailBox.messages)
+            {
+                if (message.status == statusKey)
+                    result.Add(message);
+            }
+
+            return result.ToArray();
+        }
     }
 }
