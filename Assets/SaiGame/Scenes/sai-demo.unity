@@ -440,6 +440,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 6141822644857766885, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoRefreshAfterPurchase
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_Name
       value: SaiService
