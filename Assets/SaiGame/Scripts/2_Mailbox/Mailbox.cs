@@ -12,8 +12,12 @@ namespace SaiGame.Services
         public event Action<string> OnGetMessagesFailure;
         public event Action<MailboxMessage> OnReadMessageSuccess;
         public event Action<string> OnReadMessageFailure;
+        public event Action<MailboxMessage> OnUnreadMessageSuccess;
+        public event Action<string> OnUnreadMessageFailure;
         public event Action<MailboxMessage> OnClaimMessageSuccess;
         public event Action<string> OnClaimMessageFailure;
+        public event Action<MailboxMessage> OnUnclaimMessageSuccess;
+        public event Action<string> OnUnclaimMessageFailure;
         public event Action<MailboxMessage[]> OnClaimAllMessagesSuccess;
         public event Action<string> OnClaimAllMessagesFailure;
 
@@ -176,8 +180,9 @@ namespace SaiGame.Services
         {
             string gameId = SaiService.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{messageId}";
+            string body = "{\"read\": true}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiService.Instance.PatchRequest(endpoint, body,
                 response =>
                 {
                     try
@@ -219,6 +224,78 @@ namespace SaiGame.Services
                     OnReadMessageFailure?.Invoke(error);
                     if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › ReadMessageCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
+            );
+        }
+
+        public void UnreadMessage(string messageId, System.Action<MailboxMessage> onSuccess = null, System.Action<string> onError = null)
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#FFA0A0><b>[MailBox] ► Unread Message</b></color>", gameObject);
+
+            if (SaiService.Instance == null)
+            {
+                onError?.Invoke("SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            StartCoroutine(UnreadMessageCoroutine(messageId, onSuccess, onError));
+        }
+
+        private IEnumerator UnreadMessageCoroutine(string messageId, System.Action<MailboxMessage> onSuccess, System.Action<string> onError)
+        {
+            string gameId = SaiService.Instance.GameId;
+            string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{messageId}";
+            string body = "{\"read\": false}";
+
+            yield return SaiService.Instance.PatchRequest(endpoint, body,
+                response =>
+                {
+                    try
+                    {
+                        MailboxMessage message = this.ParseMailboxMessage(response);
+
+                        if (message != null && !string.IsNullOrEmpty(message.id) && this.currentMailBox != null && this.currentMailBox.messages != null)
+                        {
+                            for (int i = 0; i < this.currentMailBox.messages.Length; i++)
+                            {
+                                if (this.currentMailBox.messages[i].id == messageId)
+                                {
+                                    this.currentMailBox.messages[i] = message;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                            Debug.Log($"Message {messageId} marked as unread");
+
+                        OnUnreadMessageSuccess?.Invoke(message);
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[MailBox] UnreadMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › UnreadMessageCoroutine");
+                        onSuccess?.Invoke(message);
+                    }
+                    catch (System.Exception e)
+                    {
+                        string errorMsg = $"Parse unread message response error: {e.Message}";
+                        OnUnreadMessageFailure?.Invoke(errorMsg);
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[MailBox] UnreadMessage</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › UnreadMessageCoroutine | {errorMsg}");
+                        onError?.Invoke(errorMsg);
+                    }
+                },
+                error =>
+                {
+                    OnUnreadMessageFailure?.Invoke(error);
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[MailBox] UnreadMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › UnreadMessageCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -291,6 +368,66 @@ namespace SaiGame.Services
                     OnClaimMessageFailure?.Invoke(error);
                     if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › ClaimMessageCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
+            );
+        }
+
+        public void UnclaimMessage(string messageId, System.Action<MailboxMessage> onSuccess = null, System.Action<string> onError = null)
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#CC88FF><b>[MailBox] ► Unclaim Message</b></color>", gameObject);
+
+            if (SaiService.Instance == null)
+            {
+                onError?.Invoke("SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            StartCoroutine(UnclaimMessageCoroutine(messageId, onSuccess, onError));
+        }
+
+        private IEnumerator UnclaimMessageCoroutine(string messageId, System.Action<MailboxMessage> onSuccess, System.Action<string> onError)
+        {
+            string gameId = SaiService.Instance.GameId;
+            string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{messageId}/claim";
+
+            yield return SaiService.Instance.DeleteRequest(endpoint,
+                response =>
+                {
+                    // Clear claimed_at locally
+                    if (this.currentMailBox != null && this.currentMailBox.messages != null)
+                    {
+                        for (int i = 0; i < this.currentMailBox.messages.Length; i++)
+                        {
+                            if (this.currentMailBox.messages[i].id == messageId)
+                            {
+                                this.currentMailBox.messages[i].claimed_at = string.Empty;
+                                break;
+                            }
+                        }
+                    }
+
+                    MailboxMessage cached = this.GetMessageById(messageId);
+                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        Debug.Log($"Message {messageId} unclaimed successfully");
+
+                    OnUnclaimMessageSuccess?.Invoke(cached);
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.Log("<color=#66CCFF>[MailBox] UnclaimMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › UnclaimMessageCoroutine");
+                    onSuccess?.Invoke(cached);
+                },
+                error =>
+                {
+                    OnUnclaimMessageFailure?.Invoke(error);
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[MailBox] UnclaimMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › UnclaimMessageCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -499,17 +636,34 @@ namespace SaiGame.Services
             return unclaimedMessages.ToArray();
         }
 
+        private MailboxStatusFilter lastLoggedFilter = (MailboxStatusFilter)(-1);
+
         /// <summary>
         /// Returns locally cached messages filtered by the given status.
         /// MailboxStatusFilter.All returns every message.
         /// </summary>
         public MailboxMessage[] GetMessagesByStatus(MailboxStatusFilter filter)
         {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog && filter != this.lastLoggedFilter)
+            {
+                this.lastLoggedFilter = filter;
+                Debug.Log($"<color=#AADDFF><b>[MailBox] \u25ba Filter by Status: <color=#FFD700>{filter}</color></b></color>", gameObject);
+            }
+
             if (this.currentMailBox == null || this.currentMailBox.messages == null)
                 return new MailboxMessage[0];
 
             if (filter == MailboxStatusFilter.All)
                 return this.currentMailBox.messages;
+
+            if (filter == MailboxStatusFilter.Unclaimed)
+            {
+                var unclaimed = new System.Collections.Generic.List<MailboxMessage>();
+                foreach (MailboxMessage message in this.currentMailBox.messages)
+                    if (string.IsNullOrEmpty(message.claimed_at))
+                        unclaimed.Add(message);
+                return unclaimed.ToArray();
+            }
 
             string statusKey;
             switch (filter)

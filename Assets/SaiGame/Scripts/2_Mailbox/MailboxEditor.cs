@@ -183,18 +183,21 @@ namespace SaiGame.Services
             bool isRead = !string.IsNullOrEmpty(message.read_at);
 
             EditorGUILayout.BeginHorizontal();
+            // Claim: enabled when unclaimed
             GUI.enabled = !isClaimed;
             GUI.backgroundColor = isClaimed ? Color.gray : new Color(1f, 0.6f, 0f);
-            if (GUILayout.Button(isClaimed ? "Claimed" : "Claim", GUILayout.Height(24)))
-            {
+            if (GUILayout.Button(isClaimed ? "Claimed ✓" : "Claim", GUILayout.Height(24)))
                 ClaimSpecificMessage(message.id);
-            }
-            GUI.enabled = !isRead;
-            GUI.backgroundColor = isRead ? Color.gray : new Color(0.4f, 0.8f, 1f);
-            if (GUILayout.Button(isRead ? "Read" : "Read", GUILayout.Height(24)))
-            {
+            // Read button: enabled only when not yet read AND not claimed
+            GUI.enabled = !isRead && !isClaimed;
+            GUI.backgroundColor = (isRead || isClaimed) ? Color.gray : new Color(0.4f, 0.8f, 1f);
+            if (GUILayout.Button(isRead ? "Read ✓" : "Read", GUILayout.Height(24)))
                 ReadSpecificMessage(message.id);
-            }
+            // Unread button: enabled only when already read AND not claimed
+            GUI.enabled = isRead && !isClaimed;
+            GUI.backgroundColor = (isRead && !isClaimed) ? new Color(1f, 0.55f, 0.55f) : Color.gray;
+            if (GUILayout.Button(isRead ? "Unread" : "Unread", GUILayout.Height(24)))
+                UnreadSpecificMessage(message.id);
             GUI.enabled = true;
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
@@ -278,11 +281,42 @@ namespace SaiGame.Services
                 {
                     if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
                         Debug.Log($"[MailBoxEditor] Message {result.id} claimed successfully");
+                    Repaint();
                 },
                 onError: error =>
                 {
                     if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
                         Debug.LogError($"[MailBoxEditor] Claim failed: {error}");
+                }
+            );
+        }
+
+        private void UnclaimSpecificMessage(string messageId)
+        {
+            if (SaiService.Instance == null)
+            {
+                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
+                return;
+            }
+
+            mailBox.UnclaimMessage(
+                messageId,
+                onSuccess: result =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[MailBoxEditor] Message {result?.id} unclaimed successfully");
+                    Repaint();
+                },
+                onError: error =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[MailBoxEditor] Unclaim failed: {error}");
                 }
             );
         }
@@ -307,11 +341,42 @@ namespace SaiGame.Services
                 {
                     if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
                         Debug.Log($"[MailBoxEditor] Message {result.id} marked as read");
+                    Repaint();
                 },
                 onError: error =>
                 {
                     if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
                         Debug.LogError($"[MailBoxEditor] Read failed: {error}");
+                }
+            );
+        }
+
+        private void UnreadSpecificMessage(string messageId)
+        {
+            if (SaiService.Instance == null)
+            {
+                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
+                return;
+            }
+
+            mailBox.UnreadMessage(
+                messageId,
+                onSuccess: result =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[MailBoxEditor] Message {result.id} marked as unread");
+                    Repaint();
+                },
+                onError: error =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[MailBoxEditor] Unread failed: {error}");
                 }
             );
         }

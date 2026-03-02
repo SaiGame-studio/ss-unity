@@ -10,7 +10,8 @@ namespace SaiGame.Services
         All,
         Unread,
         Read,
-        Claimed
+        Claimed,
+        Unclaimed
     }
 
     /// <summary>

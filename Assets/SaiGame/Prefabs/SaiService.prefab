@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 390271473075436921}
   - component: {fileID: 7304098766332990550}
   - component: {fileID: 4769566823869136907}
+  - component: {fileID: 6141822644857766885}
   m_Layer: 0
   m_Name: SaiService
   m_TagString: Untagged
@@ -54,11 +55,12 @@ MonoBehaviour:
   mailbox: {fileID: 390271473075436921}
   playerItem: {fileID: 7304098766332990550}
   playerContainer: {fileID: 4769566823869136907}
+  saiShop: {fileID: 0}
   serverEndpoint: 0
   domainOption: 0
   port: 82
   useHttps: 0
-  gameId: f68d6b0a-7ab1-4de0-99ca-b1ce19d
+  gameId: 9822e559-596c-4ff9-91d9-2724c1105c6e
   requestTimeout: 30
   showButtonsLog: 1
   showCallbackLog: 1
@@ -91,8 +93,8 @@ MonoBehaviour:
   refreshBeforeExpire: 2
   username: 
   password: 
-  saveEmail: 0
-  savePassword: 0
+  saveEmail: 1
+  savePassword: 1
   registerEmail: 
   registerUsername: 
   registerPassword: 
@@ -183,3 +185,23 @@ MonoBehaviour:
     offset: 0
   containerLimit: 50
   containerOffset: 0
+--- !u!114 &6141822644857766885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6971719431293405431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce67d82f3c0b926408f098106fda71db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiShop
+  autoLoadOnLogin: 0
+  currentShopResponse:
+    shops: []
+    limit: 0
+    offset: 0
+    total: 0
+  shopLimit: 20
+  shopOffset: 0
