@@ -23,6 +23,8 @@ namespace SaiGame.Services
         private readonly HashSet<string> loadingContainerItems = new HashSet<string>();
         // Per-item gacha loading state (keyed by item.id)
         private readonly HashSet<string> loadingGachaItems = new HashSet<string>();
+        // Selected gacha pack dropdown index per item (keyed by item.id)
+        private readonly Dictionary<string, int> selectedGachaPackIndex = new Dictionary<string, int>();
 
         // Per-container filter state
         private readonly Dictionary<string, ItemFilterOptions> containerFilters = new Dictionary<string, ItemFilterOptions>();
@@ -294,20 +296,43 @@ namespace SaiGame.Services
 
             EditorGUILayout.LabelField($"Qty: {item.quantity}  |  Level: {item.level}  |  Pos: ({item.grid_x}, {item.grid_y})");
 
-            // Show Gacha button only when metadata contains a gacha_pack_id
-            string gachaPackId = this.GetGachaPackIdFromMetadata(item.definition);
-            if (!string.IsNullOrEmpty(gachaPackId))
+            // Show Gacha controls only for gacha_pack category items with at least one gacha_pack_id
+            bool isGachaPackCategory = string.Equals(
+                item.definition?.category, "gacha_pack",
+                System.StringComparison.OrdinalIgnoreCase);
+            string[] gachaPackIds = isGachaPackCategory
+                ? this.GetGachaPackIdsFromMetadata(item.definition)
+                : null;
+            if (gachaPackIds != null && gachaPackIds.Length > 0)
             {
                 EditorGUILayout.Space(2);
                 bool isGachaLoading = this.loadingGachaItems.Contains(item.id);
-                GUI.backgroundColor = isGachaLoading ? Color.gray : new Color(1f, 0.85f, 0.1f);
+
+                if (!this.selectedGachaPackIndex.ContainsKey(item.id))
+                    this.selectedGachaPackIndex[item.id] = 0;
+
+                string[] displayOptions = this.BuildGachaPackDisplayOptions(gachaPackIds);
+
                 EditorGUI.BeginDisabledGroup(isGachaLoading);
-                if (GUILayout.Button(isGachaLoading ? "Opening..." : "Gacha", GUILayout.Height(22)))
+                EditorGUILayout.BeginHorizontal();
+
+                this.selectedGachaPackIndex[item.id] = EditorGUILayout.Popup(
+                    this.selectedGachaPackIndex[item.id],
+                    displayOptions);
+
+                GUI.backgroundColor = isGachaLoading ? Color.gray : new Color(1f, 0.85f, 0.1f);
+                if (GUILayout.Button(
+                    isGachaLoading ? "Opening..." : "Open Gacha",
+                    GUILayout.Height(20),
+                    GUILayout.Width(90)))
                 {
-                    this.OpenGachaPack(item.id, gachaPackId, containerId);
+                    int idx = this.selectedGachaPackIndex[item.id];
+                    this.OpenGachaPack(item.id, gachaPackIds[idx], containerId);
                 }
-                EditorGUI.EndDisabledGroup();
                 GUI.backgroundColor = Color.white;
+
+                EditorGUILayout.EndHorizontal();
+                EditorGUI.EndDisabledGroup();
             }
 
             EditorGUILayout.EndVertical();
@@ -358,16 +383,50 @@ namespace SaiGame.Services
         }
 
         /// <summary>
-        /// Returns gacha_pack_id from the definition's metadata if present, otherwise null.
+        /// Returns all gacha_pack_ids from the definition's metadata.
+        /// Merges the legacy single gacha_pack_id with the newer gacha_pack_ids array.
+        /// Returns null when no gacha pack info is found.
         /// </summary>
-        private string GetGachaPackIdFromMetadata(ItemDefinitionData definition)
+        private string[] GetGachaPackIdsFromMetadata(ItemDefinitionData definition)
         {
             if (definition == null || definition.metadata == null)
                 return null;
 
-            return string.IsNullOrEmpty(definition.metadata.gacha_pack_id)
-                ? null
-                : definition.metadata.gacha_pack_id;
+            var ids = new System.Collections.Generic.List<string>();
+
+            // Collect from multi-pack array first
+            if (definition.metadata.gacha_pack_ids != null)
+            {
+                foreach (string id in definition.metadata.gacha_pack_ids)
+                {
+                    if (!string.IsNullOrEmpty(id) && !ids.Contains(id))
+                        ids.Add(id);
+                }
+            }
+
+            // Also include legacy single-pack id if not already present
+            if (!string.IsNullOrEmpty(definition.metadata.gacha_pack_id)
+                && !ids.Contains(definition.metadata.gacha_pack_id))
+            {
+                ids.Add(definition.metadata.gacha_pack_id);
+            }
+
+            return ids.Count > 0 ? ids.ToArray() : null;
+        }
+
+        /// <summary>
+        /// Builds human-readable dropdown labels for a list of gacha pack UUIDs.
+        /// Format: "Pack 1  (42a699df…)"
+        /// </summary>
+        private string[] BuildGachaPackDisplayOptions(string[] ids)
+        {
+            string[] options = new string[ids.Length];
+            for (int i = 0; i < ids.Length; i++)
+            {
+                string shortId = ids[i].Length > 8 ? ids[i].Substring(0, 8) + "…" : ids[i];
+                options[i] = $"Pack {i + 1}  ({shortId})";
+            }
+            return options;
         }
 
         private void LoadContainerItems(string containerId)

@@ -12,7 +12,9 @@ namespace SaiGame.Services
     {
         public string flavor_text;
         public string icon;
-        // Present only on gacha_pack items – used as the gacha_pack_id URL parameter
+        // Legacy single-pack field – kept for backward compatibility
         public string gacha_pack_id;
+        // Multi-pack field: one gacha item can reference several gacha pack definitions
+        public string[] gacha_pack_ids;
     }
 }
