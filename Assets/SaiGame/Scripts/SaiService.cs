@@ -32,6 +32,7 @@ namespace SaiGame.Services
         [SerializeField] protected SaiShop saiShop;
         [SerializeField] protected ChainQuest chainQuest;
         [SerializeField] protected QuestProgressor questProgressor;
+        [SerializeField] protected QuestClaims questClaims;
 
         [Header("Server Configuration")]
         [HideInInspector][SerializeField] protected ServerEndpointOption serverEndpoint = ServerEndpointOption.LocalHttp;
@@ -102,6 +103,8 @@ namespace SaiGame.Services
         public ChainQuest ChainQuest => this.chainQuest;
 
         public QuestProgressor QuestProgressor => this.questProgressor;
+
+        public QuestClaims QuestClaims => this.questClaims;
 
         public SaiAuth SaiAuth => saiAuth;
 

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3667272808700333575}
   - component: {fileID: 1733594213501630859}
   - component: {fileID: 4308186167237759036}
+  - component: {fileID: 2399963655362431771}
   m_Layer: 0
   m_Name: Quest
   m_TagString: Untagged
@@ -56,6 +57,43 @@ MonoBehaviour:
     version: 0
     created_at: 
     updated_at: 
+  lastCheckedQuest:
+    progress:
+      id: 
+      studio_id: 
+      game_id: 
+      user_id: 
+      quest_definition_id: 
+      progress_data_json: 
+      status: 
+      version: 0
+      created_at: 
+      updated_at: 
+    quest_definition:
+      id: 
+      studio_id: 
+      game_id: 
+      name: 
+      description: 
+      quest_type: 
+      conditions:
+        operator_type: 
+        clauses: []
+      rewards: []
+      is_active: 0
+      sort_order: 0
+      created_at: 
+      updated_at: 
+  lastClaimedQuest:
+    id: 
+    studio_id: 
+    game_id: 
+    user_id: 
+    quest_definition_id: 
+    progress_id: 
+    idempotency_key: 
+    rewards_granted: []
+    claimed_at: 
 --- !u!114 &4308186167237759036
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -76,6 +114,25 @@ MonoBehaviour:
     total: 0
   chainLimit: 50
   chainOffset: 0
+--- !u!114 &2399963655362431771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4330135680898373133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c63fb5eb6a0f8014191c7f501bc3bc33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.QuestClaims
+  claimsLimit: 50
+  claimsOffset: 0
+  currentClaimsResponse:
+    claims: []
+    limit: 0
+    offset: 0
+    total: 0
 --- !u!1 &6971719431293405431
 GameObject:
   m_ObjectHideFlags: 0
@@ -135,11 +192,12 @@ MonoBehaviour:
   saiShop: {fileID: 6141822644857766885}
   chainQuest: {fileID: 4308186167237759036}
   questProgressor: {fileID: 1733594213501630859}
+  questClaims: {fileID: 0}
   serverEndpoint: 0
   domainOption: 0
   port: 82
   useHttps: 0
-  gameId: f7f791bd-eb32-4e91-b260-5d6bf696ea24
+  gameId: ca1d416b-2687-4d75-af1c-b4564841f380
   studioId: 
   requestTimeout: 30
   showButtonsLog: 1
@@ -171,8 +229,8 @@ MonoBehaviour:
   loginTime: 0
   autoRefreshToken: 1
   refreshBeforeExpire: 2
-  username: 
-  password: 
+  username: player1_1772737424306
+  password: 123qweasd
   saveEmail: 1
   savePassword: 1
   registerEmail: 
