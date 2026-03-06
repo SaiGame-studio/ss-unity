@@ -10,8 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 3667272808700333575}
   - component: {fileID: 1733594213501630859}
-  - component: {fileID: 4308186167237759036}
   - component: {fileID: 2399963655362431771}
+  - component: {fileID: 4308186167237759036}
+  - component: {fileID: 1892399005449690324}
   m_Layer: 0
   m_Name: Quest
   m_TagString: Untagged
@@ -94,6 +95,25 @@ MonoBehaviour:
     idempotency_key: 
     rewards_granted: []
     claimed_at: 
+--- !u!114 &2399963655362431771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4330135680898373133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c63fb5eb6a0f8014191c7f501bc3bc33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.QuestClaims
+  claimsLimit: 50
+  claimsOffset: 0
+  currentClaimsResponse:
+    claims: []
+    limit: 0
+    offset: 0
+    total: 0
 --- !u!114 &4308186167237759036
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -114,7 +134,7 @@ MonoBehaviour:
     total: 0
   chainLimit: 50
   chainOffset: 0
---- !u!114 &2399963655362431771
+--- !u!114 &1892399005449690324
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -123,16 +143,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 4330135680898373133}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c63fb5eb6a0f8014191c7f501bc3bc33, type: 3}
+  m_Script: {fileID: 11500000, guid: 2e68b60ef6fe0a04d894b74183e60aaa, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.QuestClaims
-  claimsLimit: 50
-  claimsOffset: 0
-  currentClaimsResponse:
-    claims: []
-    limit: 0
-    offset: 0
-    total: 0
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.DailyQuest
+  autoLoadOnLogin: 0
+  dqPoolId: 
+  daysAhead: 7
+  currentAssignAheadResponse:
+    pool_id: 
+    days_ahead: 0
+    start_date: 
+    end_date: 
+    days: []
 --- !u!1 &6971719431293405431
 GameObject:
   m_ObjectHideFlags: 0
@@ -193,16 +215,20 @@ MonoBehaviour:
   chainQuest: {fileID: 4308186167237759036}
   questProgressor: {fileID: 1733594213501630859}
   questClaims: {fileID: 0}
+  dailyQuest: {fileID: 0}
   serverEndpoint: 0
   domainOption: 0
   port: 82
   useHttps: 0
-  gameId: ca1d416b-2687-4d75-af1c-b4564841f380
+  gameId: b69de0a1-50fd-460c-8274-c98bbb3d9360
   studioId: 
   requestTimeout: 30
   showButtonsLog: 1
   showCallbackLog: 1
   showDebugLog: 1
+  showUrlRequest: 0
+  showJsonRequest: 0
+  showJsonResponse: 0
 --- !u!114 &813458455079530658
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -229,7 +255,7 @@ MonoBehaviour:
   loginTime: 0
   autoRefreshToken: 1
   refreshBeforeExpire: 2
-  username: player1_1772737424306
+  username: player1_1772831707061
   password: 123qweasd
   saveEmail: 1
   savePassword: 1

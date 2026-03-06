@@ -33,6 +33,7 @@ namespace SaiGame.Services
         [SerializeField] protected ChainQuest chainQuest;
         [SerializeField] protected QuestProgressor questProgressor;
         [SerializeField] protected QuestClaims questClaims;
+        [SerializeField] protected DailyQuest dailyQuest;
 
         [Header("Server Configuration")]
         [HideInInspector][SerializeField] protected ServerEndpointOption serverEndpoint = ServerEndpointOption.LocalHttp;
@@ -114,6 +115,8 @@ namespace SaiGame.Services
         public QuestProgressor QuestProgressor => this.questProgressor;
 
         public QuestClaims QuestClaims => this.questClaims;
+
+        public DailyQuest DailyQuest => this.dailyQuest;
 
         public SaiAuth SaiAuth => saiAuth;
 
@@ -322,6 +325,7 @@ namespace SaiGame.Services
             this.LoadSaiShop();
             this.LoadChainQuest();
             this.LoadQuestProgressor();
+            this.LoadDailyQuest();
             this.LoadGameIdFromPlayerPrefs();
             this.LoadStudioIdFromPlayerPrefs();
         }
@@ -389,6 +393,14 @@ namespace SaiGame.Services
             this.questProgressor = GetComponentInChildren<QuestProgressor>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadQuestProgressor", gameObject);
+        }
+
+        protected virtual void LoadDailyQuest()
+        {
+            if (this.dailyQuest != null) return;
+            this.dailyQuest = GetComponentInChildren<DailyQuest>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadDailyQuest", gameObject);
         }
 
 

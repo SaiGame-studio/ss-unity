@@ -95,9 +95,9 @@ namespace SaiGame.Services
                 case QuestSourceType.ChainQuest:
                     this.AppendChainQuestEntries(entries);
                     break;
-                // case QuestSourceType.DailyQuest:
-                //     this.AppendDailyQuestEntries(entries);
-                //     break;
+                case QuestSourceType.DailyQuest:
+                    this.AppendDailyQuestEntries(entries);
+                    break;
             }
 
             return entries;
@@ -126,6 +126,29 @@ namespace SaiGame.Services
                         sourceLabel = chain.display_name
                     });
                 }
+            }
+        }
+
+        private void AppendDailyQuestEntries(List<QuestPickerEntry> entries)
+        {
+            DailyQuest dailyQuest = SaiService.Instance?.DailyQuest;
+            if (dailyQuest == null) return;
+
+            TodayQuestResponse today = dailyQuest.CurrentTodayQuestResponse;
+            if (today?.entries == null || today.entries.Length == 0) return;
+
+            string poolLabel = today.pool?.display_name ?? "Daily Pool";
+
+            foreach (DailyQuestEntryData entry in today.entries)
+            {
+                if (entry?.quest == null) continue;
+
+                entries.Add(new QuestPickerEntry
+                {
+                    questDefinitionId = entry.quest.id,
+                    displayName = entry.quest.name,
+                    sourceLabel = poolLabel
+                });
             }
         }
 

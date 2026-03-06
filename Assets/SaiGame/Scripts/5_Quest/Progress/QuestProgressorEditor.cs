@@ -26,6 +26,12 @@ namespace SaiGame.Services
         private bool showLastChecked = true;
         private bool showLastClaimed = true;
 
+        // Daily quest pool picker state
+        private DailyQuestPoolData[] dailyLoadedPools = new DailyQuestPoolData[0];
+        private string[] dailyPoolOptions = new string[0];
+        private int dailySelectedPoolIndex = 0;
+        private bool isLoadingDailyPools = false;
+
         private void OnEnable()
         {
             this.questProgressor = (QuestProgressor)target;
@@ -40,8 +46,45 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("Quest Progressor", EditorStyles.boldLabel);
             EditorGUILayout.Space();
 
-            // ── Source selector ───────────────────────────────────────────────
+            EditorGUILayout.Space();
             EditorGUILayout.LabelField("Quest Source", EditorStyles.boldLabel);
+
+            // ── DailyQuest pool row (shown first when DailyQuest is selected) ──
+            if ((QuestSourceType)this.questSourceType.enumValueIndex == QuestSourceType.DailyQuest)
+            {
+                EditorGUILayout.BeginHorizontal();
+                if (this.dailyPoolOptions.Length > 0)
+                {
+                    this.dailySelectedPoolIndex = Mathf.Clamp(this.dailySelectedPoolIndex, 0, this.dailyPoolOptions.Length - 1);
+                    this.dailySelectedPoolIndex = EditorGUILayout.Popup("Pool", this.dailySelectedPoolIndex, this.dailyPoolOptions);
+                }
+                else
+                {
+                    EditorGUI.BeginDisabledGroup(true);
+                    EditorGUILayout.Popup("Pool", 0, new string[] { "— no pools loaded —" });
+                    EditorGUI.EndDisabledGroup();
+                }
+                bool canLoadPools = Application.isPlaying && SaiService.Instance != null && SaiService.Instance.IsAuthenticated;
+                GUI.backgroundColor = (canLoadPools && !this.isLoadingDailyPools) ? new Color(0.4f, 0.8f, 1f) : Color.gray;
+                EditorGUI.BeginDisabledGroup(!canLoadPools || this.isLoadingDailyPools);
+                if (GUILayout.Button(this.isLoadingDailyPools ? "Loading..." : "Load Pools", GUILayout.Width(90), GUILayout.Height(18)))
+                    this.LoadDailyPools();
+                EditorGUI.EndDisabledGroup();
+                GUI.backgroundColor = Color.white;
+                EditorGUILayout.EndHorizontal();
+
+                // Show selected pool info
+                if (this.dailyLoadedPools != null && this.dailyLoadedPools.Length > 0)
+                {
+                    DailyQuestPoolData pool = this.dailyLoadedPools[Mathf.Clamp(this.dailySelectedPoolIndex, 0, this.dailyLoadedPools.Length - 1)];
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    GUIStyle richMini = new GUIStyle(EditorStyles.miniLabel) { richText = true };
+                    EditorGUILayout.LabelField($"<b>{pool.display_name}</b>  |  Strategy: <b>{pool.assignment_strategy}</b>  |  Slots/day: {pool.slots_per_day}  |  Reset: {pool.reset_hour_utc}:00 UTC", richMini);
+                    EditorGUILayout.EndVertical();
+                }
+            }
+
+            // ── Source Type + Load All ────────────────────────────────────────
             EditorGUILayout.BeginHorizontal();
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.LabelField(new GUIContent("Source Type", "Where to load the available quests from"), GUILayout.Width(EditorGUIUtility.labelWidth - 4));
@@ -52,6 +95,9 @@ namespace SaiGame.Services
                 this.pickerEntries.Clear();
                 this.pickerLabels = new string[0];
                 this.selectedQuestIndex = 0;
+                this.dailyLoadedPools = new DailyQuestPoolData[0];
+                this.dailyPoolOptions = new string[0];
+                this.dailySelectedPoolIndex = 0;
             }
             bool canLoadAll = Application.isPlaying && SaiService.Instance != null && SaiService.Instance.IsAuthenticated;
             GUI.backgroundColor = (canLoadAll && !this.isLoadingAll) ? new Color(0.3f, 0.9f, 0.5f) : Color.gray;
@@ -100,9 +146,77 @@ namespace SaiGame.Services
 
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                     GUIStyle richStyle = new GUIStyle(EditorStyles.label) { richText = true };
-                    EditorGUILayout.LabelField($"<b>{selected.displayName}</b>", richStyle);
+                    GUIStyle richBold = new GUIStyle(EditorStyles.boldLabel) { richText = true };
+                    EditorGUILayout.LabelField($"<b>{selected.displayName}</b>", richBold);
                     EditorGUILayout.LabelField($"Source: {selected.sourceLabel}");
                     EditorGUILayout.LabelField($"Quest Def ID: {selected.questDefinitionId}");
+
+                    // Extended info for DailyQuest source
+                    if ((QuestSourceType)this.questSourceType.enumValueIndex == QuestSourceType.DailyQuest)
+                    {
+                        TodayQuestResponse today = SaiService.Instance?.DailyQuest?.CurrentTodayQuestResponse;
+                        if (today?.entries != null)
+                        {
+                            DailyQuestEntryData fullEntry = null;
+                            foreach (DailyQuestEntryData e in today.entries)
+                            {
+                                if (e.quest?.id == selected.questDefinitionId)
+                                {
+                                    fullEntry = e;
+                                    break;
+                                }
+                            }
+
+                            if (fullEntry != null)
+                            {
+                                EditorGUILayout.Space(2);
+
+                                // Status
+                                if (!string.IsNullOrEmpty(fullEntry.status))
+                                {
+                                    string sc = fullEntry.status == "completed"   ? "#00FF88"
+                                              : fullEntry.status == "claimed"     ? "#FFD700"
+                                              : fullEntry.status == "in_progress" ? "#66CCFF"
+                                              : "#AAAAAA";
+                                    EditorGUILayout.LabelField($"Status: <color={sc}><b>{fullEntry.status}</b></color>", richStyle);
+                                }
+
+                                // Quest fields
+                                if (fullEntry.quest != null)
+                                {
+                                    QuestDefinitionData q = fullEntry.quest;
+                                    if (!string.IsNullOrEmpty(q.description))
+                                        EditorGUILayout.LabelField($"Description: {q.description}");
+                                    EditorGUILayout.LabelField($"Type: {q.quest_type}  |  Active: {q.is_active}  |  Sort: {q.sort_order}");
+
+                                    if (q.rewards != null && q.rewards.Length > 0)
+                                    {
+                                        EditorGUILayout.LabelField($"Rewards ({q.rewards.Length}):", EditorStyles.boldLabel);
+                                        foreach (QuestReward r in q.rewards)
+                                        {
+                                            if (r.reward_type == "coin")
+                                                EditorGUILayout.LabelField($"  • coin × {r.amount}");
+                                            else if (r.reward_type == "item")
+                                                EditorGUILayout.LabelField($"  • item {r.item_definition_id} × {r.quantity_min}–{r.quantity_max}");
+                                            else
+                                                EditorGUILayout.LabelField($"  • {r.reward_type}");
+                                        }
+                                    }
+                                }
+
+                                // Assignment fields
+                                if (fullEntry.assignment != null)
+                                {
+                                    DailyAssignmentData a = fullEntry.assignment;
+                                    EditorGUILayout.Space(2);
+                                    EditorGUILayout.LabelField("Assignment:", EditorStyles.boldLabel);
+                                    EditorGUILayout.LabelField($"  ID: {a.id}");
+                                    EditorGUILayout.LabelField($"  Assigned: {a.assigned_date}   Expires: {a.expires_at}");
+                                }
+                            }
+                        }
+                    }
+
                     EditorGUILayout.EndVertical();
 
                     EditorGUILayout.Space(4);
@@ -144,7 +258,7 @@ namespace SaiGame.Services
                     EditorGUILayout.LabelField($"Claim ID: {lastClaim.id}", rich);
                     EditorGUILayout.LabelField($"Quest Def ID: {lastClaim.quest_definition_id}");
                     EditorGUILayout.LabelField($"Progress ID: {lastClaim.progress_id}");
-                    EditorGUILayout.LabelField($"Claimed At: {lastClaim.claimed_at}");
+                    EditorGUILayout.LabelField($"Claimed At: <color=#FFD700><b>{lastClaim.claimed_at}</b></color>", rich);
                     if (lastClaim.rewards_granted != null && lastClaim.rewards_granted.Length > 0)
                     {
                         EditorGUILayout.Space(2);
@@ -297,7 +411,93 @@ namespace SaiGame.Services
                 case QuestSourceType.ChainQuest:
                     this.LoadAllChainQuests();
                     break;
+                case QuestSourceType.DailyQuest:
+                    this.LoadAllDailyQuests();
+                    break;
             }
+        }
+
+        private void LoadAllDailyQuests()
+        {
+            DailyQuest dailyQuest = SaiService.Instance?.DailyQuest;
+            if (dailyQuest == null)
+            {
+                Debug.LogError("[QuestProgressorEditor] DailyQuest service not found!");
+                return;
+            }
+
+            if (this.dailyLoadedPools == null || this.dailyLoadedPools.Length == 0)
+            {
+                Debug.LogWarning("[QuestProgressorEditor] No pools loaded. Click \"Load Pools\" first to select a pool.");
+                return;
+            }
+
+            this.dailySelectedPoolIndex = Mathf.Clamp(this.dailySelectedPoolIndex, 0, this.dailyLoadedPools.Length - 1);
+            string poolId = this.dailyLoadedPools[this.dailySelectedPoolIndex].id;
+
+            this.isLoadingAll = true;
+            Repaint();
+
+            dailyQuest.GetTodayQuests(
+                dqPoolId: poolId,
+                onSuccess: response =>
+                {
+                    this.isLoadingAll = false;
+                    this.RefreshQuestPicker();
+                    Repaint();
+                },
+                onError: error =>
+                {
+                    this.isLoadingAll = false;
+                    Debug.LogError($"[QuestProgressorEditor] Failed to load today quests: {error}");
+                    Repaint();
+                }
+            );
+        }
+
+        private void LoadDailyPools()
+        {
+            DailyQuest dailyQuest = SaiService.Instance?.DailyQuest;
+            if (dailyQuest == null)
+            {
+                Debug.LogError("[QuestProgressorEditor] DailyQuest service not found!");
+                return;
+            }
+
+            this.isLoadingDailyPools = true;
+            Repaint();
+
+            dailyQuest.GetPools(
+                onSuccess: response =>
+                {
+                    this.isLoadingDailyPools = false;
+
+                    if (response?.pools == null || response.pools.Length == 0)
+                    {
+                        this.dailyLoadedPools = new DailyQuestPoolData[0];
+                        this.dailyPoolOptions = new string[0];
+                        Debug.LogWarning("[QuestProgressorEditor] No daily quest pools found.");
+                        Repaint();
+                        return;
+                    }
+
+                    this.dailyLoadedPools = response.pools;
+                    this.dailyPoolOptions = new string[response.pools.Length];
+                    for (int i = 0; i < response.pools.Length; i++)
+                    {
+                        DailyQuestPoolData pool = response.pools[i];
+                        this.dailyPoolOptions[i] = $"{pool.display_name}  [{pool.assignment_strategy}]";
+                    }
+                    this.dailySelectedPoolIndex = 0;
+                    Repaint();
+                },
+                onError: error =>
+                {
+                    this.isLoadingDailyPools = false;
+                    Debug.LogError($"[QuestProgressorEditor] Failed to load daily pools: {error}");
+                    Repaint();
+                }
+            );
         }
 
         private void LoadAllChainQuests()

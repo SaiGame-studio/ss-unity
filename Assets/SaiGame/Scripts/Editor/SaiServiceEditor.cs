@@ -72,6 +72,7 @@ namespace SaiGame.Services
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("saiShop"), new GUIContent("Sai Shop"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("chainQuest"), new GUIContent("Chain Quest"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("questProgressor"), new GUIContent("Quest Progressor"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("dailyQuest"), new GUIContent("Daily Quest"));
                 EditorGUI.indentLevel--;
             }
 

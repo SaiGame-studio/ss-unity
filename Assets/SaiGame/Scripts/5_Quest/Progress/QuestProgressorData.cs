@@ -9,7 +9,7 @@ namespace SaiGame.Services
     public enum QuestSourceType
     {
         ChainQuest,
-        // DailyQuest,  // future
+        DailyQuest,
     }
 
     /// <summary>
