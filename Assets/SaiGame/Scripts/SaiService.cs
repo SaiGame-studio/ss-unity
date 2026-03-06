@@ -58,6 +58,9 @@ namespace SaiGame.Services
         [SerializeField] protected bool showButtonsLog = true;
         [SerializeField] protected bool showCallbackLog = true;
         [SerializeField] protected bool showDebugLog = true;
+        [SerializeField] protected bool showUrlRequest = false;
+        [SerializeField] protected bool showJsonRequest = false;
+        [SerializeField] protected bool showJsonResponse = false;
 
         public event Action<string> OnTokenRefreshed;
 
@@ -66,6 +69,12 @@ namespace SaiGame.Services
         public bool ShowButtonsLog => showButtonsLog;
 
         public bool ShowCallbackLog => showCallbackLog;
+
+        public bool ShowUrlRequest => showUrlRequest;
+
+        public bool ShowJsonRequest => showJsonRequest;
+
+        public bool ShowJsonResponse => showJsonResponse;
 
         public string BaseUrl
         {
@@ -182,10 +191,15 @@ namespace SaiGame.Services
         {
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "GET"))
             {
+                if (this.showUrlRequest)
+                    Debug.Log($"[SaiService] GET {request.url}");
+
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
+                    if (this.showJsonResponse)
+                        Debug.Log($"[SaiService] GET Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else
@@ -205,10 +219,17 @@ namespace SaiGame.Services
                 request.uploadHandler = new UploadHandlerRaw(bodyRaw);
                 request.SetRequestHeader("Content-Type", "application/json");
 
+                if (this.showUrlRequest)
+                    Debug.Log($"[SaiService] POST {request.url}");
+                if (this.showJsonRequest)
+                    Debug.Log($"[SaiService] POST Request Body\n{jsonData}");
+
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
+                    if (this.showJsonResponse)
+                        Debug.Log($"[SaiService] POST Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else
@@ -228,10 +249,17 @@ namespace SaiGame.Services
                 request.uploadHandler = new UploadHandlerRaw(bodyRaw);
                 request.SetRequestHeader("Content-Type", "application/json");
 
+                if (this.showUrlRequest)
+                    Debug.Log($"[SaiService] PATCH {request.url}");
+                if (this.showJsonRequest)
+                    Debug.Log($"[SaiService] PATCH Request Body\n{jsonData}");
+
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
+                    if (this.showJsonResponse)
+                        Debug.Log($"[SaiService] PATCH Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else
@@ -247,10 +275,15 @@ namespace SaiGame.Services
         {
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "DELETE"))
             {
+                if (this.showUrlRequest)
+                    Debug.Log($"[SaiService] DELETE {request.url}");
+
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
+                    if (this.showJsonResponse)
+                        Debug.Log($"[SaiService] DELETE Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else

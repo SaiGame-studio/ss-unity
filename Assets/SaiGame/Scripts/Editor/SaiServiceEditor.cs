@@ -84,6 +84,9 @@ namespace SaiGame.Services
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showButtonsLog"), new GUIContent("Show Buttons Log"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showCallbackLog"), new GUIContent("Show Callback Log"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showDebugLog"), new GUIContent("Show Debug Log"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showUrlRequest"), new GUIContent("Show Url Request"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showJsonRequest"), new GUIContent("Show Json Request"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showJsonResponse"), new GUIContent("Show Json Response"));
                 EditorGUI.indentLevel--;
             }
 
