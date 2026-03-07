@@ -29,6 +29,7 @@ namespace SaiGame.Services
         [SerializeField] protected Mailbox mailbox;
         [SerializeField] protected PlayerItem playerItem;
         [SerializeField] protected PlayerContainer playerContainer;
+        [SerializeField] protected ItemGenerator itemGenerator;
         [SerializeField] protected SaiShop saiShop;
         [SerializeField] protected ChainQuest chainQuest;
         [SerializeField] protected QuestProgressor questProgressor;
@@ -107,6 +108,8 @@ namespace SaiGame.Services
         public PlayerItem PlayerItem => playerItem;
 
         public PlayerContainer PlayerContainer => playerContainer;
+
+        public ItemGenerator ItemGenerator => itemGenerator;
 
         public SaiShop SaiShop => saiShop;
 
@@ -322,6 +325,7 @@ namespace SaiGame.Services
             this.LoadMailbox();
             this.LoadPlayerItem();
             this.LoadPlayerContainer();
+            this.LoadItemGenerator();
             this.LoadSaiShop();
             this.LoadChainQuest();
             this.LoadQuestProgressor();
@@ -369,6 +373,14 @@ namespace SaiGame.Services
             this.playerContainer = GetComponent<PlayerContainer>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadPlayerContainer", gameObject);
+        }
+
+        protected virtual void LoadItemGenerator()
+        {
+            if (this.itemGenerator != null) return;
+            this.itemGenerator = GetComponent<ItemGenerator>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadItemGenerator", gameObject);
         }
 
         protected virtual void LoadSaiShop()

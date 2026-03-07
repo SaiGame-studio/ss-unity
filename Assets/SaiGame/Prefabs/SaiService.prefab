@@ -114,6 +114,35 @@ MonoBehaviour:
     limit: 0
     offset: 0
     total: 0
+  currentQuestStatusResponse:
+    progress:
+      id: 
+      studio_id: 
+      game_id: 
+      user_id: 
+      quest_definition_id: 
+      status: 
+      completed_at: 
+      claimed_at: 
+      version: 0
+      created_at: 
+      updated_at: 
+    quest_definition:
+      id: 
+      studio_id: 
+      game_id: 
+      name: 
+      description: 
+      quest_type: 
+      conditions:
+        operator_type: 
+        clauses: []
+      rewards: []
+      is_active: 0
+      sort_order: 0
+      created_at: 
+      updated_at: 
+    status: 
 --- !u!114 &4308186167237759036
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -155,6 +184,34 @@ MonoBehaviour:
     start_date: 
     end_date: 
     days: []
+  currentTodayQuestResponse:
+    pool:
+      id: 
+      studio_id: 
+      game_id: 
+      pool_key: 
+      display_name: 
+      description: 
+      slots_per_day: 0
+      reset_hour_utc: 0
+      assignment_strategy: 
+      is_active: 0
+      created_at: 
+      updated_at: 
+    entries: []
+    streak:
+      id: 
+      studio_id: 
+      game_id: 
+      user_id: 
+      pool_id: 
+      current_streak: 0
+      longest_streak: 0
+      total_completions: 0
+      version: 0
+      created_at: 
+      updated_at: 
+    assigned_date: 
 --- !u!1 &6971719431293405431
 GameObject:
   m_ObjectHideFlags: 0
@@ -171,6 +228,7 @@ GameObject:
   - component: {fileID: 7304098766332990550}
   - component: {fileID: 4769566823869136907}
   - component: {fileID: 6141822644857766885}
+  - component: {fileID: 4393459433292955985}
   m_Layer: 0
   m_Name: SaiService
   m_TagString: Untagged
@@ -375,3 +433,18 @@ MonoBehaviour:
     item_count: 0
     shop_id: 
   lastLoadedShopId: 
+--- !u!114 &4393459433292955985
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6971719431293405431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcbee3008849b86478e24bfd11ceb552, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemGenerator
+  autoLoadOnLogin: 0
+  currentGenerators:
+    generators: []
