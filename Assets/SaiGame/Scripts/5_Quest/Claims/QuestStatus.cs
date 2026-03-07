@@ -10,11 +10,13 @@ namespace SaiGame.Services
     /// Fetches and caches the list of quest claims for the authenticated user.
     /// </summary>
     [DefaultExecutionOrder(-99)]
-    public class QuestClaims : SaiBehaviour
+    public class QuestStatus : SaiBehaviour
     {
         // Events
         public event Action<QuestClaimsResponse> OnGetClaimsSuccess;
         public event Action<string> OnGetClaimsFailure;
+        public event Action<QuestDefinitionStatusResponse> OnGetQuestStatusSuccess;
+        public event Action<string> OnGetQuestStatusFailure;
 
         [Header("Pagination Settings")]
         [SerializeField] protected int claimsLimit = 50;
@@ -22,8 +24,14 @@ namespace SaiGame.Services
 
         [Header("Cached Response")]
         [SerializeField] protected QuestClaimsResponse currentClaimsResponse;
+        [SerializeField] protected QuestDefinitionStatusResponse currentQuestStatusResponse;
 
         public QuestClaimsResponse CurrentClaimsResponse => this.currentClaimsResponse;
+        public QuestDefinitionStatusResponse CurrentQuestStatusResponse
+        {
+            get => this.currentQuestStatusResponse;
+            set => this.currentQuestStatusResponse = value;
+        }
         public bool HasClaims => this.currentClaimsResponse != null
                                  && this.currentClaimsResponse.claims != null
                                  && this.currentClaimsResponse.claims.Length > 0;
@@ -144,6 +152,83 @@ namespace SaiGame.Services
                     this.OnGetClaimsFailure?.Invoke(error);
                     if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[QuestClaims] GetClaims</color> → <b><color=#FF4444>onError</color></b> callback (network) | QuestClaims.cs › GetClaimsCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
+            );
+        }
+
+        /// <summary>
+        /// Fetches the progress + definition for a single quest definition.
+        /// Endpoint: GET /api/v1/games/{gameId}/quests/{questDefinitionId}
+        /// </summary>
+        public void GetQuestStatus(
+            string questDefinitionId,
+            Action<QuestDefinitionStatusResponse> onSuccess = null,
+            Action<string> onError = null)
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log($"<color=#00FFFF><b>[QuestStatus] ► Get Quest Status: {questDefinitionId}</b></color>", gameObject);
+
+            if (SaiService.Instance == null)
+            {
+                onError?.Invoke("SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(questDefinitionId))
+            {
+                onError?.Invoke("Quest Definition ID is required.");
+                return;
+            }
+
+            StartCoroutine(this.GetQuestStatusCoroutine(questDefinitionId.Trim(), onSuccess, onError));
+        }
+
+        private IEnumerator GetQuestStatusCoroutine(
+            string questDefinitionId,
+            Action<QuestDefinitionStatusResponse> onSuccess,
+            Action<string> onError)
+        {
+            string gameId = SaiService.Instance.GameId;
+            string endpoint = $"/api/v1/games/{gameId}/quests/{questDefinitionId}";
+
+            yield return SaiService.Instance.GetRequest(endpoint,
+                response =>
+                {
+                    try
+                    {
+                        QuestDefinitionStatusResponse statusResponse =
+                            JsonUtility.FromJson<QuestDefinitionStatusResponse>(response);
+                        this.currentQuestStatusResponse = statusResponse;
+
+                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                            Debug.Log($"[QuestStatus] Status for {questDefinitionId}: {statusResponse.status}");
+
+                        this.OnGetQuestStatusSuccess?.Invoke(statusResponse);
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[QuestStatus] GetQuestStatus</color> → <b><color=#00FF88>onSuccess</color></b> callback | QuestStatus.cs › GetQuestStatusCoroutine");
+                        onSuccess?.Invoke(statusResponse);
+                    }
+                    catch (Exception e)
+                    {
+                        string errorMsg = $"Parse quest status response error: {e.Message}";
+                        this.OnGetQuestStatusFailure?.Invoke(errorMsg);
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[QuestStatus] GetQuestStatus</color> → <b><color=#FF4444>onError</color></b> callback (parse) | QuestStatus.cs › GetQuestStatusCoroutine | {errorMsg}");
+                        onError?.Invoke(errorMsg);
+                    }
+                },
+                error =>
+                {
+                    this.OnGetQuestStatusFailure?.Invoke(error);
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[QuestStatus] GetQuestStatus</color> → <b><color=#FF4444>onError</color></b> callback (network) | QuestStatus.cs › GetQuestStatusCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );

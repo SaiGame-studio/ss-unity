@@ -32,7 +32,7 @@ namespace SaiGame.Services
         [SerializeField] protected SaiShop saiShop;
         [SerializeField] protected ChainQuest chainQuest;
         [SerializeField] protected QuestProgressor questProgressor;
-        [SerializeField] protected QuestClaims questClaims;
+        [SerializeField] protected QuestStatus questClaims;
         [SerializeField] protected DailyQuest dailyQuest;
 
         [Header("Server Configuration")]
@@ -114,7 +114,7 @@ namespace SaiGame.Services
 
         public QuestProgressor QuestProgressor => this.questProgressor;
 
-        public QuestClaims QuestClaims => this.questClaims;
+        public QuestStatus QuestClaims => this.questClaims;
 
         public DailyQuest DailyQuest => this.dailyQuest;
 
