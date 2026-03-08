@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -89,8 +90,8 @@ namespace SaiGame.Services
                     // Info box about local calculation
                     EditorGUILayout.Space(2);
                     EditorGUILayout.HelpBox(
-                        "Local Calculation: Automatically calculates pending units based on elapsed time without calling the server. " +
-                        "UI updates every second when enabled. Disable to show server values only.",
+                        "Local Calculation: When enabled, calculates current ticks from server checkpoint + elapsed time. " +
+                        "When disabled, displays server's ticket_count value (static until next sync).",
                         MessageType.Info);
 
                     if (this.itemGenerator.CurrentGenerators.generators != null
@@ -156,128 +157,385 @@ namespace SaiGame.Services
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            // Highlight inventory_item_id
-            GUIStyle idStyle = new GUIStyle(EditorStyles.boldLabel);
-            idStyle.normal.textColor = new Color(1f, 0.84f, 0f); // Gold color
+            // === HEADER SECTION ===
+            if (generator.definition != null)
+            {
+                // Title bar with gradient background
+                EditorGUILayout.BeginHorizontal();
+                
+                GUIStyle titleStyle = new GUIStyle(EditorStyles.boldLabel);
+                titleStyle.fontSize = 14;
+                titleStyle.normal.textColor = this.GetRarityColor(generator.definition.rarity);
+                EditorGUILayout.LabelField($"★ {generator.definition.name}", titleStyle);
+                
+                GUILayout.FlexibleSpace();
+                
+                // Rarity badge (right-aligned)
+                GUIStyle rarityStyle = new GUIStyle(EditorStyles.label);
+                rarityStyle.fontSize = 11;
+                rarityStyle.normal.textColor = this.GetRarityColor(generator.definition.rarity);
+                rarityStyle.fontStyle = FontStyle.Bold;
+                rarityStyle.alignment = TextAnchor.MiddleRight;
+                EditorGUILayout.LabelField(generator.definition.rarity.ToUpper(), rarityStyle, GUILayout.MinWidth(70));
+                
+                EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.LabelField("Inventory Item ID:", generator.inventory_item_id, idStyle);
-            EditorGUILayout.LabelField($"Definition ID: {generator.definition_id}");
-            EditorGUILayout.LabelField($"Output Item Code: {generator.output_item_code}");
+                // Subtle separator
+                GUIStyle separatorStyle = new GUIStyle(EditorStyles.label);
+                separatorStyle.fontSize = 8;
+                separatorStyle.normal.textColor = new Color(0.3f, 0.3f, 0.3f);
+                EditorGUILayout.LabelField("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", separatorStyle);
+            }
 
-            EditorGUILayout.Space(4);
+            // === COMPACT INFO ===
+            GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
+            labelStyle.fontSize = 10;
+            labelStyle.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
+            
+            if (generator.definition != null)
+            {
+                EditorGUILayout.LabelField($"CODE: {generator.definition.item_code}", labelStyle);
+            }
+            
+            EditorGUILayout.LabelField($"DEF: {generator.definition_id}", labelStyle);
+            
+            GUIStyle idStyle = new GUIStyle(EditorStyles.label);
+            idStyle.fontSize = 10;
+            idStyle.normal.textColor = new Color(1f, 0.84f, 0f);
+            EditorGUILayout.LabelField($"ID: {generator.inventory_item_id}", idStyle);
 
-            // Local Calculation Toggle
+            EditorGUILayout.Space(8);
+
+            // === LOCAL CALCULATION TOGGLE ===
             EditorGUI.BeginChangeCheck();
-            bool newLocalCalcValue = EditorGUILayout.Toggle(
-                new GUIContent("Enable Local Calculation", "Calculate pending units locally based on elapsed time"),
-                generator.enableLocalCalculation);
+            bool newLocalCalcValue = EditorGUILayout.Toggle("Local Calculation", generator.enableLocalCalculation);
             if (EditorGUI.EndChangeCheck())
             {
-                this.itemGenerator.SetGeneratorLocalCalculation(generator.inventory_item_id, newLocalCalcValue);
+                if (!newLocalCalcValue && generator.enableLocalCalculation)
+                {
+                    // Turning OFF: snapshot the current calculated value so counter freezes here
+                    // GetCurrentPendingUnits() still works because enableLocalCalculation is still true
+                    int currentValue = generator.GetCurrentPendingUnits();
+                    generator.ticket_count = currentValue;
+                    generator.checkpoint_at = System.DateTime.UtcNow.ToString("o");
+                }
+                
+                generator.enableLocalCalculation = newLocalCalcValue;
+                // When turning ON again, it calculates from snapshotted ticket_count + checkpoint_at
+                // so counter continues from where it stopped
+                
+                EditorUtility.SetDirty(target);
                 Repaint();
             }
 
-            EditorGUILayout.Space(2);
-
-            // Display calculated vs server values
-            int currentPending = generator.GetCurrentPendingUnits();
-            
-            if (generator.enableLocalCalculation)
-            {
-                // Show calculated value prominently
-                GUIStyle calculatedStyle = new GUIStyle(EditorStyles.boldLabel);
-                calculatedStyle.normal.textColor = new Color(0.4f, 1f, 0.6f); // Light green
-                EditorGUILayout.LabelField($"Current Pending (Calculated): {currentPending} / {generator.capacity}", calculatedStyle);
-                
-                // Show server value as reference
-                GUIStyle serverStyle = new GUIStyle(EditorStyles.miniLabel);
-                serverStyle.normal.textColor = Color.gray;
-                EditorGUILayout.LabelField($"  └─ Server Value: {generator.pending_units}", serverStyle);
-            }
-            else
-            {
-                // Show server value only
-                EditorGUILayout.LabelField($"Pending Units (Server): {generator.pending_units} / {generator.capacity}");
-            }
-
-            // Progress bar with calculated value
-            float fillPercentage = generator.capacity > 0 ? (float)currentPending / generator.capacity : 0f;
-            Rect progressRect = EditorGUILayout.GetControlRect(false, 18);
-            EditorGUI.ProgressBar(progressRect, fillPercentage, $"{currentPending}/{generator.capacity}");
-
-            // Time until full (only if local calculation is enabled)
-            if (generator.enableLocalCalculation)
-            {
-                string timeUntilFull = generator.GetTimeUntilFullFormatted();
-                GUIStyle timeStyle = new GUIStyle(EditorStyles.miniLabel);
-                if (generator.IsAtCapacity())
-                {
-                    timeStyle.normal.textColor = Color.yellow;
-                }
-                else
-                {
-                    timeStyle.normal.textColor = new Color(0.6f, 0.8f, 1f); // Light blue
-                }
-                EditorGUILayout.LabelField($"Time Until Full: {timeUntilFull}", timeStyle);
-            }
-
-            EditorGUILayout.LabelField($"Production Interval: {generator.production_interval_seconds}s");
-            EditorGUILayout.LabelField($"Checkpoint At: {generator.checkpoint_at}");
-
-            // Action Buttons
             EditorGUILayout.Space(4);
-            EditorGUILayout.BeginHorizontal();
 
-            // Check Button
+            // === PRODUCTION STATUS ===
+            int currentPending = generator.GetCurrentPendingUnits();
+            string timeElapsed = this.GetTimeElapsed(generator.checkpoint_at);
+            
+            // Status bar
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            
+            EditorGUILayout.BeginHorizontal();
+            GUIStyle statusLabel = new GUIStyle(EditorStyles.label);
+            statusLabel.fontSize = 11;
+            statusLabel.fontStyle = FontStyle.Bold;
+            statusLabel.normal.textColor = new Color(1f, 0.7f, 0.2f);
+            EditorGUILayout.LabelField("⚡ PRODUCTION STATUS", statusLabel, GUILayout.Width(180));
+            
+            if (!string.IsNullOrEmpty(timeElapsed))
+            {
+                GUIStyle timeStyle = new GUIStyle(EditorStyles.label);
+                timeStyle.fontSize = 10;
+                timeStyle.normal.textColor = new Color(0.5f, 0.7f, 1f);
+                timeStyle.alignment = TextAnchor.MiddleRight;
+                EditorGUILayout.LabelField($"running {timeElapsed}", timeStyle, GUILayout.ExpandWidth(true));
+            }
+            EditorGUILayout.EndHorizontal();
+
+            // Tick info
+            GUIStyle tickLabelStyle = new GUIStyle(EditorStyles.label);
+            tickLabelStyle.fontSize = 11;
+            tickLabelStyle.normal.textColor = new Color(0.7f, 0.7f, 0.7f);
+            
+            GUIStyle tickValueStyle = new GUIStyle(EditorStyles.boldLabel);
+            tickValueStyle.fontSize = 13;
+            tickValueStyle.normal.textColor = generator.is_full ? new Color(1f, 0.8f, 0.2f) : new Color(0.4f, 1f, 0.6f);
+            
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Ticks:", tickLabelStyle, GUILayout.Width(110));
+            EditorGUILayout.LabelField($"{currentPending}/{generator.tick_capacity}", tickValueStyle);
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.Space(2);
+            
+            // Interval info with dynamic countdown
+            EditorGUILayout.BeginHorizontal();
+            GUIStyle intervalLabelStyle = new GUIStyle(EditorStyles.label);
+            intervalLabelStyle.fontSize = 10;
+            intervalLabelStyle.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
+            EditorGUILayout.LabelField("⏱ Interval:", intervalLabelStyle, GUILayout.Width(110));
+            
+            int dynamicNextTick = generator.GetDynamicNextTickSeconds();
+            GUIStyle intervalValueStyle = new GUIStyle(EditorStyles.label);
+            intervalValueStyle.fontSize = 11;
+            intervalValueStyle.normal.textColor = new Color(0.7f, 0.9f, 1f);
+            EditorGUILayout.LabelField($"{dynamicNextTick}/{generator.production_interval_seconds}s", intervalValueStyle);
+            EditorGUILayout.EndHorizontal();
+            
+            // Capacity time info (total time to full)
+            EditorGUILayout.BeginHorizontal();
+            GUIStyle capacityTimeLabelStyle = new GUIStyle(EditorStyles.label);
+            capacityTimeLabelStyle.fontSize = 10;
+            capacityTimeLabelStyle.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
+            EditorGUILayout.LabelField("⏳ Capacity Time:", capacityTimeLabelStyle, GUILayout.Width(110));
+            
+            string totalTimeFormatted = generator.GetTotalTimeToFullFormatted();
+            GUIStyle capacityTimeValueStyle = new GUIStyle(EditorStyles.label);
+            capacityTimeValueStyle.fontSize = 10;
+            capacityTimeValueStyle.normal.textColor = new Color(0.8f, 0.8f, 0.8f);
+            EditorGUILayout.LabelField($"{totalTimeFormatted} ({generator.tick_capacity} ticks)", capacityTimeValueStyle);
+            EditorGUILayout.EndHorizontal();
+
+            // Time remaining info
+            EditorGUILayout.BeginHorizontal();
+            GUIStyle remainingLabelStyle = new GUIStyle(EditorStyles.label);
+            remainingLabelStyle.fontSize = 10;
+            remainingLabelStyle.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
+            EditorGUILayout.LabelField("⏱ Time Remaining:", remainingLabelStyle, GUILayout.Width(110));
+            
+            string timeRemaining = generator.GetTimeUntilFullFormatted();
+            GUIStyle remainingValueStyle = new GUIStyle(EditorStyles.label);
+            remainingValueStyle.fontSize = 10;
+            remainingValueStyle.normal.textColor = currentPending >= generator.tick_capacity ? new Color(1f, 0.8f, 0.2f) : new Color(0.4f, 1f, 0.6f);
+            EditorGUILayout.LabelField(timeRemaining, remainingValueStyle);
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.Space(4);
+            
+            // Progress bar
+            float fillPercentage = generator.tick_capacity > 0 ? (float)currentPending / generator.tick_capacity : 0f;
+            Rect progressRect = EditorGUILayout.GetControlRect(false, 20);
+            
+            // Draw background
+            EditorGUI.DrawRect(progressRect, new Color(0.2f, 0.2f, 0.2f));
+            
+            // Draw fill
+            Rect fillRect = new Rect(progressRect.x, progressRect.y, progressRect.width * fillPercentage, progressRect.height);
+            Color barColor = generator.is_full ? new Color(1f, 0.7f, 0.2f) : new Color(0.3f, 0.8f, 0.5f);
+            EditorGUI.DrawRect(fillRect, barColor);
+            
+            // Draw percentage text with shadow for better visibility
+            GUIStyle percentStyle = new GUIStyle(GUI.skin.label);
+            percentStyle.alignment = TextAnchor.MiddleCenter;
+            percentStyle.fontSize = 11;
+            percentStyle.fontStyle = FontStyle.Bold;
+            percentStyle.normal.textColor = Color.white;
+            
+            // Draw shadow first
+            Rect shadowRect = new Rect(progressRect.x + 1, progressRect.y + 1, progressRect.width, progressRect.height);
+            GUIStyle shadowStyle = new GUIStyle(percentStyle);
+            shadowStyle.normal.textColor = new Color(0f, 0f, 0f, 0.8f);
+            GUI.Label(shadowRect, $"{fillPercentage * 100:F0}%", shadowStyle);
+            
+            // Draw main text
+            GUI.Label(progressRect, $"{fillPercentage * 100:F0}%", percentStyle);
+
+            // Status message
+            if (generator.is_full)
+            {
+                GUIStyle warningStyle = new GUIStyle(EditorStyles.label);
+                warningStyle.fontSize = 11;
+                warningStyle.normal.textColor = new Color(1f, 0.8f, 0.2f);
+                EditorGUILayout.LabelField("⚠ Full — Production stopped", warningStyle);
+            }
+            
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.Space(4);
+
+            // === OUTPUT POOL (Card-based layout) ===
+            if (generator.definition != null && generator.definition.output_pool != null && generator.definition.output_pool.Length > 0)
+            {
+                GUIStyle poolHeader = new GUIStyle(EditorStyles.boldLabel);
+                poolHeader.fontSize = 11;
+                poolHeader.normal.textColor = new Color(0.7f, 0.9f, 1f);
+                EditorGUILayout.LabelField($"📤 LOOT POOL ({generator.definition.output_pool.Length})", poolHeader);
+                
+                EditorGUILayout.Space(3);
+                
+                foreach (var output in generator.definition.output_pool)
+                {
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    
+                    // Item Definition ID (full, no truncation)
+                    GUIStyle itemIdStyle = new GUIStyle(EditorStyles.label);
+                    itemIdStyle.fontSize = 10;
+                    itemIdStyle.normal.textColor = new Color(0.7f, 0.9f, 1f);
+                    itemIdStyle.fontStyle = FontStyle.Bold;
+                    itemIdStyle.wordWrap = false;
+                    EditorGUILayout.LabelField($"Item: {output.item_definition_id}", itemIdStyle);
+                    
+                    EditorGUILayout.Space(2);
+                    
+                    // Drop Rate
+                    EditorGUILayout.BeginHorizontal();
+                    GUIStyle lootLabelStyle = new GUIStyle(EditorStyles.label);
+                    lootLabelStyle.fontSize = 9;
+                    lootLabelStyle.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
+                    EditorGUILayout.LabelField("Drop Rate:", lootLabelStyle, GUILayout.Width(80));
+                    
+                    GUIStyle dropStyle = new GUIStyle(EditorStyles.label);
+                    dropStyle.fontSize = 10;
+                    dropStyle.normal.textColor = (output.drop_rate * 100) >= 50 ? new Color(0.3f, 1f, 0.5f) : new Color(1f, 1f, 0.5f);
+                    dropStyle.fontStyle = FontStyle.Bold;
+                    EditorGUILayout.LabelField($"{output.drop_rate * 100:F1}%", dropStyle);
+                    EditorGUILayout.EndHorizontal();
+                    
+                    // Quantity Range
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("Quantity:", lootLabelStyle, GUILayout.Width(80));
+                    
+                    GUIStyle qtyStyle = new GUIStyle(EditorStyles.label);
+                    qtyStyle.fontSize = 10;
+                    qtyStyle.normal.textColor = new Color(0.9f, 0.9f, 0.9f);
+                    EditorGUILayout.LabelField($"{output.quantity_min}-{output.quantity_max}", qtyStyle);
+                    EditorGUILayout.EndHorizontal();
+                    
+                    // Expected Output Calculation
+                    // drop_rate: 1 = 100%, 0.5 = 50%, etc.
+                    // Logic: drop_rate determines how many ticks will drop items
+                    // Each successful tick drops quantity_min to quantity_max items
+                    bool isGuaranteed = output.drop_rate >= 1.0f;
+                    float expectedDrops = currentPending * output.drop_rate; // Number of successful drops
+                    
+                    int rawMin, rawMax;
+                    string expectedText;
+                    
+                    if (output.quantity_min == output.quantity_max)
+                    {
+                        // Fixed quantity per drop (e.g., 10-10 means always 10 if dropped)
+                        int quantityPerDrop = output.quantity_min;
+                        float expectedTotal = expectedDrops * quantityPerDrop;
+                        
+                        if (expectedDrops < 1.0f && !isGuaranteed)
+                        {
+                            // Low probability: might get nothing or at least 1 drop worth
+                            // Example: 0.18 drops × 10 = might get 0 or 10
+                            rawMin = 0;
+                            rawMax = quantityPerDrop;
+                            expectedText = $"0-{rawMax}";
+                        }
+                        else
+                        {
+                            // High enough probability or guaranteed
+                            rawMin = Mathf.FloorToInt(expectedTotal);
+                            rawMax = Mathf.CeilToInt(expectedTotal);
+                            expectedText = rawMin == rawMax ? rawMin.ToString() : $"{rawMin}-{rawMax}";
+                        }
+                    }
+                    else
+                    {
+                        // Variable quantity per drop (e.g., 10-30)
+                        rawMin = Mathf.FloorToInt(expectedDrops * output.quantity_min);
+                        rawMax = Mathf.FloorToInt(expectedDrops * output.quantity_max);
+                        expectedText = rawMin == rawMax ? rawMin.ToString() : $"{rawMin}-{rawMax}";
+                    }
+                    
+                    // Apply collect_cap
+                    int expectedMin = Mathf.Min(rawMin, output.collect_cap);
+                    int expectedMax = Mathf.Min(rawMax, output.collect_cap);
+                    bool isCapped = rawMax > output.collect_cap;
+                    
+                    // Update display text if capped
+                    if (isCapped)
+                    {
+                        expectedText = expectedMin == expectedMax ? expectedMin.ToString() : $"{expectedMin}-{expectedMax}";
+                    }
+                    
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("Expected:", lootLabelStyle, GUILayout.Width(80));
+                    
+                    GUIStyle expectedStyle = new GUIStyle(EditorStyles.label);
+                    expectedStyle.fontSize = 10;
+                    expectedStyle.normal.textColor = isCapped ? new Color(1f, 0.6f, 0.3f) : new Color(0.4f, 1f, 0.6f);
+                    expectedStyle.fontStyle = FontStyle.Bold;
+                    
+                    // Format: guaranteed items show as "→ X", probabilistic show as "→ ~X"
+                    string prefix = isGuaranteed ? "→ " : "→ ~";
+                    EditorGUILayout.LabelField($"{prefix}{expectedText}", expectedStyle);
+                    
+                    GUILayout.Space(10);
+                    GUIStyle capStyle = new GUIStyle(EditorStyles.label);
+                    capStyle.fontSize = 9;
+                    capStyle.normal.textColor = isCapped ? new Color(1f, 0.5f, 0.2f) : new Color(0.6f, 0.6f, 0.6f);
+                    capStyle.fontStyle = isCapped ? FontStyle.Bold : FontStyle.Normal;
+                    string capIcon = isCapped ? "▲" : "◆";
+                    EditorGUILayout.LabelField($"{capIcon} CAP: {output.collect_cap}", capStyle);
+                    
+                    EditorGUILayout.EndHorizontal();
+                    
+                    EditorGUILayout.EndVertical();
+                    
+                    EditorGUILayout.Space(2);
+                }
+            }
+
+            EditorGUILayout.Space(6);
+
+            // === ACTION BUTTONS ===
             bool isCheckLoading = this.loadingCheckGenerators.Contains(generator.inventory_item_id);
+            bool isCollectLoading = this.loadingCollectGenerators.Contains(generator.inventory_item_id);
+            bool hasUnits = currentPending > 0;
+
+            // Primary Actions Row
+            EditorGUILayout.BeginHorizontal();
+            
+            // Check Button
             GUI.backgroundColor = isCheckLoading ? Color.gray : new Color(0.3f, 0.8f, 1f);
             EditorGUI.BeginDisabledGroup(isCheckLoading);
-            if (GUILayout.Button(isCheckLoading ? "Checking..." : "Check", GUILayout.Height(24)))
+            if (GUILayout.Button(isCheckLoading ? "🔄 Checking..." : "🔄 Check", GUILayout.Height(32)))
             {
                 this.CheckGenerator(generator.inventory_item_id);
             }
             EditorGUI.EndDisabledGroup();
             GUI.backgroundColor = Color.white;
-
-            // Collect Button - use calculated value for display
-            bool isCollectLoading = this.loadingCollectGenerators.Contains(generator.inventory_item_id);
-            bool hasUnits = currentPending > 0;
-            GUI.backgroundColor = isCollectLoading ? Color.gray : (hasUnits ? new Color(0.2f, 1f, 0.4f) : new Color(0.5f, 0.5f, 0.5f));
+            
+            // Collect Button (Green/Gray)
+            GUI.backgroundColor = isCollectLoading ? Color.gray : (hasUnits ? new Color(0.3f, 0.9f, 0.5f) : new Color(0.4f, 0.4f, 0.4f));
             EditorGUI.BeginDisabledGroup(isCollectLoading || !hasUnits);
-            if (GUILayout.Button(isCollectLoading ? "Collecting..." : $"Collect ({currentPending})", GUILayout.Height(24)))
+            if (GUILayout.Button(isCollectLoading ? "📦 Collecting..." : $"📦 Collect ({currentPending})", GUILayout.Height(32)))
             {
                 this.CollectGenerator(generator.inventory_item_id);
             }
             EditorGUI.EndDisabledGroup();
             GUI.backgroundColor = Color.white;
-
+            
             EditorGUILayout.EndHorizontal();
 
-            // Developer Tools Buttons
             EditorGUILayout.Space(2);
+
+            // Debug Actions Row (Compact)
             EditorGUILayout.BeginHorizontal();
-
-            GUI.backgroundColor = new Color(0.4f, 0.9f, 1f);
-            if (GUILayout.Button("Get Pending", GUILayout.Height(22)))
+            
+            GUI.backgroundColor = new Color(0.4f, 0.6f, 0.7f);
+            if (GUILayout.Button("📊 Pending", GUILayout.Height(20)))
             {
-                this.itemGenerator.GetGeneratorCurrentPendingUnits(generator.inventory_item_id);
+                this.itemGenerator.GetGeneratorExpectedOutput(generator.inventory_item_id);
             }
-            GUI.backgroundColor = Color.white;
-
-            GUI.backgroundColor = new Color(0.6f, 0.4f, 1f);
-            if (GUILayout.Button("Get Time", GUILayout.Height(22)))
+            
+            if (GUILayout.Button("⏰ Time", GUILayout.Height(20)))
             {
                 this.itemGenerator.GetGeneratorTimeUntilFull(generator.inventory_item_id);
             }
-            GUI.backgroundColor = Color.white;
-
-            GUI.backgroundColor = new Color(1f, 0.6f, 1f);
-            if (GUILayout.Button("Log State", GUILayout.Height(22)))
+            
+            if (GUILayout.Button("📝 Log", GUILayout.Height(20)))
             {
                 this.itemGenerator.LogGeneratorState(generator.inventory_item_id);
             }
             GUI.backgroundColor = Color.white;
-
+            
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndVertical();
@@ -340,7 +598,7 @@ namespace SaiGame.Services
                     this.loadingCheckGenerators.Remove(inventoryItemId);
 
                     if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                        Debug.Log($"[ItemGeneratorEditor] Generator checked: {inventoryItemId} | Pending: {generatorData.pending_units}/{generatorData.capacity}");
+                        Debug.Log($"[ItemGeneratorEditor] Generator checked: {inventoryItemId} | Tickets: {generatorData.ticket_count}/{generatorData.capacity}");
 
                     Repaint();
                 },
@@ -380,7 +638,12 @@ namespace SaiGame.Services
                     this.loadingCollectGenerators.Remove(inventoryItemId);
 
                     if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                        Debug.Log($"[ItemGeneratorEditor] Collected {collectResponse.units_collected} units of {collectResponse.output_item_code} | Output Item ID: {collectResponse.output_inventory_item_id}");
+                    {
+                        string itemInfo = !string.IsNullOrEmpty(collectResponse.output_item_code) 
+                            ? collectResponse.output_item_code 
+                            : "Unknown Item";
+                        Debug.Log($"[ItemGeneratorEditor] Collected {collectResponse.units_collected} units of {itemInfo} | Output Item ID: {collectResponse.output_inventory_item_id}");
+                    }
 
                     Repaint();
                 },
@@ -394,6 +657,81 @@ namespace SaiGame.Services
                     Repaint();
                 }
             );
+        }
+
+        private Color GetRarityColor(string rarity)
+        {
+            switch (rarity.ToLower())
+            {
+                case "common":
+                    return new Color(0.7f, 0.7f, 0.7f); // Gray
+                case "uncommon":
+                    return new Color(0.3f, 1f, 0.3f); // Green
+                case "rare":
+                    return new Color(0.3f, 0.6f, 1f); // Blue
+                case "epic":
+                    return new Color(0.8f, 0.3f, 1f); // Purple
+                case "legendary":
+                    return new Color(1f, 0.6f, 0f); // Orange
+                case "mythic":
+                    return new Color(1f, 0.3f, 0.3f); // Red
+                default:
+                    return Color.white;
+            }
+        }
+
+        private Texture2D MakeTex(int width, int height, Color color)
+        {
+            Color[] pixels = new Color[width * height];
+            for (int i = 0; i < pixels.Length; i++)
+                pixels[i] = color;
+
+            Texture2D texture = new Texture2D(width, height);
+            texture.SetPixels(pixels);
+            texture.Apply();
+            return texture;
+        }
+
+        private string GetTimeElapsed(string checkpointAt)
+        {
+            if (string.IsNullOrEmpty(checkpointAt))
+                return "";
+
+            try
+            {
+                DateTime checkpointTime = DateTime.Parse(checkpointAt).ToUniversalTime();
+                DateTime currentTime = DateTime.UtcNow;
+                TimeSpan elapsed = currentTime - checkpointTime;
+
+                if (elapsed.TotalSeconds < 0)
+                    return "";
+
+                if (elapsed.TotalHours >= 1)
+                    return $"{(int)elapsed.TotalHours}h {elapsed.Minutes}m {elapsed.Seconds}s";
+                else if (elapsed.TotalMinutes >= 1)
+                    return $"{elapsed.Minutes}m {elapsed.Seconds}s";
+                else
+                    return $"{elapsed.Seconds}s";
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        private string FormatSeconds(int totalSeconds)
+        {
+            if (totalSeconds < 60)
+                return $"{totalSeconds}s";
+
+            int hours = totalSeconds / 3600;
+            int minutes = (totalSeconds % 3600) / 60;
+            int seconds = totalSeconds % 60;
+
+            if (hours > 0)
+                return $"{hours}h {minutes}m ({seconds}s)";
+            else
+                return $"{minutes}m {seconds}s";
         }
     }
 }

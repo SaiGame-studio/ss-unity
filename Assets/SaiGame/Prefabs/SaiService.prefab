@@ -269,11 +269,12 @@ MonoBehaviour:
   mailbox: {fileID: 390271473075436921}
   playerItem: {fileID: 7304098766332990550}
   playerContainer: {fileID: 4769566823869136907}
+  itemGenerator: {fileID: 4393459433292955985}
   saiShop: {fileID: 6141822644857766885}
   chainQuest: {fileID: 4308186167237759036}
   questProgressor: {fileID: 1733594213501630859}
   questClaims: {fileID: 0}
-  dailyQuest: {fileID: 0}
+  dailyQuest: {fileID: 1892399005449690324}
   serverEndpoint: 0
   domainOption: 0
   port: 82
@@ -284,9 +285,9 @@ MonoBehaviour:
   showButtonsLog: 1
   showCallbackLog: 1
   showDebugLog: 1
-  showUrlRequest: 0
-  showJsonRequest: 0
-  showJsonResponse: 0
+  showUrlRequest: 1
+  showJsonRequest: 1
+  showJsonResponse: 1
 --- !u!114 &813458455079530658
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -317,6 +318,7 @@ MonoBehaviour:
   password: 123qweasd
   saveEmail: 1
   savePassword: 1
+  autoLogin: 0
   registerEmail: 
   registerUsername: 
   registerPassword: 

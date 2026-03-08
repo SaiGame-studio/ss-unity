@@ -6,9 +6,16 @@ namespace SaiGame.Services
     [CustomEditor(typeof(SaiAuth))]
     public class SaiAuthEditor : Editor
     {
+        private const string PREF_AUTO_SETTINGS = "SaiAuthEditor.showAutoSettings";
         private const string PREF_AUTO_REFRESH = "SaiAuthEditor.showAutoRefreshSettings";
         private const string PREF_LOGIN_INPUTS = "SaiAuthEditor.showLoginInputs";
         private const string PREF_REGISTER_INPUTS = "SaiAuthEditor.showRegisterInputs";
+
+        private bool showAutoSettings
+        {
+            get => EditorPrefs.GetBool(PREF_AUTO_SETTINGS, true);
+            set => EditorPrefs.SetBool(PREF_AUTO_SETTINGS, value);
+        }
 
         private bool showAutoRefreshSettings
         {
@@ -41,6 +48,18 @@ namespace SaiGame.Services
             EditorGUILayout.PropertyField(serializedObject.FindProperty("expiresIn"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("userData"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("loginTime"));
+
+            EditorGUILayout.Space();
+
+            // Auto Settings (collapsible)
+            bool autoSettings = EditorGUILayout.Foldout(this.showAutoSettings, "Auto Settings", true);
+            if (autoSettings != this.showAutoSettings) this.showAutoSettings = autoSettings;
+            if (this.showAutoSettings)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("autoLogin"), new GUIContent("Auto Login On Start"));
+                EditorGUI.indentLevel--;
+            }
 
             EditorGUILayout.Space();
 

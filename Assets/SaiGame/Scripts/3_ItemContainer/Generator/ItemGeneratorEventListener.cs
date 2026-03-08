@@ -59,7 +59,7 @@ namespace SaiGame.Services
         {
             // Handle successful generator check
             // Example: Update UI with latest generator state
-            Debug.Log($"[ItemGeneratorEventListener] Generator checked: {generatorData.inventory_item_id} | Pending: {generatorData.pending_units}/{generatorData.capacity}");
+            Debug.Log($"[ItemGeneratorEventListener] Generator checked: {generatorData.inventory_item_id} | Tickets: {generatorData.ticket_count}/{generatorData.capacity}");
         }
 
         private void HandleCheckGeneratorFailure(string error)

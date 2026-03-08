@@ -130,12 +130,30 @@ namespace SaiGame.Services
                         string wrappedResponse = "{\"generators\":" + response + "}";
                         GeneratorsResponse generatorsResponse = JsonUtility.FromJson<GeneratorsResponse>(wrappedResponse);
                         
-                        // Sync checkpoint to now for all generators to prevent calculation drift
+                        // Save local calculation settings before updating
+                        System.Collections.Generic.Dictionary<string, bool> localCalcSettings = new System.Collections.Generic.Dictionary<string, bool>();
+                        if (this.currentGenerators != null && this.currentGenerators.generators != null)
+                        {
+                            foreach (GeneratorData oldGen in this.currentGenerators.generators)
+                            {
+                                localCalcSettings[oldGen.inventory_item_id] = oldGen.enableLocalCalculation;
+                            }
+                        }
+                        
+                        // Restore only the local calculation setting
+                        // Sync checkpoint_at to NOW because server's ticket_count is already the CURRENT count
                         if (generatorsResponse.generators != null)
                         {
                             foreach (GeneratorData gen in generatorsResponse.generators)
                             {
+                                // ticket_count from server = current real count → sync checkpoint to now
                                 gen.SyncCheckpointToNow();
+                                
+                                // Restore local calculation setting if it existed
+                                if (localCalcSettings.ContainsKey(gen.inventory_item_id))
+                                {
+                                    gen.enableLocalCalculation = localCalcSettings[gen.inventory_item_id];
+                                }
                             }
                         }
                         
@@ -146,7 +164,8 @@ namespace SaiGame.Services
                             Debug.Log($"[ItemGenerator] Generators loaded: {generatorsResponse.generators.Length} generators");
                             foreach (GeneratorData gen in generatorsResponse.generators)
                             {
-                                Debug.Log($"  → Generator: <b><color=#FFD700>{gen.inventory_item_id}</color></b> | Output: {gen.output_item_code} | Pending: {gen.pending_units}/{gen.capacity} | Interval: {gen.production_interval_seconds}s");
+                                string genName = gen.definition != null ? gen.definition.name : "Unknown";
+                                Debug.Log($"  → Generator: <b><color=#FFD700>{gen.inventory_item_id}</color></b> | Name: {genName} | Tickets: {gen.ticket_count}/{gen.tick_capacity} | Interval: {gen.production_interval_seconds}s");
                             }
                         }
 
@@ -227,8 +246,8 @@ namespace SaiGame.Services
             return null;
         }
 
-        /// <summary>Returns all locally cached generators that produce the given output item code.</summary>
-        public GeneratorData[] GetGeneratorsByOutputItemCode(string outputItemCode)
+        /// <summary>Returns all locally cached generators that have the given item code in their definition or output pool.</summary>
+        public GeneratorData[] GetGeneratorsByOutputItemCode(string itemCode)
         {
             if (this.currentGenerators == null || this.currentGenerators.generators == null)
                 return new GeneratorData[0];
@@ -237,8 +256,25 @@ namespace SaiGame.Services
 
             foreach (GeneratorData generator in this.currentGenerators.generators)
             {
-                if (generator.output_item_code == outputItemCode)
+                // Check if definition item_code matches
+                if (generator.definition != null && generator.definition.item_code == itemCode)
+                {
                     result.Add(generator);
+                    continue;
+                }
+
+                // Check if any output pool item matches
+                if (generator.definition != null && generator.definition.output_pool != null)
+                {
+                    foreach (var output in generator.definition.output_pool)
+                    {
+                        if (output.item_definition_id == itemCode)
+                        {
+                            result.Add(generator);
+                            break;
+                        }
+                    }
+                }
             }
 
             return result.ToArray();
@@ -254,7 +290,7 @@ namespace SaiGame.Services
 
             foreach (GeneratorData generator in this.currentGenerators.generators)
             {
-                if (generator.pending_units > 0)
+                if (generator.ticket_count > 0)
                     result.Add(generator);
             }
 
@@ -271,7 +307,7 @@ namespace SaiGame.Services
 
             foreach (GeneratorData generator in this.currentGenerators.generators)
             {
-                if (generator.pending_units >= generator.capacity)
+                if (generator.ticket_count >= generator.capacity)
                     result.Add(generator);
             }
 
@@ -320,8 +356,24 @@ namespace SaiGame.Services
                     {
                         GeneratorData generatorData = JsonUtility.FromJson<GeneratorData>(response);
                         
-                        // Sync checkpoint to now to prevent calculation drift
+                        // Preserve local calculation setting from current generator
+                        bool preservedLocalCalc = true; // default
+                        if (this.currentGenerators != null && this.currentGenerators.generators != null)
+                        {
+                            for (int i = 0; i < this.currentGenerators.generators.Length; i++)
+                            {
+                                if (this.currentGenerators.generators[i].inventory_item_id == inventoryItemId)
+                                {
+                                    preservedLocalCalc = this.currentGenerators.generators[i].enableLocalCalculation;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Server's ticket_count = current real count → sync checkpoint to now
+                        // Only preserve the local calculation setting
                         generatorData.SyncCheckpointToNow();
+                        generatorData.enableLocalCalculation = preservedLocalCalc;
 
                         // Update the generator in currentGenerators if it exists
                         if (this.currentGenerators != null && this.currentGenerators.generators != null)
@@ -337,7 +389,10 @@ namespace SaiGame.Services
                         }
 
                         if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                            Debug.Log($"[ItemGenerator] Generator checked: <b><color=#FFD700>{generatorData.inventory_item_id}</color></b> | Output: {generatorData.output_item_code} | Pending: {generatorData.pending_units}/{generatorData.capacity}");
+                        {
+                            string genName = generatorData.definition != null ? generatorData.definition.name : "Unknown";
+                            Debug.Log($"[ItemGenerator] Generator checked: <b><color=#FFD700>{generatorData.inventory_item_id}</color></b> | Name: {genName} | Tickets: {generatorData.ticket_count}/{generatorData.tick_capacity} | Checkpoint: {generatorData.checkpoint_at}");
+                        }
 
                         this.OnCheckGeneratorSuccess?.Invoke(generatorData);
                         if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
@@ -439,6 +494,8 @@ namespace SaiGame.Services
 
         /// <summary>
         /// Toggles local calculation for a specific generator by inventory_item_id.
+        /// When enabled: calculates current ticks from server's checkpoint (ticket_count + elapsed ticks).
+        /// When disabled: displays server's ticket_count as-is (static value until next server sync).
         /// </summary>
         public void SetGeneratorLocalCalculation(string inventoryItemId, bool enabled)
         {
@@ -460,28 +517,77 @@ namespace SaiGame.Services
         }
 
         /// <summary>
-        /// Gets the current pending units for a generator (calculated locally if enabled).
-        /// Returns -1 if generator not found.
+        /// Gets the expected output for all items in a generator's output pool.
+        /// Returns null if generator not found or has no output pool.
         /// </summary>
-        public int GetGeneratorCurrentPendingUnits(string inventoryItemId)
+        public GeneratorExpectedOutput[] GetGeneratorExpectedOutput(string inventoryItemId)
         {
             GeneratorData generator = this.GetGeneratorByInventoryItemId(inventoryItemId);
             if (generator == null)
             {
                 if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                     Debug.LogWarning($"[ItemGenerator] Generator not found: {inventoryItemId}");
-                return -1;
+                return null;
             }
 
-            int currentPending = generator.GetCurrentPendingUnits();
+            if (generator.definition == null || generator.definition.output_pool == null || generator.definition.output_pool.Length == 0)
+            {
+                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    Debug.LogWarning($"[ItemGenerator] Generator has no output pool: {inventoryItemId}");
+                return null;
+            }
+
+            int currentPendingTicks = generator.GetCurrentPendingUnits();
+            var expectedOutputs = new System.Collections.Generic.List<GeneratorExpectedOutput>();
+
+            foreach (var output in generator.definition.output_pool)
+            {
+                float expectedDrops = currentPendingTicks * output.drop_rate;
+                int expectedMin = Mathf.FloorToInt(expectedDrops * output.quantity_min);
+                int expectedMax = Mathf.FloorToInt(expectedDrops * output.quantity_max);
+
+                // Clamp to collect_cap
+                expectedMin = Mathf.Min(expectedMin, output.collect_cap);
+                expectedMax = Mathf.Min(expectedMax, output.collect_cap);
+
+                expectedOutputs.Add(new GeneratorExpectedOutput
+                {
+                    item_definition_id = output.item_definition_id,
+                    drop_rate = output.drop_rate,
+                    quantity_min = output.quantity_min,
+                    quantity_max = output.quantity_max,
+                    collect_cap = output.collect_cap,
+                    expected_min = expectedMin,
+                    expected_max = expectedMax,
+                    current_pending_ticks = currentPendingTicks
+                });
+            }
 
             if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
             {
                 string calcType = generator.enableLocalCalculation ? "<color=#00FF88>Calculated</color>" : "<color=#AAAAAA>Server</color>";
-                Debug.Log($"<color=#00DDFF><b>[ItemGenerator] ► Get Current Pending Units</b></color> | Generator: <b><color=#FFD700>{inventoryItemId}</color></b> | Type: {calcType} | Units: <b>{currentPending}/{generator.capacity}</b> | <i>ItemGenerator.cs › GetGeneratorCurrentPendingUnits</i>", gameObject);
+                
+                // Build detailed output info
+                string outputDetails = "";
+                foreach (var exp in expectedOutputs)
+                {
+                    string expectedRange = exp.expected_min == exp.expected_max ? exp.expected_min.ToString() : $"{exp.expected_min}-{exp.expected_max}";
+                    outputDetails += $"\n    • <b>Item:</b> {exp.item_definition_id}" +
+                                    $"\n      <b>Drop Rate:</b> {exp.drop_rate * 100:F1}% | <b>Quantity:</b> {exp.quantity_min}-{exp.quantity_max} | <b>Cap:</b> {exp.collect_cap}" +
+                                    $"\n      <b>Expected:</b> <color=#00FF88>{expectedRange}</color> items | <b>Ticks:</b> {exp.current_pending_ticks}";
+                }
+                
+                Debug.Log(
+                    $"<color=#00DDFF><b>[ItemGenerator] ► Get Expected Output</b></color>\n" +
+                    $"  <b>Type:</b> {calcType}\n" +
+                    $"  <b>Current Ticks:</b> <b>{currentPendingTicks}/{generator.capacity}</b>\n" +
+                    $"  <b>Output Pool ({expectedOutputs.Count} items):</b>{outputDetails}\n" +
+                    $"  <i>ItemGenerator.cs › GetGeneratorExpectedOutput</i>",
+                    gameObject
+                );
             }
 
-            return currentPending;
+            return expectedOutputs.ToArray();
         }
 
         /// <summary>
@@ -512,7 +618,7 @@ namespace SaiGame.Services
                 string coloredTime = generator.IsAtCapacity() 
                     ? $"<color=#FFFF00>{timeUntilFull}</color>" 
                     : $"<color=#66DDFF>{timeUntilFull}</color>";
-                Debug.Log($"<color=#9966FF><b>[ItemGenerator] ► Get Time Until Full</b></color> | Generator: <b><color=#FFD700>{inventoryItemId}</color></b> | Time: {coloredTime} | <i>ItemGenerator.cs › GetGeneratorTimeUntilFull</i>", gameObject);
+                Debug.Log($"<color=#9966FF><b>[ItemGenerator] ► Get Time Until Full</b></color> | Time: {coloredTime} | <i>ItemGenerator.cs › GetGeneratorTimeUntilFull</i>", gameObject);
             }
 
             return timeUntilFull;
@@ -534,19 +640,57 @@ namespace SaiGame.Services
             string timeUntilFull = generator.enableLocalCalculation ? generator.GetTimeUntilFullFormatted() : "N/A";
             bool isAtCapacity = generator.IsAtCapacity();
 
+            // Get expected outputs using the new method
+            GeneratorExpectedOutput[] expectedOutputs = this.GetGeneratorExpectedOutput(inventoryItemId);
+            int totalExpectedMin = 0;
+            int totalExpectedMax = 0;
+            
+            if (expectedOutputs != null)
+            {
+                foreach (var exp in expectedOutputs)
+                {
+                    totalExpectedMin += exp.expected_min;
+                    totalExpectedMax += exp.expected_max;
+                }
+            }
+
+            // Build definition info
+            string definitionInfo = "N/A";
+            if (generator.definition != null)
+            {
+                definitionInfo = $"{generator.definition.name} ({generator.definition.item_code}) - Rarity: {generator.definition.rarity}";
+            }
+
+            // Build output pool info using expected outputs
+            string outputPoolInfo = "N/A";
+            if (expectedOutputs != null && expectedOutputs.Length > 0)
+            {
+                outputPoolInfo = $"{expectedOutputs.Length} items:\n";
+                foreach (var exp in expectedOutputs)
+                {
+                    string expectedRange = exp.expected_min == exp.expected_max ? exp.expected_min.ToString() : $"{exp.expected_min}-{exp.expected_max}";
+                    outputPoolInfo += $"    • Item {exp.item_definition_id}: {exp.quantity_min}-{exp.quantity_max} units (Drop Rate: {exp.drop_rate * 100:F1}%, Cap: {exp.collect_cap}) → Expected: {expectedRange}\n";
+                }
+            }
+
+            string totalExpectedRange = totalExpectedMin == totalExpectedMax ? totalExpectedMin.ToString() : $"{totalExpectedMin}-{totalExpectedMax}";
+
             Debug.Log(
                 $"<color=#FF99FF><b>[ItemGenerator] ═══ Generator State ═══</b></color>\n" +
                 $"  <b>Inventory Item ID:</b> <color=#FFD700>{generator.inventory_item_id}</color>\n" +
-                $"  <b>Output Item Code:</b> {generator.output_item_code}\n" +
+                $"  <b>Definition:</b> {definitionInfo}\n" +
+                $"  <b>Output Pool:</b> {outputPoolInfo}" +
                 $"  <b>Local Calculation:</b> {(generator.enableLocalCalculation ? "<color=#00FF88>ENABLED</color>" : "<color=#AAAAAA>DISABLED</color>")}\n" +
-                $"  <b>Server Pending:</b> {generator.pending_units}\n" +
-                $"  <b>Current Pending:</b> <color=#00DDFF>{currentPending}</color> / {generator.capacity}\n" +
+                $"  <b>Server Ticket Count:</b> {generator.ticket_count}\n" +
+                $"  <b>Current Pending Ticks:</b> <color=#00DDFF>{currentPending}</color> / {generator.tick_capacity}\n" +
+                $"  <b>Total Expected Items:</b> <color=#00FF88>{totalExpectedRange}</color>\n" +
                 $"  <b>Production Interval:</b> {generator.production_interval_seconds}s\n" +
                 $"  <b>Time Until Full:</b> {timeUntilFull}\n" +
-                $"  <b>Status:</b> {(isAtCapacity ? "<color=#FFFF00>AT CAPACITY</color>" : "<color=#00FF88>PRODUCING</color>")}\n" +
+                $"  <b>Status Server:</b> {(generator.is_full ? "<color=#FFFF00>FULL</color>" : "<color=#00FF88>PRODUCING</color>")} | Next Tick: {generator.next_tick_in_seconds}s\n" +
+                $"  <b>Status Local:</b> {(isAtCapacity ? "<color=#FFFF00>AT CAPACITY</color>" : "<color=#00FF88>PRODUCING</color>")}\n" +
                 $"  <b>Checkpoint:</b> {generator.checkpoint_at}\n" +
                 $"<color=#FF99FF>═══════════════════════════</color>",
-                gameObject
+                this.gameObject
             );
         }
     }

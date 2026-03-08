@@ -440,13 +440,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoLogin
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_Name
       value: SaiService
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.85258
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalPosition.y
@@ -454,7 +458,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.96002
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalRotation.w
@@ -486,7 +490,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: gameId
-      value: 72cf0fd3-251f-438d-90b4-a7f709a798b7
+      value: 07e8b6dc-f669-4c29-adda-b64d4ecdac5d
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

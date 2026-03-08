@@ -27,6 +27,9 @@ namespace SaiGame.Services
         [SerializeField] protected UserData userData;
         [SerializeField] protected float loginTime;
 
+        [Header("Auto Settings")]
+        [SerializeField] protected bool autoLogin = false;
+
         [Header("Auto Refresh Settings")]
         [SerializeField] protected bool autoRefreshToken = true;
         [SerializeField] protected int refreshBeforeExpire = 2;
@@ -46,6 +49,7 @@ namespace SaiGame.Services
         private const string PREF_PASSWORD = "SaiGame_SavedPassword";
         private const string PREF_SAVE_EMAIL_FLAG = "SaiGame_SaveEmailFlag";
         private const string PREF_SAVE_PASSWORD_FLAG = "SaiGame_SavePasswordFlag";
+        private const string PREF_AUTO_LOGIN_FLAG = "SaiGame_AutoLoginFlag";
 
         public bool IsAuthenticated => !string.IsNullOrEmpty(accessToken);
         public string AccessToken => accessToken;
@@ -64,6 +68,28 @@ namespace SaiGame.Services
         {
             base.LoadComponents();
             this.LoadCredentialsFromPlayerPrefs();
+        }
+
+        protected virtual void Start()
+        {
+            if (this.autoLogin && !string.IsNullOrEmpty(this.username) && !string.IsNullOrEmpty(this.password))
+            {
+                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    Debug.Log("[SaiAuth] Auto-login enabled, attempting to login...");
+
+                this.Login(this.username, this.password,
+                    response =>
+                    {
+                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                            Debug.Log($"[SaiAuth] Auto-login successful! Welcome {response.user.username}");
+                    },
+                    error =>
+                    {
+                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                            Debug.LogWarning($"[SaiAuth] Auto-login failed: {error}");
+                    }
+                );
+            }
         }
 
         protected virtual void LoadCredentialsFromPlayerPrefs()
@@ -106,6 +132,7 @@ namespace SaiGame.Services
 
             PlayerPrefs.SetInt(PREF_SAVE_EMAIL_FLAG, this.saveEmail ? 1 : 0);
             PlayerPrefs.SetInt(PREF_SAVE_PASSWORD_FLAG, this.savePassword ? 1 : 0);
+            PlayerPrefs.SetInt(PREF_AUTO_LOGIN_FLAG, this.autoLogin ? 1 : 0);
 
             if (this.saveEmail)
             {
@@ -553,6 +580,17 @@ namespace SaiGame.Services
             return this.savePassword;
         }
 
+        public void SetAutoLogin(bool auto)
+        {
+            this.autoLogin = auto;
+            this.SaveCredentialsToPlayerPrefs();
+        }
+
+        public bool GetAutoLogin()
+        {
+            return this.autoLogin;
+        }
+
         public string GetUsername()
         {
             return this.username;
@@ -578,12 +616,14 @@ namespace SaiGame.Services
             PlayerPrefs.DeleteKey(PREF_PASSWORD);
             PlayerPrefs.DeleteKey(PREF_SAVE_EMAIL_FLAG);
             PlayerPrefs.DeleteKey(PREF_SAVE_PASSWORD_FLAG);
+            PlayerPrefs.DeleteKey(PREF_AUTO_LOGIN_FLAG);
             PlayerPrefs.Save();
 
             this.username = string.Empty;
             this.password = string.Empty;
             this.saveEmail = false;
             this.savePassword = false;
+            this.autoLogin = false;
 
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
                 Debug.Log("Cleared all credentials from PlayerPrefs");
