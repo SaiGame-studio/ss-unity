@@ -553,6 +553,16 @@ namespace SaiGame.Services
             return this.savePassword;
         }
 
+        public string GetUsername()
+        {
+            return this.username;
+        }
+
+        public string GetPassword()
+        {
+            return this.password;
+        }
+
         public void ManualSaveCredentials()
         {
             if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)

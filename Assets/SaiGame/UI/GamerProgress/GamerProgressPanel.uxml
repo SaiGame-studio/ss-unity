@@ -1,0 +1,60 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements"
+         xmlns:uie="UnityEditor.UIElements"
+         xsi="http://www.w3.org/2001/XMLSchema-instance"
+         noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd"
+         editor-extension-mode="False">
+
+    <Style src="GamerProgressPanel.uss" />
+
+    <ui:VisualElement name="GamerProgressRoot" class="panel-root">
+        <ui:VisualElement name="GamerProgressCard" class="card progress-card">
+
+            <!-- Header row -->
+            <ui:VisualElement class="progress-header">
+                <ui:Label text="Gamer Progress" class="panel-title" style="margin-bottom:0;" />
+                <ui:Button name="RefreshButton" text="↻ Refresh" class="btn-secondary progress-refresh-btn" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="divider" />
+
+            <!-- Stats section -->
+            <ui:VisualElement class="stats-grid">
+
+                <!-- Level -->
+                <ui:VisualElement class="stat-box">
+                    <ui:Label text="LEVEL" class="stat-box__label" />
+                    <ui:Label name="LevelValue" text="—" class="stat-box__value stat-box__value--level" />
+                </ui:VisualElement>
+
+                <!-- Gold -->
+                <ui:VisualElement class="stat-box">
+                    <ui:Label text="GOLD" class="stat-box__label" />
+                    <ui:Label name="GoldValue" text="—" class="stat-box__value stat-box__value--gold" />
+                </ui:VisualElement>
+
+                <!-- Experience -->
+                <ui:VisualElement class="stat-box stat-box--wide">
+                    <ui:Label text="EXPERIENCE" class="stat-box__label" />
+                    <ui:Label name="ExpValue" text="—" class="stat-box__value" />
+                    <ui:VisualElement class="xp-bar">
+                        <ui:VisualElement name="XpFill" class="xp-bar__fill" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+
+            <ui:VisualElement class="divider" />
+
+            <!-- Action buttons -->
+            <ui:VisualElement class="progress-actions">
+                <ui:Button name="CreateProgressButton" text="+ Create Progress" class="btn-primary" />
+                <ui:Button name="DeleteProgressButton" text="Delete" class="btn-secondary progress-delete-btn" />
+            </ui:VisualElement>
+
+            <!-- Feedback message -->
+            <ui:Label name="MessageLabel" text="" class="feedback" />
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+</ui:UXML>

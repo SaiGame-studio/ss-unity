@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements"
+         xmlns:uie="UnityEditor.UIElements"
+         xsi="http://www.w3.org/2001/XMLSchema-instance"
+         noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd"
+         editor-extension-mode="False">
+
+    <Style src="AppShell.uss" />
+
+    <!--
+        AppShell — single UIDocument root.
+        • #TopNav  : persistent navigation bar (hidden on Login/Register panels)
+        • #PanelContainer : UIRouter clones each panel's UXML here at runtime
+    -->
+    <ui:VisualElement name="AppShell" class="app-shell">
+
+        <!-- Top navigation bar — managed by TopNavigatorUI -->
+        <ui:VisualElement name="TopNav" class="top-nav">
+            <ui:Label name="AppTitle" text="SaiGame" class="top-nav__title" />
+            <ui:VisualElement name="NavTabs" class="top-nav__tabs" />
+            <ui:Button name="LogoutButton" text="Logout" class="top-nav__logout" />
+        </ui:VisualElement>
+
+        <!-- Panel content area -->
+        <ui:VisualElement name="PanelContainer" class="panel-container" />
+
+    </ui:VisualElement>
+
+</ui:UXML>

@@ -6,7 +6,8 @@ namespace SaiGame.Services
     [CustomEditor(typeof(SaiService))]
     public class SaiServiceEditor : Editor
     {
-        private bool showDebugSettings = true;
+        private bool showServiceReferences = false;
+        private bool showDebugSettings = false;
         private static readonly string[] SERVER_ENDPOINT_OPTIONS =
         {
             "Local API (HTTP) - local-api.saigame.studio:82",
@@ -18,23 +19,23 @@ namespace SaiGame.Services
             this.serializedObject.Update();
 
             EditorGUILayout.Space(5);
-            
+
             GUIStyle versionStyle = new GUIStyle(EditorStyles.boldLabel)
             {
                 alignment = TextAnchor.MiddleCenter,
                 fontSize = 12
             };
-            
+
             GUIStyle packageStyle = new GUIStyle(EditorStyles.label)
             {
                 alignment = TextAnchor.MiddleCenter,
                 fontSize = 10,
                 fontStyle = FontStyle.Italic
             };
-            
+
             EditorGUILayout.LabelField(SaiService.PACKAGE_NAME, packageStyle);
             EditorGUILayout.LabelField($"v{SaiService.PACKAGE_VERSION}", versionStyle);
-            
+
             EditorGUILayout.Space(5);
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
             EditorGUILayout.Space(5);
@@ -57,8 +58,23 @@ namespace SaiGame.Services
                 if (svc != null) svc.ManualSaveServerEndpoint();
             }
 
+            // Service References foldout
             EditorGUILayout.Space(5);
-            DrawPropertiesExcluding(this.serializedObject, "m_Script", "serverEndpoint", "domainOption", "port", "useHttps", "showDebugLog", "showButtonsLog", "showCallbackLog");
+            this.showServiceReferences = EditorGUILayout.Foldout(this.showServiceReferences, "Service References", true);
+            if (this.showServiceReferences)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("saiAuth"), new GUIContent("Sai Auth"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("gamerProgress"), new GUIContent("Gamer Progress"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("mailbox"), new GUIContent("Mailbox"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("playerItem"), new GUIContent("Player Item"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("playerContainer"), new GUIContent("Player Container"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("saiShop"), new GUIContent("Sai Shop"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("chainQuest"), new GUIContent("Chain Quest"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("questProgressor"), new GUIContent("Quest Progressor"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("dailyQuest"), new GUIContent("Daily Quest"));
+                EditorGUI.indentLevel--;
+            }
 
             // Debug Settings foldout
             EditorGUILayout.Space(5);
@@ -69,8 +85,20 @@ namespace SaiGame.Services
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showButtonsLog"), new GUIContent("Show Buttons Log"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showCallbackLog"), new GUIContent("Show Callback Log"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showDebugLog"), new GUIContent("Show Debug Log"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showUrlRequest"), new GUIContent("Show Url Request"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showJsonRequest"), new GUIContent("Show Json Request"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("showJsonResponse"), new GUIContent("Show Json Response"));
                 EditorGUI.indentLevel--;
             }
+
+            EditorGUILayout.Space(5);
+            EditorGUILayout.LabelField("Game Configuration", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(this.serializedObject.FindProperty("gameId"), new GUIContent("Game Id"));
+            EditorGUILayout.PropertyField(this.serializedObject.FindProperty("studioId"), new GUIContent("Studio Id"));
+
+            EditorGUILayout.Space(5);
+            EditorGUILayout.LabelField("API Settings", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(this.serializedObject.FindProperty("requestTimeout"), new GUIContent("Request Timeout"));
 
             this.serializedObject.ApplyModifiedProperties();
 

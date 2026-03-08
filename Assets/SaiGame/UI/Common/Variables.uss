@@ -1,0 +1,171 @@
+/*
+ * =========================================================
+ *  Variables.uss — Design tokens & shared utility classes
+ *  Import this file at the top of every panel's .uss:
+ *      @import url("../Common/Variables.uss");
+ * =========================================================
+ */
+
+/* ----------------------------------------------------------
+   Full-screen centre container (root of every panel)
+   ---------------------------------------------------------- */
+.panel-root {
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(10, 12, 20, 0.92);
+}
+
+/* ----------------------------------------------------------
+   Card  (centred content box)
+   ---------------------------------------------------------- */
+.card {
+    padding: 40px 36px 36px 36px;
+    background-color: rgba(22, 26, 40, 1);
+    border-radius: 16px;
+    border-width: 1px;
+    border-color: rgba(80, 100, 160, 0.35);
+    align-items: stretch;
+}
+
+/* ----------------------------------------------------------
+   Typography
+   ---------------------------------------------------------- */
+.panel-title {
+    font-size: 28px;
+    color: rgb(230, 235, 255);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 28px;
+    letter-spacing: 1px;
+}
+
+.field-label {
+    font-size: 12px;
+    color: rgb(160, 170, 200);
+    margin-bottom: 4px;
+    margin-top: 12px;
+}
+
+/* ----------------------------------------------------------
+   Input field
+   ---------------------------------------------------------- */
+.input-field {
+    margin-bottom: 0;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: rgba(80, 100, 160, 0.5);
+    background-color: rgba(30, 35, 55, 1);
+    color: rgb(220, 225, 255);
+    font-size: 14px;
+    padding: 8px 12px;
+}
+
+.input-field:focus {
+    border-color: rgba(80, 140, 255, 0.9);
+}
+
+/* ----------------------------------------------------------
+   Toggle row  (checkbox + label side by side)
+   ---------------------------------------------------------- */
+.toggle-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 14px;
+    margin-bottom: 4px;
+}
+
+.toggle-row__checkbox {
+    margin-right: 8px;
+}
+
+.toggle-row__label {
+    font-size: 12px;
+    color: rgb(160, 170, 200);
+    flex: 1;
+}
+
+/* ----------------------------------------------------------
+   Primary button
+   ---------------------------------------------------------- */
+.btn-primary {
+    margin-top: 28px;
+    padding: 12px;
+    border-radius: 10px;
+    background-color: rgba(60, 110, 230, 1);
+    color: rgb(240, 244, 255);
+    font-size: 15px;
+    -unity-font-style: bold;
+    border-width: 0;
+    transition-duration: 0.15s;
+    cursor: link;
+}
+
+.btn-primary:hover {
+    background-color: rgba(80, 130, 255, 1);
+}
+
+.btn-primary:active {
+    background-color: rgba(45, 90, 200, 1);
+}
+
+.btn-primary:disabled {
+    background-color: rgba(50, 55, 80, 1);
+    color: rgba(150, 155, 180, 0.6);
+}
+
+/* Secondary / ghost button */
+.btn-secondary {
+    margin-top: 12px;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: transparent;
+    color: rgb(140, 160, 220);
+    font-size: 14px;
+    border-width: 1px;
+    border-color: rgba(80, 100, 160, 0.5);
+    transition-duration: 0.15s;
+    cursor: link;
+}
+
+.btn-secondary:hover {
+    background-color: rgba(60, 80, 140, 0.3);
+    border-color: rgba(80, 140, 255, 0.7);
+}
+
+.btn-secondary:disabled {
+    color: rgba(100, 110, 150, 0.5);
+    border-color: rgba(50, 60, 100, 0.4);
+}
+
+/* ----------------------------------------------------------
+   Divider
+   ---------------------------------------------------------- */
+.divider {
+    height: 1px;
+    background-color: rgba(80, 100, 160, 0.25);
+    margin-top: 24px;
+    margin-bottom: 8px;
+}
+
+/* ----------------------------------------------------------
+   Feedback message  (shown below a form)
+   Usage: add "feedback--error" or "feedback--success" from code
+   ---------------------------------------------------------- */
+.feedback {
+    margin-top: 14px;
+    font-size: 12px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    display: none;
+}
+
+.feedback--error {
+    color: rgb(255, 100, 100);
+    display: flex;
+}
+
+.feedback--success {
+    color: rgb(80, 220, 140);
+    display: flex;
+}

@@ -29,7 +29,12 @@ namespace SaiGame.Services
         [SerializeField] protected Mailbox mailbox;
         [SerializeField] protected PlayerItem playerItem;
         [SerializeField] protected PlayerContainer playerContainer;
+        [SerializeField] protected ItemGenerator itemGenerator;
         [SerializeField] protected SaiShop saiShop;
+        [SerializeField] protected ChainQuest chainQuest;
+        [SerializeField] protected QuestProgressor questProgressor;
+        [SerializeField] protected QuestStatus questClaims;
+        [SerializeField] protected DailyQuest dailyQuest;
 
         [Header("Server Configuration")]
         [HideInInspector][SerializeField] protected ServerEndpointOption serverEndpoint = ServerEndpointOption.LocalHttp;
@@ -55,6 +60,9 @@ namespace SaiGame.Services
         [SerializeField] protected bool showButtonsLog = true;
         [SerializeField] protected bool showCallbackLog = true;
         [SerializeField] protected bool showDebugLog = true;
+        [SerializeField] protected bool showUrlRequest = false;
+        [SerializeField] protected bool showJsonRequest = false;
+        [SerializeField] protected bool showJsonResponse = false;
 
         public event Action<string> OnTokenRefreshed;
 
@@ -63,6 +71,12 @@ namespace SaiGame.Services
         public bool ShowButtonsLog => showButtonsLog;
 
         public bool ShowCallbackLog => showCallbackLog;
+
+        public bool ShowUrlRequest => showUrlRequest;
+
+        public bool ShowJsonRequest => showJsonRequest;
+
+        public bool ShowJsonResponse => showJsonResponse;
 
         public string BaseUrl
         {
@@ -95,7 +109,17 @@ namespace SaiGame.Services
 
         public PlayerContainer PlayerContainer => playerContainer;
 
+        public ItemGenerator ItemGenerator => itemGenerator;
+
         public SaiShop SaiShop => saiShop;
+
+        public ChainQuest ChainQuest => this.chainQuest;
+
+        public QuestProgressor QuestProgressor => this.questProgressor;
+
+        public QuestStatus QuestClaims => this.questClaims;
+
+        public DailyQuest DailyQuest => this.dailyQuest;
 
         public SaiAuth SaiAuth => saiAuth;
 
@@ -173,10 +197,15 @@ namespace SaiGame.Services
         {
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "GET"))
             {
+                if (this.showUrlRequest)
+                    Debug.Log($"[SaiService] GET {request.url}");
+
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
+                    if (this.showJsonResponse)
+                        Debug.Log($"[SaiService] GET Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else
@@ -196,10 +225,17 @@ namespace SaiGame.Services
                 request.uploadHandler = new UploadHandlerRaw(bodyRaw);
                 request.SetRequestHeader("Content-Type", "application/json");
 
+                if (this.showUrlRequest)
+                    Debug.Log($"[SaiService] POST {request.url}");
+                if (this.showJsonRequest)
+                    Debug.Log($"[SaiService] POST Request Body\n{jsonData}");
+
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
+                    if (this.showJsonResponse)
+                        Debug.Log($"[SaiService] POST Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else
@@ -219,10 +255,17 @@ namespace SaiGame.Services
                 request.uploadHandler = new UploadHandlerRaw(bodyRaw);
                 request.SetRequestHeader("Content-Type", "application/json");
 
+                if (this.showUrlRequest)
+                    Debug.Log($"[SaiService] PATCH {request.url}");
+                if (this.showJsonRequest)
+                    Debug.Log($"[SaiService] PATCH Request Body\n{jsonData}");
+
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
+                    if (this.showJsonResponse)
+                        Debug.Log($"[SaiService] PATCH Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else
@@ -238,10 +281,15 @@ namespace SaiGame.Services
         {
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "DELETE"))
             {
+                if (this.showUrlRequest)
+                    Debug.Log($"[SaiService] DELETE {request.url}");
+
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
+                    if (this.showJsonResponse)
+                        Debug.Log($"[SaiService] DELETE Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else
@@ -277,7 +325,11 @@ namespace SaiGame.Services
             this.LoadMailbox();
             this.LoadPlayerItem();
             this.LoadPlayerContainer();
+            this.LoadItemGenerator();
             this.LoadSaiShop();
+            this.LoadChainQuest();
+            this.LoadQuestProgressor();
+            this.LoadDailyQuest();
             this.LoadGameIdFromPlayerPrefs();
             this.LoadStudioIdFromPlayerPrefs();
         }
@@ -323,12 +375,44 @@ namespace SaiGame.Services
                 Debug.Log(transform.name + ": LoadPlayerContainer", gameObject);
         }
 
+        protected virtual void LoadItemGenerator()
+        {
+            if (this.itemGenerator != null) return;
+            this.itemGenerator = GetComponent<ItemGenerator>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadItemGenerator", gameObject);
+        }
+
         protected virtual void LoadSaiShop()
         {
             if (this.saiShop != null) return;
             this.saiShop = GetComponent<SaiShop>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadSaiShop", gameObject);
+        }
+
+        protected virtual void LoadChainQuest()
+        {
+            if (this.chainQuest != null) return;
+            this.chainQuest = GetComponentInChildren<ChainQuest>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadChainQuest", gameObject);
+        }
+
+        protected virtual void LoadQuestProgressor()
+        {
+            if (this.questProgressor != null) return;
+            this.questProgressor = GetComponentInChildren<QuestProgressor>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadQuestProgressor", gameObject);
+        }
+
+        protected virtual void LoadDailyQuest()
+        {
+            if (this.dailyQuest != null) return;
+            this.dailyQuest = GetComponentInChildren<DailyQuest>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadDailyQuest", gameObject);
         }
 
 

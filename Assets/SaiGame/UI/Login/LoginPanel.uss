@@ -1,0 +1,7 @@
+/* Import shared design tokens */
+@import url("../Common/Variables.uss");
+
+/* Login-specific: fixed card width */
+.card {
+    width: 380px;
+}
