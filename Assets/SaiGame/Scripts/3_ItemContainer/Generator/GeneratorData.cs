@@ -30,7 +30,7 @@ namespace SaiGame.Services
         /// Calculates the current pending units based on elapsed time since last sync.
         /// Server's ticket_count = CURRENT real count at the moment of API call.
         /// After receiving server data, checkpoint_at is synced to NOW.
-        /// Local calculation adds only NEW ticks since that sync point.
+        /// First new tick happens after next_tick_in_seconds, subsequent ticks every production_interval_seconds.
         /// </summary>
         public int GetCurrentPendingUnits()
         {
@@ -46,9 +46,14 @@ namespace SaiGame.Services
                 if (elapsedSeconds < 0)
                     return this.ticket_count;
 
-                // Only count NEW ticks since our local checkpoint (which is synced to NOW on server response)
-                int newTicksSinceCheckpoint = (int)(elapsedSeconds / this.production_interval_seconds);
-                int totalPending = this.ticket_count + newTicksSinceCheckpoint;
+                // First tick happens after next_tick_in_seconds, not after a full interval
+                if (elapsedSeconds < this.next_tick_in_seconds)
+                    return this.ticket_count;
+
+                // First tick completed, count additional ticks after that
+                double elapsedAfterFirstTick = elapsedSeconds - this.next_tick_in_seconds;
+                int newTicks = 1 + (int)(elapsedAfterFirstTick / this.production_interval_seconds);
+                int totalPending = this.ticket_count + newTicks;
 
                 return Mathf.Min(totalPending, this.capacity);
             }

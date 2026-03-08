@@ -20,6 +20,9 @@ namespace SaiGame.Services
         private readonly HashSet<string> loadingCheckGenerators = new HashSet<string>();
         private readonly HashSet<string> loadingCollectGenerators = new HashSet<string>();
 
+        // Collapse states per generator (keyed by inventory_item_id)
+        private readonly Dictionary<string, bool> expandedGenerators = new Dictionary<string, bool>();
+
         private double lastRepaintTime = 0;
         private const double repaintInterval = 1.0; // Repaint every second for real-time updates
 
@@ -157,35 +160,55 @@ namespace SaiGame.Services
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            // === HEADER SECTION ===
+            // === COLLAPSIBLE HEADER ===
+            string genId = generator.inventory_item_id;
+            if (!this.expandedGenerators.ContainsKey(genId))
+                this.expandedGenerators[genId] = false;
+
+            // Build header label with key info
+            string headerName = generator.definition != null ? generator.definition.name : genId;
+            int currentTicks = generator.GetCurrentPendingUnits();
+            string headerLabel = $"★ {headerName}  [{currentTicks}/{generator.tick_capacity}]";
+
+            // Custom foldout style matching rarity color
+            GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
+            foldoutStyle.fontSize = 13;
+            foldoutStyle.fontStyle = FontStyle.Bold;
+            if (generator.definition != null)
+                foldoutStyle.normal.textColor = this.GetRarityColor(generator.definition.rarity);
+            foldoutStyle.onNormal.textColor = foldoutStyle.normal.textColor;
+            foldoutStyle.focused.textColor = foldoutStyle.normal.textColor;
+            foldoutStyle.onFocused.textColor = foldoutStyle.normal.textColor;
+            foldoutStyle.active.textColor = foldoutStyle.normal.textColor;
+            foldoutStyle.onActive.textColor = foldoutStyle.normal.textColor;
+
+            EditorGUILayout.BeginHorizontal();
+            this.expandedGenerators[genId] = EditorGUILayout.Foldout(this.expandedGenerators[genId], headerLabel, true, foldoutStyle);
+
+            // Rarity badge (right-aligned)
             if (generator.definition != null)
             {
-                // Title bar with gradient background
-                EditorGUILayout.BeginHorizontal();
-                
-                GUIStyle titleStyle = new GUIStyle(EditorStyles.boldLabel);
-                titleStyle.fontSize = 14;
-                titleStyle.normal.textColor = this.GetRarityColor(generator.definition.rarity);
-                EditorGUILayout.LabelField($"★ {generator.definition.name}", titleStyle);
-                
-                GUILayout.FlexibleSpace();
-                
-                // Rarity badge (right-aligned)
                 GUIStyle rarityStyle = new GUIStyle(EditorStyles.label);
                 rarityStyle.fontSize = 11;
                 rarityStyle.normal.textColor = this.GetRarityColor(generator.definition.rarity);
                 rarityStyle.fontStyle = FontStyle.Bold;
                 rarityStyle.alignment = TextAnchor.MiddleRight;
                 EditorGUILayout.LabelField(generator.definition.rarity.ToUpper(), rarityStyle, GUILayout.MinWidth(70));
-                
-                EditorGUILayout.EndHorizontal();
-
-                // Subtle separator
-                GUIStyle separatorStyle = new GUIStyle(EditorStyles.label);
-                separatorStyle.fontSize = 8;
-                separatorStyle.normal.textColor = new Color(0.3f, 0.3f, 0.3f);
-                EditorGUILayout.LabelField("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", separatorStyle);
             }
+            EditorGUILayout.EndHorizontal();
+
+            if (!this.expandedGenerators[genId])
+            {
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space(4);
+                return;
+            }
+
+            // Subtle separator
+            GUIStyle separatorStyle = new GUIStyle(EditorStyles.label);
+            separatorStyle.fontSize = 8;
+            separatorStyle.normal.textColor = new Color(0.3f, 0.3f, 0.3f);
+            EditorGUILayout.LabelField("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", separatorStyle);
 
             // === COMPACT INFO ===
             GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
@@ -443,10 +466,10 @@ namespace SaiGame.Services
                         expectedText = rawMin == rawMax ? rawMin.ToString() : $"{rawMin}-{rawMax}";
                     }
                     
-                    // Apply collect_cap
-                    int expectedMin = Mathf.Min(rawMin, output.collect_cap);
-                    int expectedMax = Mathf.Min(rawMax, output.collect_cap);
-                    bool isCapped = rawMax > output.collect_cap;
+                    // Apply collect_cap (0 = unlimited)
+                    int expectedMin = output.collect_cap > 0 ? Mathf.Min(rawMin, output.collect_cap) : rawMin;
+                    int expectedMax = output.collect_cap > 0 ? Mathf.Min(rawMax, output.collect_cap) : rawMax;
+                    bool isCapped = output.collect_cap > 0 && rawMax > output.collect_cap;
                     
                     // Update display text if capped
                     if (isCapped)
@@ -472,7 +495,8 @@ namespace SaiGame.Services
                     capStyle.normal.textColor = isCapped ? new Color(1f, 0.5f, 0.2f) : new Color(0.6f, 0.6f, 0.6f);
                     capStyle.fontStyle = isCapped ? FontStyle.Bold : FontStyle.Normal;
                     string capIcon = isCapped ? "▲" : "◆";
-                    EditorGUILayout.LabelField($"{capIcon} CAP: {output.collect_cap}", capStyle);
+                    string capText = output.collect_cap == 0 ? "∞" : output.collect_cap.ToString();
+                    EditorGUILayout.LabelField($"{capIcon} CAP: {capText}", capStyle);
                     
                     EditorGUILayout.EndHorizontal();
                     

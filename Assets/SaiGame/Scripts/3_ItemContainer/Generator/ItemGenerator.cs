@@ -546,9 +546,12 @@ namespace SaiGame.Services
                 int expectedMin = Mathf.FloorToInt(expectedDrops * output.quantity_min);
                 int expectedMax = Mathf.FloorToInt(expectedDrops * output.quantity_max);
 
-                // Clamp to collect_cap
-                expectedMin = Mathf.Min(expectedMin, output.collect_cap);
-                expectedMax = Mathf.Min(expectedMax, output.collect_cap);
+                // Clamp to collect_cap (0 = unlimited)
+                if (output.collect_cap > 0)
+                {
+                    expectedMin = Mathf.Min(expectedMin, output.collect_cap);
+                    expectedMax = Mathf.Min(expectedMax, output.collect_cap);
+                }
 
                 expectedOutputs.Add(new GeneratorExpectedOutput
                 {

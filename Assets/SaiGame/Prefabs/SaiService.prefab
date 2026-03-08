@@ -279,7 +279,7 @@ MonoBehaviour:
   domainOption: 0
   port: 82
   useHttps: 0
-  gameId: b69de0a1-50fd-460c-8274-c98bbb3d9360
+  gameId: 1ba4be5b-9640-4101-be83-9cc6b22b904f
   studioId: 
   requestTimeout: 30
   showButtonsLog: 1
@@ -312,13 +312,13 @@ MonoBehaviour:
     is_verified: 0
     created_at: 0
   loginTime: 0
+  autoLogin: 1
   autoRefreshToken: 1
   refreshBeforeExpire: 2
-  username: player1_1772831707061
+  username: username_player1_1772960098791
   password: 123qweasd
   saveEmail: 1
   savePassword: 1
-  autoLogin: 0
   registerEmail: 
   registerUsername: 
   registerPassword: 
