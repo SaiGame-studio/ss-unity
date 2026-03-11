@@ -31,11 +31,12 @@ namespace SaiGame.Services
         [SerializeField] protected PlayerContainer playerContainer;
         [SerializeField] protected ItemGenerator itemGenerator;
         [SerializeField] protected EquipmentSlot equipmentSlotManager;
-        [SerializeField] protected SaiShop saiShop;
+        [SerializeField] protected Shop saiShop;
         [SerializeField] protected ChainQuest chainQuest;
         [SerializeField] protected QuestProgressor questProgressor;
         [SerializeField] protected QuestStatus questClaims;
         [SerializeField] protected DailyQuest dailyQuest;
+        [SerializeField] protected ItemTag itemTag;
 
         [Header("Server Configuration")]
         [HideInInspector][SerializeField] protected ServerEndpointOption serverEndpoint = ServerEndpointOption.LocalHttp;
@@ -112,7 +113,7 @@ namespace SaiGame.Services
 
         public ItemGenerator ItemGenerator => itemGenerator;
 
-        public SaiShop SaiShop => saiShop;
+        public Shop SaiShop => saiShop;
 
         public EquipmentSlot EquipmentSlotManager => this.equipmentSlotManager;
 
@@ -123,6 +124,8 @@ namespace SaiGame.Services
         public QuestStatus QuestClaims => this.questClaims;
 
         public DailyQuest DailyQuest => this.dailyQuest;
+
+        public ItemTag ItemTag => this.itemTag;
 
         public SaiAuth SaiAuth => saiAuth;
 
@@ -334,6 +337,7 @@ namespace SaiGame.Services
             this.LoadChainQuest();
             this.LoadQuestProgressor();
             this.LoadDailyQuest();
+            this.LoadItemTag();
             this.LoadGameIdFromPlayerPrefs();
             this.LoadStudioIdFromPlayerPrefs();
         }
@@ -398,7 +402,7 @@ namespace SaiGame.Services
         protected virtual void LoadSaiShop()
         {
             if (this.saiShop != null) return;
-            this.saiShop = GetComponentInChildren<SaiShop>();
+            this.saiShop = GetComponentInChildren<Shop>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadSaiShop", gameObject);
         }
@@ -425,6 +429,14 @@ namespace SaiGame.Services
             this.dailyQuest = GetComponentInChildren<DailyQuest>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadDailyQuest", gameObject);
+        }
+
+        protected virtual void LoadItemTag()
+        {
+            if (this.itemTag != null) return;
+            this.itemTag = GetComponentInChildren<ItemTag>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadItemTag", gameObject);
         }
 
 

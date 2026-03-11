@@ -4,11 +4,11 @@ using UnityEngine;
 
 namespace SaiGame.Services
 {
-    [CustomEditor(typeof(SaiShop))]
+    [CustomEditor(typeof(Shop))]
     [CanEditMultipleObjects]
-    public class SaiShopEditor : Editor
+    public class ShopEditor : Editor
     {
-        private SaiShop saiShop;
+        private Shop saiShop;
         private SerializedProperty autoLoadOnLogin;
         private SerializedProperty autoRefreshAfterPurchase;
         private SerializedProperty shopLimit;
@@ -33,7 +33,7 @@ namespace SaiGame.Services
 
         private void OnEnable()
         {
-            this.saiShop = (SaiShop)target;
+            this.saiShop = (Shop)target;
             this.autoLoadOnLogin = serializedObject.FindProperty("autoLoadOnLogin");
             this.autoRefreshAfterPurchase = serializedObject.FindProperty("autoRefreshAfterPurchase");
             this.shopLimit = serializedObject.FindProperty("shopLimit");

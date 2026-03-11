@@ -226,6 +226,7 @@ GameObject:
   - component: {fileID: 4042283287993455742}
   - component: {fileID: 8359460651495667961}
   - component: {fileID: 2893519870010327973}
+  - component: {fileID: 9128749862781184251}
   m_Layer: 0
   m_Name: Item
   m_TagString: Untagged
@@ -349,6 +350,26 @@ MonoBehaviour:
     total: 0
   currentEquipped:
     equipped: []
+--- !u!114 &9128749862781184251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5318073927917700422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29a87983e55107345b16dd8a48151c8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemTag
+  autoLoadOnLogin: 0
+  currentTags:
+    limit: 0
+    offset: 0
+    tags: []
+    total: 0
+  tagLimit: 50
+  tagOffset: 0
 --- !u!1 &6971719431293405431
 GameObject:
   m_ObjectHideFlags: 0
@@ -410,6 +431,7 @@ MonoBehaviour:
   questProgressor: {fileID: 1733594213501630859}
   questClaims: {fileID: 0}
   dailyQuest: {fileID: 1892399005449690324}
+  itemTag: {fileID: 0}
   serverEndpoint: 0
   domainOption: 0
   port: 82

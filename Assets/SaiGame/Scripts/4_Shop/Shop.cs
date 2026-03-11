@@ -5,7 +5,7 @@ using UnityEngine;
 namespace SaiGame.Services
 {
     [DefaultExecutionOrder(-99)]
-    public class SaiShop : SaiBehaviour
+    public class Shop : SaiBehaviour
     {
         // Events for other classes to listen to
         public event Action<ShopResponse> OnGetShopsSuccess;
