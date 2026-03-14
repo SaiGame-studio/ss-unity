@@ -28,6 +28,7 @@ namespace SaiGame.Services
         [SerializeField] protected GamerProgress gamerProgress;
         [SerializeField] protected Mailbox mailbox;
         [SerializeField] protected PlayerItem playerItem;
+        [SerializeField] protected PlayerEvent playerEvent;
         [SerializeField] protected PlayerContainer playerContainer;
         [SerializeField] protected ItemGenerator itemGenerator;
         [SerializeField] protected EquipmentSlot equipmentSlotManager;
@@ -108,6 +109,8 @@ namespace SaiGame.Services
         public GamerProgress GamerProgress => gamerProgress;
 
         public PlayerItem PlayerItem => playerItem;
+
+        public PlayerEvent PlayerEvent => playerEvent;
 
         public PlayerContainer PlayerContainer => playerContainer;
 
