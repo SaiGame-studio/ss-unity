@@ -383,6 +383,7 @@ GameObject:
   - component: {fileID: 813458455079530658}
   - component: {fileID: 3797376410084372741}
   - component: {fileID: 390271473075436921}
+  - component: {fileID: 27159321914394544}
   m_Layer: 0
   m_Name: SaiService
   m_TagString: Untagged
@@ -423,6 +424,7 @@ MonoBehaviour:
   gamerProgress: {fileID: 3797376410084372741}
   mailbox: {fileID: 390271473075436921}
   playerItem: {fileID: 8153881721212893719}
+  playerEvent: {fileID: 0}
   playerContainer: {fileID: 4042283287993455742}
   itemGenerator: {fileID: 8359460651495667961}
   equipmentSlotManager: {fileID: 0}
@@ -436,7 +438,7 @@ MonoBehaviour:
   domainOption: 0
   port: 82
   useHttps: 0
-  gameId: 67365c15-ea2c-4b34-85c0-488f73178bd5
+  gameId: d0ce02cd-b65c-4e86-a216-e46ad4b287d3
   studioId: 
   requestTimeout: 30
   showButtonsLog: 1
@@ -524,3 +526,20 @@ MonoBehaviour:
     total: 0
   messageLimit: 20
   messageOffset: 0
+--- !u!114 &27159321914394544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6971719431293405431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 704b42a5b4a0a3b4b99d1606c15c7fe5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerEvent
+  autoTrackOnLogin: 0
+  autoTrackEventType: join_game
+  sessionId: 
+  eventType: join_game
+  eventSource: game
