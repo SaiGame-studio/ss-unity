@@ -384,6 +384,7 @@ GameObject:
   - component: {fileID: 3797376410084372741}
   - component: {fileID: 390271473075436921}
   - component: {fileID: 27159321914394544}
+  - component: {fileID: 1993458322055049526}
   m_Layer: 0
   m_Name: SaiService
   m_TagString: Untagged
@@ -434,11 +435,12 @@ MonoBehaviour:
   questClaims: {fileID: 0}
   dailyQuest: {fileID: 1892399005449690324}
   itemTag: {fileID: 0}
+  leaderboard: {fileID: 0}
   serverEndpoint: 0
   domainOption: 0
   port: 82
   useHttps: 0
-  gameId: d0ce02cd-b65c-4e86-a216-e46ad4b287d3
+  gameId: 29f172e4-c60a-4766-bb1f-942c163999fc
   studioId: 
   requestTimeout: 30
   showButtonsLog: 1
@@ -538,8 +540,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 704b42a5b4a0a3b4b99d1606c15c7fe5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerEvent
-  autoTrackOnLogin: 0
-  autoTrackEventType: join_game
   sessionId: 
-  eventType: join_game
-  eventSource: game
+  eventType: arrive
+  eventDataJson: "{\n  \"source\": \"game\"\n}"
+--- !u!114 &1993458322055049526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6971719431293405431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e6266713b40fa645aec9176b05fc4af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.Leaderboard
+  autoLoadOnLogin: 0
+  currentBoards:
+    boards: []
+  selectedBoardKey: 
+  topN: 10

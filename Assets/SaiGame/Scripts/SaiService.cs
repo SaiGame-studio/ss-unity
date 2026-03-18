@@ -38,6 +38,7 @@ namespace SaiGame.Services
         [SerializeField] protected QuestStatus questClaims;
         [SerializeField] protected DailyQuest dailyQuest;
         [SerializeField] protected ItemTag itemTag;
+        [SerializeField] protected Leaderboard leaderboard;
 
         [Header("Server Configuration")]
         [HideInInspector][SerializeField] protected ServerEndpointOption serverEndpoint = ServerEndpointOption.LocalHttp;
@@ -129,6 +130,8 @@ namespace SaiGame.Services
         public DailyQuest DailyQuest => this.dailyQuest;
 
         public ItemTag ItemTag => this.itemTag;
+
+        public Leaderboard Leaderboard => this.leaderboard;
 
         public SaiAuth SaiAuth => saiAuth;
 

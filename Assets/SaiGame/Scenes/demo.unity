@@ -485,8 +485,16 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: gameId
-      value: 634af48f-df9f-41c5-9191-54cf535a44a6
+      propertyPath: showUrlRequest
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: showJsonRequest
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: showJsonResponse
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
