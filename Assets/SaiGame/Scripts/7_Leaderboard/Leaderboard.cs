@@ -23,6 +23,7 @@ namespace SaiGame.Services
         [Header("Current Leaderboard Data")]
         [SerializeField] protected LeaderboardBoardsResponse currentBoards;
         [SerializeField] protected LeaderboardRankingsResponse currentTopRankings;
+        [SerializeField] protected LeaderboardLocalRankingResponse currentMyRank;
 
         [Header("Query Settings")]
         [SerializeField] protected string selectedBoardId = "";
@@ -32,6 +33,7 @@ namespace SaiGame.Services
         public LeaderboardBoardsResponse CurrentBoards => this.currentBoards;
         public bool HasBoards => this.currentBoards != null && this.currentBoards.boards != null && this.currentBoards.boards.Length > 0;
         public LeaderboardRankingsResponse CurrentTopRankings => this.currentTopRankings;
+        public LeaderboardLocalRankingResponse CurrentMyRank => this.currentMyRank;
 
         protected override void LoadComponents()
         {
@@ -297,12 +299,12 @@ namespace SaiGame.Services
             );
         }
 
-        // ─── Get Local Ranking ───────────────────────────────────────────────────────
+        // ─── Get My Rank ─────────────────────────────────────────────────────────────
 
-        public void GetLocalRanking(string boardKey, Action<LeaderboardLocalRankingResponse> onSuccess = null, Action<string> onError = null)
+        public void GetLocalRanking(string boardId, Action<LeaderboardLocalRankingResponse> onSuccess = null, Action<string> onError = null)
         {
             if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
-                Debug.Log($"<color=#CC88FF><b>[Leaderboard] ► Get Local Ranking: {boardKey}</b></color>", gameObject);
+                Debug.Log($"<color=#CC88FF><b>[Leaderboard] ► Get My Rank: {boardId}</b></color>", gameObject);
 
             if (SaiService.Instance == null)
             {
@@ -316,19 +318,19 @@ namespace SaiGame.Services
                 return;
             }
 
-            if (string.IsNullOrEmpty(boardKey))
+            if (string.IsNullOrEmpty(boardId))
             {
-                onError?.Invoke("Board key cannot be empty!");
+                onError?.Invoke("Board ID cannot be empty!");
                 return;
             }
 
-            StartCoroutine(GetLocalRankingCoroutine(boardKey, onSuccess, onError));
+            StartCoroutine(GetLocalRankingCoroutine(boardId, onSuccess, onError));
         }
 
-        private IEnumerator GetLocalRankingCoroutine(string boardKey, Action<LeaderboardLocalRankingResponse> onSuccess, Action<string> onError)
+        private IEnumerator GetLocalRankingCoroutine(string boardId, Action<LeaderboardLocalRankingResponse> onSuccess, Action<string> onError)
         {
             string gameId = SaiService.Instance.GameId;
-            string endpoint = $"/api/v1/games/{gameId}/leaderboards/{boardKey}/rankings/local";
+            string endpoint = $"/api/v1/games/{gameId}/leaderboards/{boardId}/me";
 
             yield return SaiService.Instance.GetRequest(endpoint,
                 response =>
@@ -336,9 +338,10 @@ namespace SaiGame.Services
                     try
                     {
                         LeaderboardLocalRankingResponse parsed = JsonUtility.FromJson<LeaderboardLocalRankingResponse>(response);
+                        this.currentMyRank = parsed;
 
                         if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                            Debug.Log($"[Leaderboard] Local ranking for board {boardKey}: rank #{parsed.rank}, score: {parsed.score}");
+                            Debug.Log($"[Leaderboard] My rank for board {boardId}: rank #{parsed.rank}, score: {parsed.score}");
 
                         OnGetLocalRankingSuccess?.Invoke(parsed);
                         if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
@@ -347,7 +350,7 @@ namespace SaiGame.Services
                     }
                     catch (Exception e)
                     {
-                        string errorMsg = $"Parse get local ranking response error: {e.Message}";
+                        string errorMsg = $"Parse get my rank response error: {e.Message}";
                         OnGetLocalRankingFailure?.Invoke(errorMsg);
                         if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[Leaderboard] GetLocalRanking</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Leaderboard.cs › GetLocalRankingCoroutine | {errorMsg}");

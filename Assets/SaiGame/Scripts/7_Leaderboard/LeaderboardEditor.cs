@@ -11,6 +11,7 @@ namespace SaiGame.Services
         private SerializedProperty autoLoadOnLogin;
         private SerializedProperty currentBoards;
         private SerializedProperty currentTopRankings;
+        private SerializedProperty currentMyRank;
         private SerializedProperty selectedBoardId;
         private SerializedProperty selectedBoardKey;
         private SerializedProperty topN;
@@ -18,6 +19,7 @@ namespace SaiGame.Services
         private bool showCurrentBoards = true;
         private bool showBoardList = true;
         private bool showTopRankings = true;
+        private bool showMyRank = true;
         private bool showUtilityButtons = true;
         private System.Collections.Generic.Dictionary<string, bool> boardFoldouts = new System.Collections.Generic.Dictionary<string, bool>();
 
@@ -27,6 +29,7 @@ namespace SaiGame.Services
             this.autoLoadOnLogin = serializedObject.FindProperty("autoLoadOnLogin");
             this.currentBoards = serializedObject.FindProperty("currentBoards");
             this.currentTopRankings = serializedObject.FindProperty("currentTopRankings");
+            this.currentMyRank = serializedObject.FindProperty("currentMyRank");
             this.selectedBoardId = serializedObject.FindProperty("selectedBoardId");
             this.selectedBoardKey = serializedObject.FindProperty("selectedBoardKey");
             this.topN = serializedObject.FindProperty("topN");
@@ -44,8 +47,7 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Query Settings", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(this.selectedBoardId, new GUIContent("Selected Board ID", "Board UUID used for Get Board detail"));
-            EditorGUILayout.PropertyField(this.selectedBoardKey, new GUIContent("Selected Board Key", "Board key used for rankings operations (Top N, Local)"));
+            EditorGUILayout.PropertyField(this.selectedBoardId, new GUIContent("Selected Board ID", "Board UUID used for Get Board / Top N / My Rank"));
             EditorGUILayout.PropertyField(this.topN, new GUIContent("Top N", "Number of top rankings to fetch"));
 
             EditorGUILayout.Space();
@@ -113,6 +115,37 @@ namespace SaiGame.Services
             }
 
             EditorGUILayout.Space();
+
+            // My Rank Data
+            var myRank = this.leaderboard.CurrentMyRank;
+            string myRankLabel = (myRank != null && myRank.user_id != null)
+                ? $"My Rank  (#{myRank.rank}  score: {myRank.score})"
+                : "My Rank";
+            this.showMyRank = EditorGUILayout.Foldout(this.showMyRank, myRankLabel, true);
+            if (this.showMyRank)
+            {
+                EditorGUI.indentLevel++;
+
+                if (myRank != null && myRank.user_id != null)
+                {
+                    EditorGUILayout.LabelField($"Rank: #{myRank.rank}");
+                    EditorGUILayout.LabelField($"User ID: {myRank.user_id}");
+                    EditorGUILayout.LabelField($"Score: {myRank.score}");
+                    if (!string.IsNullOrEmpty(myRank.metadata) && myRank.metadata != "null")
+                        EditorGUILayout.LabelField($"Metadata: {myRank.metadata}");
+                    if (myRank.season != null && !string.IsNullOrEmpty(myRank.season.id))
+                        EditorGUILayout.LabelField($"Season: #{myRank.season.season_number}  ({myRank.season.id})");
+                    EditorGUILayout.LabelField($"Updated: {myRank.updated_at}");
+                }
+                else
+                {
+                    EditorGUILayout.LabelField("No rank loaded. Press \"Get My Rank\".", EditorStyles.miniLabel);
+                }
+
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.Space();
             this.showUtilityButtons = EditorGUILayout.Foldout(this.showUtilityButtons, "Utility Actions", true);
             if (this.showUtilityButtons)
             {
@@ -145,9 +178,9 @@ namespace SaiGame.Services
                     this.EditorGetTopRankings();
                 GUI.backgroundColor = Color.white;
 
-                // Get Local Ranking (using selectedBoardKey)
+                // Get Local Ranking (using selectedBoardId)
                 GUI.backgroundColor = new Color(0.6f, 0.4f, 1f);
-                if (GUILayout.Button($"Get Local Ranking  \"{this.leaderboard.GetSelectedBoardKey()}\"", GUILayout.Height(28)))
+                if (GUILayout.Button($"Get My Rank  \"{this.leaderboard.GetSelectedBoardId()}\"", GUILayout.Height(28)))
                     this.EditorGetLocalRanking();
                 GUI.backgroundColor = Color.white;
 
@@ -217,8 +250,8 @@ namespace SaiGame.Services
                 GUI.backgroundColor = new Color(0.6f, 0.4f, 1f);
                 if (GUILayout.Button("My Rank", GUILayout.Height(22)))
                 {
-                    this.leaderboard.SetSelectedBoardKey(board.board_key);
-                    this.EditorGetLocalRanking(board.board_key);
+                    this.leaderboard.SetSelectedBoardId(board.id);
+                    this.EditorGetLocalRanking(board.id);
                 }
                 GUI.backgroundColor = Color.white;
 
@@ -301,29 +334,29 @@ namespace SaiGame.Services
             );
         }
 
-        private void EditorGetLocalRanking(string boardKey = null)
+        private void EditorGetLocalRanking(string boardId = null)
         {
             if (!this.CheckReady("[LeaderboardEditor]")) return;
 
-            string key = boardKey ?? this.leaderboard.GetSelectedBoardKey();
-            if (string.IsNullOrEmpty(key))
+            string id = boardId ?? this.leaderboard.GetSelectedBoardId();
+            if (string.IsNullOrEmpty(id))
             {
-                Debug.LogWarning("[LeaderboardEditor] Selected Board Key is empty!");
+                Debug.LogWarning("[LeaderboardEditor] Selected Board ID is empty!");
                 return;
             }
 
             this.leaderboard.GetLocalRanking(
-                key,
+                id,
                 onSuccess: result =>
                 {
                     if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                        Debug.Log($"[LeaderboardEditor] Local ranking for {key}: rank #{result?.rank}, score: {result?.score}");
+                        Debug.Log($"[LeaderboardEditor] My rank for {id}: rank #{result?.rank}, score: {result?.score}");
                     Repaint();
                 },
                 onError: error =>
                 {
                     if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                        Debug.LogError($"[LeaderboardEditor] Get local ranking failed: {error}");
+                        Debug.LogError($"[LeaderboardEditor] Get my rank failed: {error}");
                 }
             );
         }
