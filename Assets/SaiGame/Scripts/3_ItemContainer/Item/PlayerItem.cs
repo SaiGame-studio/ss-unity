@@ -201,7 +201,12 @@ namespace SaiGame.Services
                 {
                     try
                     {
-                        InventoryResponse inventoryResponse = JsonUtility.FromJson<InventoryResponse>(response);
+                        // Pre-process: convert JSON object fields (base_stats, public_properties,
+                        // private_properties) from object literals to escaped JSON strings so that
+                        // Unity's JsonUtility can map them into C# string fields without skipping items.
+                        string sanitized = InventoryJsonHelper.StringifyObjectFields(response);
+
+                        InventoryResponse inventoryResponse = JsonUtility.FromJson<InventoryResponse>(sanitized);
                         this.currentInventory = inventoryResponse;
 
                         if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
@@ -226,6 +231,99 @@ namespace SaiGame.Services
                     this.OnGetItemsFailure?.Invoke(error);
                     if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemContainer] GetItems</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemContainer.cs › GetItemsCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
+            );
+        }
+
+        // ── Update Item Public Properties (client_writable) ────────────────────
+
+        /// <summary>
+        /// Sends a PATCH request to merge <paramref name="propertiesJson"/> into the item's
+        /// public_properties. The item definition must have client_writable = true.
+        /// Endpoint: PATCH /api/v1/games/{game_id}/inventory-items/{item_id}
+        /// </summary>
+        /// <param name="itemId">The inventory item id to update.</param>
+        /// <param name="propertiesJson">
+        /// A valid JSON object string, e.g. {"skin":"golden","effect":"glow"}.
+        /// Values are merged (not replaced) server-side via JSONB || operator.
+        /// Max 50 total keys (including nested).
+        /// </param>
+        public void UpdateItemProperties(
+            string itemId,
+            string propertiesJson,
+            System.Action<InventoryItemData> onSuccess = null,
+            System.Action<string> onError = null)
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#00FFFF><b>[ItemContainer] ► Update Item Properties</b></color>", gameObject);
+
+            if (SaiService.Instance == null)
+            {
+                onError?.Invoke("SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(itemId))
+            {
+                onError?.Invoke("itemId must not be empty.");
+                return;
+            }
+
+            StartCoroutine(this.UpdateItemPropertiesCoroutine(itemId, propertiesJson, onSuccess, onError));
+        }
+
+        private IEnumerator UpdateItemPropertiesCoroutine(
+            string itemId,
+            string propertiesJson,
+            System.Action<InventoryItemData> onSuccess,
+            System.Action<string> onError)
+        {
+            string gameId = SaiService.Instance.GameId;
+            string endpoint = $"/api/v1/games/{gameId}/inventory-items/{itemId}";
+
+            // version is required by the schema but ignored server-side for optimistic locking
+            string body = $"{{\"version\":0,\"properties\":{propertiesJson}}}";
+
+            yield return SaiService.Instance.PatchRequest(endpoint, body,
+                response =>
+                {
+                    // Server returns {"message":"properties updated successfully"} — not a full item object.
+                    // Find the cached item, patch public_properties locally, then invoke onSuccess.
+                    InventoryItemData cachedItem = null;
+
+                    if (this.currentInventory?.items != null)
+                    {
+                        for (int i = 0; i < this.currentInventory.items.Length; i++)
+                        {
+                            if (this.currentInventory.items[i].id == itemId)
+                            {
+                                cachedItem = this.currentInventory.items[i];
+                                // Optimistically update public_properties with the sent JSON
+                                cachedItem.public_properties = propertiesJson;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        Debug.Log($"[ItemContainer] Item {itemId} public_properties updated successfully. Server: {response}");
+
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.Log("<color=#66CCFF>[ItemContainer] UpdateItemProperties</color> → <b><color=#00FF88>onSuccess</color></b> callback | PlayerItem.cs › UpdateItemPropertiesCoroutine");
+
+                    onSuccess?.Invoke(cachedItem);
+                },
+                error =>
+                {
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[ItemContainer] UpdateItemProperties</color> → <b><color=#FF4444>onError</color></b> callback (network) | PlayerItem.cs › UpdateItemPropertiesCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );

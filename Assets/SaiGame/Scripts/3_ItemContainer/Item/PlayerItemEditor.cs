@@ -21,6 +21,10 @@ namespace SaiGame.Services
 
         private readonly Dictionary<string, bool> itemFoldouts = new Dictionary<string, bool>();
 
+        // Per-item state for the in-place Update Properties form
+        private readonly Dictionary<string, string> itemPropertiesJson = new Dictionary<string, string>();
+        private readonly HashSet<string> itemsUpdating = new HashSet<string>();
+
         // Category dropdown state (static so it persists across re-inspects)
         private static string[] cachedCategories = null;
         private static string[] dropdownOptions = new string[] { "(All)" };
@@ -218,8 +222,9 @@ namespace SaiGame.Services
             if (!this.itemFoldouts.ContainsKey(item.id))
                 this.itemFoldouts[item.id] = false;
 
+            bool isClientWritable = item.definition != null && item.definition.client_writable;
             string label = item.definition != null
-                ? $"{item.definition.name}  |  {item.definition.category}  ×{item.quantity}"
+                ? $"{item.definition.name}  [{item.definition.category}]  ×{item.quantity}{(isClientWritable ? "  ✎" : "")}"
                 : $"{item.id}  ×{item.quantity}";
 
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -229,21 +234,205 @@ namespace SaiGame.Services
             if (this.itemFoldouts[item.id])
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.LabelField($"ID: {item.id}");
-                EditorGUILayout.LabelField($"Qty: {item.quantity}  |  Level: {item.level}  |  Grid: ({item.grid_x}, {item.grid_y})");
 
+                // ── Item fields ──────────────────────────────────────────────
+                EditorGUILayout.LabelField("Item", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("ID",                  item.id);
+                EditorGUILayout.LabelField("Studio ID",           item.studio_id);
+                EditorGUILayout.LabelField("Game ID",             item.game_id);
+                EditorGUILayout.LabelField("User ID",             item.user_id);
+                EditorGUILayout.LabelField("Definition ID",       item.item_definition_id);
+                EditorGUILayout.LabelField("Container ID",        item.item_container_id);
+                EditorGUILayout.LabelField("Quantity",            item.quantity.ToString());
+                EditorGUILayout.LabelField("Level",               item.level.ToString());
+                EditorGUILayout.LabelField("Grid",                $"({item.grid_x}, {item.grid_y})");
+                EditorGUILayout.LabelField("Version",             item.version.ToString());
+                EditorGUILayout.LabelField("Acquired At",         item.acquired_at);
+                EditorGUILayout.LabelField("Last Modified At",    item.last_modified_at);
+
+                // ── Properties ───────────────────────────────────────────────
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Properties", EditorStyles.boldLabel);
+
+                string prettyPublic  = PrettyJson(item.public_properties);
+                string prettyPrivate = PrettyJson(item.private_properties);
+
+                EditorGUILayout.LabelField("public_properties");
+                EditorGUI.indentLevel++;
+                EditorGUILayout.SelectableLabel(prettyPublic,
+                    EditorStyles.textArea,
+                    GUILayout.MinHeight(EditorStyles.textArea.lineHeight * (CountLines(prettyPublic) + 1)));
+                EditorGUI.indentLevel--;
+
+                EditorGUILayout.LabelField("private_properties");
+                EditorGUI.indentLevel++;
+                EditorGUILayout.SelectableLabel(prettyPrivate,
+                    EditorStyles.textArea,
+                    GUILayout.MinHeight(EditorStyles.textArea.lineHeight * (CountLines(prettyPrivate) + 1)));
+                EditorGUI.indentLevel--;
+
+                // ── Definition ───────────────────────────────────────────────
                 if (item.definition != null)
                 {
-                    EditorGUILayout.LabelField($"Name: {item.definition.name}");
-                    EditorGUILayout.LabelField($"Category: {item.definition.category}  |  Rarity: {item.definition.rarity}");
-                    EditorGUILayout.LabelField($"Stackable: {item.definition.is_stackable}  |  Grid: {item.definition.grid_width}x{item.definition.grid_height}");
+                    var d = item.definition;
+                    EditorGUILayout.Space(4);
+                    EditorGUILayout.LabelField("Definition", EditorStyles.boldLabel);
+                    EditorGUILayout.LabelField("Def ID",              d.id);
+                    EditorGUILayout.LabelField("Item Code",           d.item_code);
+                    EditorGUILayout.LabelField("Name",                d.name);
+                    EditorGUILayout.LabelField("Category",            d.category);
+                    EditorGUILayout.LabelField("Rarity",              d.rarity);
+                    EditorGUILayout.LabelField("Stackable",           $"{d.is_stackable}  (max {d.max_stack_size})");
+                    EditorGUILayout.LabelField("Grid Size",           $"{d.grid_width} × {d.grid_height}");
+                    EditorGUILayout.LabelField("Client Writable",     d.client_writable.ToString());
+                    EditorGUILayout.LabelField("Allow Client Qty",    d.allow_client_update_qty.ToString());
+                    EditorGUILayout.LabelField("Created By",          d.created_by);
+                    EditorGUILayout.LabelField("Created At",          d.created_at);
+                    EditorGUILayout.LabelField("Updated At",          d.updated_at);
+
+                    if (!string.IsNullOrEmpty(d.base_stats))
+                    {
+                        EditorGUILayout.LabelField("base_stats");
+                        EditorGUI.indentLevel++;
+                        string prettyStats = PrettyJson(d.base_stats);
+                        EditorGUILayout.SelectableLabel(prettyStats,
+                            EditorStyles.textArea,
+                            GUILayout.MinHeight(EditorStyles.textArea.lineHeight * (CountLines(prettyStats) + 1)));
+                        EditorGUI.indentLevel--;
+                    }
                 }
 
-                EditorGUILayout.LabelField($"Acquired: {item.acquired_at}");
+                // ── Inline update form (only for client_writable items) ──────
+                if (isClientWritable)
+                {
+                    EditorGUILayout.Space(6);
+                    EditorGUILayout.LabelField("Update public_properties", EditorStyles.boldLabel);
+
+                    if (!this.itemPropertiesJson.ContainsKey(item.id))
+                        this.itemPropertiesJson[item.id] = "{\n  \"key\": \"value\"\n}";
+
+                    this.itemPropertiesJson[item.id] = EditorGUILayout.TextArea(
+                        this.itemPropertiesJson[item.id], GUILayout.MinHeight(56));
+
+                    bool isUpdating = this.itemsUpdating.Contains(item.id);
+
+                    EditorGUILayout.BeginHorizontal();
+
+                    // Beautify button
+                    GUI.backgroundColor = new Color(1f, 0.85f, 0.3f);
+                    if (GUILayout.Button("Beautify ✦", GUILayout.Height(26), GUILayout.Width(90)))
+                    {
+                        this.itemPropertiesJson[item.id] = PrettyJson(this.itemPropertiesJson[item.id]);
+                        Repaint();
+                    }
+                    GUI.backgroundColor = Color.white;
+
+                    // Update button
+                    GUI.backgroundColor = isUpdating ? Color.gray : new Color(0.4f, 1f, 0.6f);
+                    EditorGUI.BeginDisabledGroup(isUpdating);
+                    if (GUILayout.Button(isUpdating ? "Updating..." : "Update Properties", GUILayout.Height(26)))
+                    {
+                        string itemId = item.id;
+                        string json = this.itemPropertiesJson[itemId];
+                        this.itemsUpdating.Add(itemId);
+                        Repaint();
+
+                        this.itemContainer.UpdateItemProperties(
+                            itemId: itemId,
+                            propertiesJson: json,
+                            onSuccess: updated =>
+                            {
+                                this.itemsUpdating.Remove(itemId);
+                                Repaint();
+                                string id = updated != null ? updated.id : itemId;
+                                string props = updated != null ? updated.public_properties : json;
+                                Debug.Log($"[ItemContainerEditor] Updated public_properties for item {id}: {props}");
+                            },
+                            onError: err =>
+                            {
+                                this.itemsUpdating.Remove(itemId);
+                                Repaint();
+                                Debug.LogError($"[ItemContainerEditor] UpdateItemProperties failed: {err}");
+                            }
+                        );
+                    }
+                    EditorGUI.EndDisabledGroup();
+                    GUI.backgroundColor = Color.white;
+
+                    EditorGUILayout.EndHorizontal();
+                }
+
                 EditorGUI.indentLevel--;
             }
 
             EditorGUILayout.EndVertical();
+        }
+
+        /// <summary>Simple JSON pretty-printer: adds newlines and indentation.</summary>
+        private static string PrettyJson(string json)
+        {
+            if (string.IsNullOrEmpty(json)) return "{}";
+
+            var sb = new System.Text.StringBuilder();
+            int indent = 0;
+            bool inString = false;
+
+            foreach (char c in json)
+            {
+                if (c == '"' && (sb.Length == 0 || sb[sb.Length - 1] != '\\'))
+                    inString = !inString;
+
+                if (inString)
+                {
+                    sb.Append(c);
+                    continue;
+                }
+
+                switch (c)
+                {
+                    case '{':
+                    case '[':
+                        sb.Append(c);
+                        sb.Append('\n');
+                        indent++;
+                        sb.Append(new string(' ', indent * 2));
+                        break;
+                    case '}':
+                    case ']':
+                        sb.Append('\n');
+                        indent--;
+                        sb.Append(new string(' ', indent * 2));
+                        sb.Append(c);
+                        break;
+                    case ',':
+                        sb.Append(c);
+                        sb.Append('\n');
+                        sb.Append(new string(' ', indent * 2));
+                        break;
+                    case ':':
+                        sb.Append(": ");
+                        break;
+                    case ' ':
+                    case '\t':
+                    case '\n':
+                    case '\r':
+                        break; // strip original whitespace
+                    default:
+                        sb.Append(c);
+                        break;
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        private static int CountLines(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return 1;
+            int n = 1;
+            foreach (char c in s)
+                if (c == '\n') n++;
+            return n;
         }
 
         private void FetchCategories()
