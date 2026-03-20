@@ -69,6 +69,7 @@ namespace SaiGame.Services
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("mailbox"), new GUIContent("Mailbox"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("playerItem"), new GUIContent("Player Item"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("playerContainer"), new GUIContent("Player Container"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("itemPreset"), new GUIContent("Item Preset"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("saiShop"), new GUIContent("Sai Shop"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("chainQuest"), new GUIContent("Chain Quest"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("questProgressor"), new GUIContent("Quest Progressor"));

@@ -227,6 +227,7 @@ GameObject:
   - component: {fileID: 8359460651495667961}
   - component: {fileID: 2893519870010327973}
   - component: {fileID: 9128749862781184251}
+  - component: {fileID: 770429900078848718}
   m_Layer: 0
   m_Name: Item
   m_TagString: Untagged
@@ -370,6 +371,22 @@ MonoBehaviour:
     total: 0
   tagLimit: 50
   tagOffset: 0
+--- !u!114 &770429900078848718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5318073927917700422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7de018e797516c74c91f20dc9ccd0047, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemPreset
+  autoLoadOnLogin: 0
+  currentPresets:
+    containers: []
+  definitionId: 
 --- !u!1 &6971719431293405431
 GameObject:
   m_ObjectHideFlags: 0
@@ -427,6 +444,7 @@ MonoBehaviour:
   playerItem: {fileID: 8153881721212893719}
   playerEvent: {fileID: 0}
   playerContainer: {fileID: 4042283287993455742}
+  itemPreset: {fileID: 0}
   itemGenerator: {fileID: 8359460651495667961}
   equipmentSlotManager: {fileID: 0}
   saiShop: {fileID: 7399820738238440333}
@@ -440,15 +458,15 @@ MonoBehaviour:
   domainOption: 0
   port: 82
   useHttps: 0
-  gameId: 29f172e4-c60a-4766-bb1f-942c163999fc
+  gameId: f9f21a85-2382-449c-8bac-9957016c2939
   studioId: 
   requestTimeout: 30
   showButtonsLog: 1
   showCallbackLog: 1
   showDebugLog: 1
-  showUrlRequest: 0
-  showJsonRequest: 0
-  showJsonResponse: 0
+  showUrlRequest: 1
+  showJsonRequest: 1
+  showJsonResponse: 1
 --- !u!114 &813458455079530658
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -473,10 +491,10 @@ MonoBehaviour:
     is_verified: 0
     created_at: 0
   loginTime: 0
-  autoLogin: 1
+  autoLogin: 0
   autoRefreshToken: 1
   refreshBeforeExpire: 2
-  username: username_player1_1772960098791
+  username: username_player1_1773970252201
   password: 123qweasd
   saveEmail: 1
   savePassword: 1
@@ -558,5 +576,19 @@ MonoBehaviour:
   autoLoadOnLogin: 0
   currentBoards:
     boards: []
+  currentTopRankings:
+    entries: []
+    limit: 0
+    total: 0
+  currentMyRank:
+    rank: 0
+    user_id: 
+    score: 0
+    metadata: 
+    season:
+      id: 
+      season_number: 0
+    updated_at: 
+  selectedBoardId: 
   selectedBoardKey: 
   topN: 10

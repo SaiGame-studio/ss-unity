@@ -30,6 +30,7 @@ namespace SaiGame.Services
         [SerializeField] protected PlayerItem playerItem;
         [SerializeField] protected PlayerEvent playerEvent;
         [SerializeField] protected PlayerContainer playerContainer;
+        [SerializeField] protected ItemPreset itemPreset;
         [SerializeField] protected ItemGenerator itemGenerator;
         [SerializeField] protected EquipmentSlot equipmentSlotManager;
         [SerializeField] protected Shop saiShop;
@@ -114,6 +115,8 @@ namespace SaiGame.Services
         public PlayerEvent PlayerEvent => playerEvent;
 
         public PlayerContainer PlayerContainer => playerContainer;
+
+        public ItemPreset ItemPreset => this.itemPreset;
 
         public ItemGenerator ItemGenerator => itemGenerator;
 
@@ -254,6 +257,36 @@ namespace SaiGame.Services
                 {
                     string rawResponse = request.downloadHandler?.text ?? "No response data";
                     string errorMsg = $"POST {endpoint} failed: {request.error}\nResponse Code: {request.responseCode}\nRaw Data: {rawResponse}";
+                    onError?.Invoke(errorMsg);
+                }
+            }
+        }
+
+        public IEnumerator PutRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)
+        {
+            using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "PUT"))
+            {
+                byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
+                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                request.SetRequestHeader("Content-Type", "application/json");
+
+                if (this.showUrlRequest)
+                    Debug.Log($"[SaiService] PUT {request.url}");
+                if (this.showJsonRequest)
+                    Debug.Log($"[SaiService] PUT Request Body\n{jsonData}");
+
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    if (this.showJsonResponse)
+                        Debug.Log($"[SaiService] PUT Response\n{request.downloadHandler.text}");
+                    onSuccess?.Invoke(request.downloadHandler.text);
+                }
+                else
+                {
+                    string rawResponse = request.downloadHandler?.text ?? "No response data";
+                    string errorMsg = $"PUT {endpoint} failed: {request.error}\nResponse Code: {request.responseCode}\nRaw Data: {rawResponse}";
                     onError?.Invoke(errorMsg);
                 }
             }

@@ -440,6 +440,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 770429900078848718, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoLoadOnLogin
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoLogin
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_Name
       value: SaiService
@@ -483,18 +491,6 @@ PrefabInstance:
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: showUrlRequest
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: showJsonRequest
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: showJsonResponse
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
