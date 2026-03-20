@@ -228,6 +228,7 @@ GameObject:
   - component: {fileID: 2893519870010327973}
   - component: {fileID: 9128749862781184251}
   - component: {fileID: 770429900078848718}
+  - component: {fileID: 7695481116977442798}
   m_Layer: 0
   m_Name: Item
   m_TagString: Untagged
@@ -383,10 +384,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7de018e797516c74c91f20dc9ccd0047, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemPreset
-  autoLoadOnLogin: 0
+  autoLoadOnLogin: 1
   currentPresets:
     containers: []
   definitionId: 
+--- !u!114 &7695481116977442798
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5318073927917700422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a5f35307d642124fb8589881a3e2f35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemAddDeduct
+  playerItem: {fileID: 8153881721212893719}
+  playerContainer: {fileID: 4042283287993455742}
+  itemDefinitionId: 
+  containerId: 
+  quantity: 1
 --- !u!1 &6971719431293405431
 GameObject:
   m_ObjectHideFlags: 0
@@ -442,18 +460,19 @@ MonoBehaviour:
   gamerProgress: {fileID: 3797376410084372741}
   mailbox: {fileID: 390271473075436921}
   playerItem: {fileID: 8153881721212893719}
-  playerEvent: {fileID: 0}
+  playerEvent: {fileID: 27159321914394544}
   playerContainer: {fileID: 4042283287993455742}
-  itemPreset: {fileID: 0}
+  itemPreset: {fileID: 770429900078848718}
+  itemAddDeduct: {fileID: 7695481116977442798}
   itemGenerator: {fileID: 8359460651495667961}
-  equipmentSlotManager: {fileID: 0}
+  equipmentSlotManager: {fileID: 2893519870010327973}
   saiShop: {fileID: 7399820738238440333}
   chainQuest: {fileID: 4308186167237759036}
   questProgressor: {fileID: 1733594213501630859}
-  questClaims: {fileID: 0}
+  questClaims: {fileID: 2399963655362431771}
   dailyQuest: {fileID: 1892399005449690324}
-  itemTag: {fileID: 0}
-  leaderboard: {fileID: 0}
+  itemTag: {fileID: 9128749862781184251}
+  leaderboard: {fileID: 1993458322055049526}
   serverEndpoint: 0
   domainOption: 0
   port: 82
@@ -464,9 +483,9 @@ MonoBehaviour:
   showButtonsLog: 1
   showCallbackLog: 1
   showDebugLog: 1
-  showUrlRequest: 1
-  showJsonRequest: 1
-  showJsonResponse: 1
+  showUrlRequest: 0
+  showJsonRequest: 0
+  showJsonResponse: 0
 --- !u!114 &813458455079530658
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -491,7 +510,7 @@ MonoBehaviour:
     is_verified: 0
     created_at: 0
   loginTime: 0
-  autoLogin: 0
+  autoLogin: 1
   autoRefreshToken: 1
   refreshBeforeExpire: 2
   username: username_player1_1773970252201

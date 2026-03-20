@@ -21,7 +21,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiService : SaiSingleton<SaiService>
     {
-        public const string PACKAGE_VERSION = "0.2.0b1";
+        public const string PACKAGE_VERSION = "0.2.0";
         public const string PACKAGE_NAME = "SaiGame Services";
 
         [SerializeField] protected SaiAuth saiAuth;
@@ -31,6 +31,7 @@ namespace SaiGame.Services
         [SerializeField] protected PlayerEvent playerEvent;
         [SerializeField] protected PlayerContainer playerContainer;
         [SerializeField] protected ItemPreset itemPreset;
+        [SerializeField] protected ItemAddDeduct itemAddDeduct;
         [SerializeField] protected ItemGenerator itemGenerator;
         [SerializeField] protected EquipmentSlot equipmentSlotManager;
         [SerializeField] protected Shop saiShop;
@@ -117,6 +118,8 @@ namespace SaiGame.Services
         public PlayerContainer PlayerContainer => playerContainer;
 
         public ItemPreset ItemPreset => this.itemPreset;
+
+        public ItemAddDeduct ItemAddDeduct => this.itemAddDeduct;
 
         public ItemGenerator ItemGenerator => itemGenerator;
 
@@ -368,13 +371,18 @@ namespace SaiGame.Services
             this.LoadSaiAuth();
             this.LoadGamerProgress();
             this.LoadMailbox();
+            this.LoadPlayerEvent();
+            this.LoadLeaderboard();
             this.LoadPlayerItem();
             this.LoadPlayerContainer();
+            this.LoadItemPreset();
+            this.LoadItemAddDeduct();
             this.LoadItemGenerator();
             this.LoadEquipmentSlotManager();
             this.LoadSaiShop();
             this.LoadChainQuest();
             this.LoadQuestProgressor();
+            this.LoadQuestStatus();
             this.LoadDailyQuest();
             this.LoadItemTag();
             this.LoadGameIdFromPlayerPrefs();
@@ -388,6 +396,22 @@ namespace SaiGame.Services
             this.saiAuth = GetComponent<SaiAuth>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadSaiAuth", gameObject);
+        }
+
+        protected virtual void LoadPlayerEvent()
+        {
+            if (this.playerEvent != null) return;
+            this.playerEvent = GetComponent<PlayerEvent>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadPlayerEvent", gameObject);
+        }
+
+        protected virtual void LoadLeaderboard()
+        {
+            if (this.leaderboard != null) return;
+            this.leaderboard = GetComponent<Leaderboard>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadLeaderboard", gameObject);
         }
 
         protected virtual void LoadMailbox()
@@ -420,6 +444,22 @@ namespace SaiGame.Services
             this.playerContainer = GetComponentInChildren<PlayerContainer>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadPlayerContainer", gameObject);
+        }
+
+        protected virtual void LoadItemPreset()
+        {
+            if (this.itemPreset != null) return;
+            this.itemPreset = GetComponentInChildren<ItemPreset>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadItemPreset", gameObject);
+        }
+
+        protected virtual void LoadItemAddDeduct()
+        {
+            if (this.itemAddDeduct != null) return;
+            this.itemAddDeduct = GetComponentInChildren<ItemAddDeduct>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadItemAddDeduct", gameObject);
         }
 
         protected virtual void LoadItemGenerator()
@@ -468,6 +508,14 @@ namespace SaiGame.Services
             this.dailyQuest = GetComponentInChildren<DailyQuest>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadDailyQuest", gameObject);
+        }
+
+        protected virtual void LoadQuestStatus()
+        {
+            if (this.questClaims != null) return;
+            this.questClaims = GetComponentInChildren<QuestStatus>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadQuestStatus", gameObject);
         }
 
         protected virtual void LoadItemTag()
