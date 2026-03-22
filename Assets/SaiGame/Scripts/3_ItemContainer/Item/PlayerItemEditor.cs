@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -24,6 +25,12 @@ namespace SaiGame.Services
         // Per-item state for the in-place Update Properties form
         private readonly Dictionary<string, string> itemPropertiesJson = new Dictionary<string, string>();
         private readonly HashSet<string> itemsUpdating = new HashSet<string>();
+
+        // Cached reference to ItemCrafting for the Craft button on recipe items
+        private ItemCrafting craftingRef;
+
+        // Cached reference to PlayerContainer for the Gacha button on gacha_pack items
+        private PlayerContainer containerRef;
 
         // Category dropdown state (static so it persists across re-inspects)
         private static string[] cachedCategories = null;
@@ -223,17 +230,55 @@ namespace SaiGame.Services
                 this.itemFoldouts[item.id] = false;
 
             bool isClientWritable = item.definition != null && item.definition.client_writable;
+            string rarityLabel = item.definition != null && !string.IsNullOrEmpty(item.definition.rarity)
+                ? $"  ★{item.definition.rarity}" : "";
+            string levelLabel = item.level > 0 ? $"  Lv.{item.level}" : "";
             string label = item.definition != null
-                ? $"{item.definition.name}  [{item.definition.category}]  ×{item.quantity}{(isClientWritable ? "  ✎" : "")}"
+                ? $"{item.definition.name}  [{item.definition.category}]{rarityLabel}{levelLabel}  ×{item.quantity}{(isClientWritable ? "  ✎" : "")}"
                 : $"{item.id}  ×{item.quantity}";
 
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            this.itemFoldouts[item.id] = EditorGUILayout.Foldout(this.itemFoldouts[item.id], label, true);
+            // Header row: rarity-coloured foldout + optional Recipe badge on far right
+            GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
+            foldoutStyle.fontStyle = FontStyle.Bold;
+            Color rarityColor = GetRarityColor(item.definition?.rarity);
+            foldoutStyle.normal.textColor    = rarityColor;
+            foldoutStyle.onNormal.textColor  = rarityColor;
+            foldoutStyle.focused.textColor   = rarityColor;
+            foldoutStyle.onFocused.textColor = rarityColor;
+            foldoutStyle.active.textColor    = rarityColor;
+            foldoutStyle.onActive.textColor  = rarityColor;
+
+            bool isRecipeItem    = string.Equals(item.definition?.category, "recipe",     System.StringComparison.OrdinalIgnoreCase);
+            bool isGachaPackItem = string.Equals(item.definition?.category, "gacha_pack", System.StringComparison.OrdinalIgnoreCase);
+
+            EditorGUILayout.BeginHorizontal();
+            this.itemFoldouts[item.id] = EditorGUILayout.Foldout(this.itemFoldouts[item.id], label, true, foldoutStyle);
+            if (isRecipeItem)
+            {
+                GUIStyle recipeStyle = new GUIStyle(EditorStyles.miniLabel);
+                recipeStyle.fontStyle = FontStyle.Bold;
+                recipeStyle.normal.textColor = new Color(0.9f, 0.65f, 0.1f);
+                GUILayout.Label("Recipe", recipeStyle, GUILayout.ExpandWidth(false));
+            }
+            if (isGachaPackItem)
+            {
+                GUIStyle gachaStyle = new GUIStyle(EditorStyles.miniLabel);
+                gachaStyle.fontStyle = FontStyle.Bold;
+                gachaStyle.normal.textColor = new Color(0.4f, 0.8f, 1.0f);
+                GUILayout.Label("Gacha Pack", gachaStyle, GUILayout.ExpandWidth(false));
+            }
+            EditorGUILayout.EndHorizontal();
 
             if (this.itemFoldouts[item.id])
             {
                 EditorGUI.indentLevel++;
+
+                // ── Key Stats (highlighted summary) ───────────────────────────
+                EditorGUILayout.Space(4);
+                this.DrawKeyStatsCard(item);
+                EditorGUILayout.Space(4);
 
                 // ── Item fields ──────────────────────────────────────────────
                 EditorGUILayout.LabelField("Item", EditorStyles.boldLabel);
@@ -299,6 +344,56 @@ namespace SaiGame.Services
                             EditorStyles.textArea,
                             GUILayout.MinHeight(EditorStyles.textArea.lineHeight * (CountLines(prettyStats) + 1)));
                         EditorGUI.indentLevel--;
+                    }
+
+                    // ── Metadata ─────────────────────────────────────────────
+                    if (d.metadata != null)
+                    {
+                        EditorGUILayout.Space(4);
+                        EditorGUILayout.LabelField("Metadata", EditorStyles.boldLabel);
+
+                        if (!string.IsNullOrEmpty(d.metadata.flavor_text))
+                            EditorGUILayout.LabelField("Flavor Text", d.metadata.flavor_text);
+
+                        if (!string.IsNullOrEmpty(d.metadata.icon))
+                            EditorGUILayout.LabelField("Icon", d.metadata.icon);
+
+                        if (!string.IsNullOrEmpty(d.metadata.gacha_pack_id))
+                            EditorGUILayout.LabelField("Gacha Pack ID", d.metadata.gacha_pack_id);
+
+                        if (d.metadata.gacha_pack_ids != null && d.metadata.gacha_pack_ids.Length > 0)
+                        {
+                            EditorGUILayout.LabelField($"Gacha Pack IDs ({d.metadata.gacha_pack_ids.Length})");
+                            EditorGUI.indentLevel++;
+                            foreach (string packId in d.metadata.gacha_pack_ids)
+                            {
+                                EditorGUILayout.BeginHorizontal();
+                                EditorGUILayout.LabelField(packId);
+                                GUI.backgroundColor = new Color(0.4f, 0.8f, 1.0f);
+                                if (GUILayout.Button("Gacha 🎰", GUILayout.Width(80), GUILayout.Height(18)))
+                                    this.DoOpenGacha(packId, item.item_container_id);
+                                GUI.backgroundColor = Color.white;
+                                EditorGUILayout.EndHorizontal();
+                            }
+                            EditorGUI.indentLevel--;
+                        }
+
+                        if (d.metadata.craft_recipe_input_ids != null && d.metadata.craft_recipe_input_ids.Length > 0)
+                        {
+                            EditorGUILayout.LabelField($"Craft Recipe Input IDs ({d.metadata.craft_recipe_input_ids.Length})");
+                            EditorGUI.indentLevel++;
+                            foreach (string recipeInputId in d.metadata.craft_recipe_input_ids)
+                            {
+                                EditorGUILayout.BeginHorizontal();
+                                EditorGUILayout.LabelField(recipeInputId);
+                                GUI.backgroundColor = new Color(0.3f, 1f, 0.5f);
+                                if (GUILayout.Button("Craft ⚒", GUILayout.Width(70), GUILayout.Height(18)))
+                                    this.DoCraft(recipeInputId);
+                                GUI.backgroundColor = Color.white;
+                                EditorGUILayout.EndHorizontal();
+                            }
+                            EditorGUI.indentLevel--;
+                        }
                     }
                 }
 
@@ -366,6 +461,168 @@ namespace SaiGame.Services
             }
 
             EditorGUILayout.EndVertical();
+        }
+
+        private void DrawKeyStatsCard(InventoryItemData item)
+        {
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            GUIStyle headerStyle = new GUIStyle(EditorStyles.boldLabel);
+            headerStyle.fontSize = 11;
+            headerStyle.normal.textColor = new Color(1f, 0.84f, 0f);
+            EditorGUILayout.LabelField("✦ KEY STATS", headerStyle);
+
+            GUIStyle labelCol = new GUIStyle(EditorStyles.label);
+            labelCol.fontSize = 11;
+            labelCol.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
+
+            GUIStyle valueCol = new GUIStyle(EditorStyles.boldLabel);
+            valueCol.fontSize = 11;
+
+            if (item.definition != null && !string.IsNullOrEmpty(item.definition.name))
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Name:", labelCol, GUILayout.Width(90));
+                valueCol.normal.textColor = Color.white;
+                EditorGUILayout.LabelField(item.definition.name, valueCol);
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (item.definition != null && !string.IsNullOrEmpty(item.definition.category))
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Category:", labelCol, GUILayout.Width(90));
+                valueCol.normal.textColor = new Color(1f, 0.84f, 0f);
+                EditorGUILayout.LabelField(item.definition.category, valueCol);
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (item.definition != null && !string.IsNullOrEmpty(item.definition.rarity))
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Rarity:", labelCol, GUILayout.Width(90));
+                valueCol.normal.textColor = GetRarityColor(item.definition.rarity);
+                EditorGUILayout.LabelField($"★ {item.definition.rarity}", valueCol);
+                EditorGUILayout.EndHorizontal();
+            }
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Quantity:", labelCol, GUILayout.Width(90));
+            valueCol.normal.textColor = new Color(0.4f, 1f, 0.9f);
+            EditorGUILayout.LabelField($"×{item.quantity}", valueCol);
+            EditorGUILayout.EndHorizontal();
+
+            if (item.level > 0)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Level:", labelCol, GUILayout.Width(90));
+                valueCol.normal.textColor = new Color(1f, 0.65f, 0.2f);
+                EditorGUILayout.LabelField($"Lv. {item.level}", valueCol);
+                EditorGUILayout.EndHorizontal();
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+
+        private static Color GetRarityColor(string rarity)
+        {
+            if (string.IsNullOrEmpty(rarity)) return Color.white;
+            switch (rarity.ToLower())
+            {
+                case "legendary": return new Color(1f,    0.84f, 0f);
+                case "epic":      return new Color(0.75f, 0.3f,  1f);
+                case "rare":      return new Color(0.4f,  0.7f,  1f);
+                case "uncommon":  return new Color(0.3f,  1f,    0.5f);
+                case "common":    return new Color(0.7f,  0.7f,  0.7f);
+                default:          return Color.white;
+            }
+        }
+
+        private void DoOpenGacha(string gachaPackId, string containerId)
+        {
+            if (string.IsNullOrEmpty(gachaPackId))
+            {
+                Debug.LogError("[PlayerItemEditor] Gacha Pack ID is empty, cannot open.");
+                return;
+            }
+
+            if (SaiService.Instance == null)
+            {
+                Debug.LogError("[PlayerItemEditor] SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                Debug.LogError("[PlayerItemEditor] Not authenticated!");
+                return;
+            }
+
+            if (this.containerRef == null)
+                this.containerRef = UnityEngine.Object.FindAnyObjectByType<PlayerContainer>();
+
+            if (this.containerRef == null)
+            {
+                Debug.LogError("[PlayerItemEditor] No PlayerContainer component found in scene!");
+                return;
+            }
+
+            this.containerRef.OpenGachaPack(
+                gachaPackId,
+                containerId,
+                onSuccess: response =>
+                {
+                    Debug.Log($"[PlayerItemEditor] Gacha OK. Items granted: {response.items_granted?.Length ?? 0}");
+                    this.Repaint();
+                },
+                onError: error =>
+                {
+                    Debug.LogError($"[PlayerItemEditor] Gacha failed: {error}");
+                }
+            );
+        }
+
+        private void DoCraft(string recipeId)
+        {
+            if (string.IsNullOrEmpty(recipeId))
+            {
+                Debug.LogError("[PlayerItemEditor] Recipe ID is empty, cannot craft.");
+                return;
+            }
+
+            if (SaiService.Instance == null)
+            {
+                Debug.LogError("[PlayerItemEditor] SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                Debug.LogError("[PlayerItemEditor] Not authenticated!");
+                return;
+            }
+
+            if (this.craftingRef == null)
+                this.craftingRef = UnityEngine.Object.FindAnyObjectByType<ItemCrafting>();
+
+            if (this.craftingRef == null)
+            {
+                Debug.LogError("[PlayerItemEditor] No ItemCrafting component found in scene!");
+                return;
+            }
+
+            this.craftingRef.Craft(
+                recipeId,
+                onSuccess: response =>
+                {
+                    Debug.Log($"[PlayerItemEditor] Craft OK. Tx: {response.transaction_id}");
+                    this.Repaint();
+                },
+                onError: error =>
+                {
+                    Debug.LogError($"[PlayerItemEditor] Craft failed: {error}");
+                }
+            );
         }
 
         /// <summary>Simple JSON pretty-printer: adds newlines and indentation.</summary>

@@ -191,7 +191,7 @@ namespace SaiGame.Services
             System.Action<string> onError)
         {
             string gameId = SaiService.Instance.GameId;
-            string endpoint = $"/api/v1/games/{gameId}/inventory?limit={limit}&offset={offset}";
+            string endpoint = $"/api/v1/games/{gameId}/inventory?limit={limit}&offset={offset}&include_metadata=true";
 
             if (!string.IsNullOrEmpty(category))
                 endpoint += $"&category={category}";
