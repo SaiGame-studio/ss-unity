@@ -98,6 +98,7 @@ namespace SaiGame.Services
         /// </summary>
         public void Craft(
             string recipeId,
+            string idempotencyKey = null,
             System.Action<CraftingResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
@@ -116,18 +117,21 @@ namespace SaiGame.Services
                 return;
             }
 
-            StartCoroutine(this.CraftCoroutine(recipeId, onSuccess, onError));
+            StartCoroutine(this.CraftCoroutine(recipeId, idempotencyKey, onSuccess, onError));
         }
 
         private IEnumerator CraftCoroutine(
             string recipeId,
+            string idempotencyKey,
             System.Action<CraftingResponse> onSuccess,
             System.Action<string> onError)
         {
             string gameId = SaiService.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/crafting/craft";
-            
-            string idempotencyKey = Guid.NewGuid().ToString();
+
+            // Use provided key or generate a new one
+            if (string.IsNullOrEmpty(idempotencyKey))
+                idempotencyKey = Guid.NewGuid().ToString();
 
             string body = JsonUtility.ToJson(new CraftRequest
             {

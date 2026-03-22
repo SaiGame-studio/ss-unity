@@ -22,6 +22,7 @@ namespace SaiGame.Services
         private readonly Dictionary<string, bool> expandedTransactions = new Dictionary<string, bool>();
 
         private string testRecipeId = "";
+        private string testIdempotencyKey = "";
 
         private void OnEnable()
         {
@@ -113,16 +114,26 @@ namespace SaiGame.Services
             if (this.showTestCrafting)
             {
                 EditorGUI.indentLevel++;
+
+                // Recipe ID belongs to the crafting receipt definition, not the item recipe definition
+                EditorGUILayout.HelpBox("Recipe ID: ID of the crafting receipt definition (not the item recipe definition).", MessageType.None);
+
                 EditorGUILayout.BeginHorizontal();
-
                 this.testRecipeId = EditorGUILayout.TextField("Recipe ID", this.testRecipeId);
-
                 GUI.backgroundColor = new Color(1f, 0.84f, 0f);
                 if (GUILayout.Button("Craft", GUILayout.Width(80), GUILayout.Height(18)))
                     this.CraftTest();
-
                 GUI.backgroundColor = Color.white;
                 EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.BeginHorizontal();
+                this.testIdempotencyKey = EditorGUILayout.TextField("Idempotency Key", this.testIdempotencyKey);
+                GUI.backgroundColor = new Color(0.5f, 0.8f, 1f);
+                if (GUILayout.Button("UUID", GUILayout.Width(50), GUILayout.Height(18)))
+                    this.testIdempotencyKey = System.Guid.NewGuid().ToString();
+                GUI.backgroundColor = Color.white;
+                EditorGUILayout.EndHorizontal();
+
                 EditorGUI.indentLevel--;
             }
 
@@ -362,8 +373,13 @@ namespace SaiGame.Services
                 return;
             }
 
+            string idempotencyKey = string.IsNullOrEmpty(this.testIdempotencyKey)
+                ? null
+                : this.testIdempotencyKey;
+
             this.crafting.Craft(
                 this.testRecipeId,
+                idempotencyKey: idempotencyKey,
                 onSuccess: response =>
                 {
                     Debug.Log($"[ItemCraftingEditor] Craft OK. Tx: {response.transaction_id}");
