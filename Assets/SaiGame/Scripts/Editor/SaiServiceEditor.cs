@@ -83,7 +83,7 @@ namespace SaiGame.Services
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("itemTag"),              new GUIContent("Item Tag"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("itemPreset"),           new GUIContent("Item Preset"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("itemAddDeduct"),        new GUIContent("Item Add Deduct"));
-                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("ItemCrafting"),       new GUIContent("Player Crafting"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("itemCrafting"),         new GUIContent("Player Crafting"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("saiShop"),              new GUIContent("Sai Shop"));
 
                 // ── Quest child ──────────────────────────────────────────────
@@ -93,6 +93,12 @@ namespace SaiGame.Services
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("questClaims"),          new GUIContent("Quest Status"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("chainQuest"),           new GUIContent("Chain Quest"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("dailyQuest"),           new GUIContent("Daily Quest"));
+
+                // ── Battle child ─────────────────────────────────────────────
+                EditorGUILayout.Space(2);
+                EditorGUILayout.LabelField("Battle Child Object", EditorStyles.miniBoldLabel);
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("battleSessions"),       new GUIContent("Battle Sessions"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("battleScript"),         new GUIContent("Battle Script"));
 
                 EditorGUI.indentLevel--;
             }

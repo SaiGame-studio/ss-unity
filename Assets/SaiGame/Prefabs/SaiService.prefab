@@ -472,6 +472,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8448881463889205349}
   - component: {fileID: 8438002230962336466}
+  - component: {fileID: 5292617345916487666}
   m_Layer: 0
   m_Name: Battle
   m_TagString: Untagged
@@ -506,7 +507,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe8598ccc1b445942b788756e3147514, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.BattleSessions
-  autoLoadOnLogin: 0
+  autoLoadOnLogin: 1
   currentSessions:
     limit: 0
     offset: 0
@@ -514,6 +515,20 @@ MonoBehaviour:
     sessions: []
   sessionLimit: 50
   sessionOffset: 0
+--- !u!114 &5292617345916487666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5574195839657187037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db608e07204a27a448e2db9b3934afa4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.BattleScript
+  scriptName: 
+  jsonResponse: 
 --- !u!1 &6971719431293405431
 GameObject:
   m_ObjectHideFlags: 0
@@ -574,7 +589,7 @@ MonoBehaviour:
   playerContainer: {fileID: 4042283287993455742}
   itemPreset: {fileID: 770429900078848718}
   itemAddDeduct: {fileID: 7695481116977442798}
-  itemCrafting: {fileID: 0}
+  itemCrafting: {fileID: 3712696907917878105}
   itemGenerator: {fileID: 8359460651495667961}
   equipmentSlotManager: {fileID: 2893519870010327973}
   saiShop: {fileID: 7399820738238440333}
@@ -584,12 +599,13 @@ MonoBehaviour:
   dailyQuest: {fileID: 1892399005449690324}
   itemTag: {fileID: 9128749862781184251}
   leaderboard: {fileID: 1993458322055049526}
-  battleSessions: {fileID: 0}
+  battleSessions: {fileID: 8438002230962336466}
+  battleScript: {fileID: 5292617345916487666}
   serverEndpoint: 0
   domainOption: 0
   port: 82
   useHttps: 0
-  gameId: 88519482-ac68-4101-a0a8-88ba33ea26a1
+  gameId: c49a3290-b9f4-4012-b32e-780cbd939797
   studioId: 
   requestTimeout: 30
   showButtonsLog: 1

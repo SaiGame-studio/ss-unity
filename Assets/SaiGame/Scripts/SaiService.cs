@@ -43,6 +43,7 @@ namespace SaiGame.Services
         [SerializeField] protected ItemTag itemTag;
         [SerializeField] protected Leaderboard leaderboard;
         [SerializeField] protected BattleSessions battleSessions;
+        [SerializeField] protected BattleScript battleScript;
 
         [Header("Server Configuration")]
         [HideInInspector][SerializeField] protected ServerEndpointOption serverEndpoint = ServerEndpointOption.LocalHttp;
@@ -144,6 +145,8 @@ namespace SaiGame.Services
         public Leaderboard Leaderboard => this.leaderboard;
 
         public BattleSessions BattleSessions => this.battleSessions;
+
+        public BattleScript BattleScript => this.battleScript;
 
         public SaiAuth SaiAuth => saiAuth;
 
@@ -393,6 +396,7 @@ namespace SaiGame.Services
             this.LoadDailyQuest();
             this.LoadItemTag();
             this.LoadBattleSessions();
+            this.LoadBattleScript();
             this.LoadGameIdFromPlayerPrefs();
             this.LoadStudioIdFromPlayerPrefs();
         }
@@ -548,6 +552,14 @@ namespace SaiGame.Services
             this.battleSessions = GetComponentInChildren<BattleSessions>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadBattleSessions", gameObject);
+        }
+
+        protected virtual void LoadBattleScript()
+        {
+            if (this.battleScript != null) return;
+            this.battleScript = GetComponentInChildren<BattleScript>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadBattleScript", gameObject);
         }
 
 
