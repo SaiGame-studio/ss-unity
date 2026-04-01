@@ -134,7 +134,10 @@ namespace SaiGame.Services
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"ID: {container.id}", EditorStyles.boldLabel);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = container.id;
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField($"Type: {container.container_type}");
 
             if (container.definition != null)
@@ -286,7 +289,10 @@ namespace SaiGame.Services
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"ID: {item.id}", EditorStyles.miniLabel);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = item.id;
+            EditorGUILayout.EndHorizontal();
 
             if (item.definition != null)
             {

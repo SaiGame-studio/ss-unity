@@ -201,8 +201,14 @@ namespace SaiGame.Services
                 EditorGUILayout.LabelField("<b>PROGRESS</b>", rich);
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField($"<color=#888888>Progress ID: {p.id}</color>", mini);
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = p.id;
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField($"<color=#888888>Def ID:      {p.quest_definition_id}</color>", mini);
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = p.quest_definition_id;
+                EditorGUILayout.EndHorizontal();
 
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField($"<b>Version:</b> {p.version}", rich, GUILayout.MaxWidth(100f));
@@ -227,7 +233,10 @@ namespace SaiGame.Services
                 EditorGUILayout.LabelField("<b>QUEST DEFINITION</b>", rich);
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField($"<color=#888888>ID: {def.id}</color>", mini);
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = def.id;
+                EditorGUILayout.EndHorizontal();
 
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField(
@@ -308,9 +317,18 @@ namespace SaiGame.Services
             EditorGUILayout.EndHorizontal();
 
             // ── Technical IDs (dimmed) ────────────────────────────────────────
-            EditorGUILayout.LabelField(
-                $"<color=#888888>Claim: {claim.id}  |  Def: {claim.quest_definition_id}  |  Progress: {claim.progress_id}</color>",
-                mini);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"<color=#888888>Claim: {claim.id}</color>", mini);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = claim.id;
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"<color=#888888>Def: {claim.quest_definition_id}</color>", mini);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = claim.quest_definition_id;
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"<color=#888888>Progress: {claim.progress_id}</color>", mini);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = claim.progress_id;
+            EditorGUILayout.EndHorizontal();
 
             // ── Quest Definition badge row ────────────────────────────────────
             if (claim.quest_definition != null)

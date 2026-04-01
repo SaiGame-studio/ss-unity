@@ -225,7 +225,10 @@ namespace SaiGame.Services
             GUIStyle idStyle = new GUIStyle(EditorStyles.label);
             idStyle.fontSize = 10;
             idStyle.normal.textColor = new Color(1f, 0.84f, 0f);
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"ID: {generator.inventory_item_id}", idStyle);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = generator.inventory_item_id;
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(8);
 

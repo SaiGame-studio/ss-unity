@@ -160,7 +160,10 @@ namespace SaiGame.Services
         private void DrawMessageSummary(MailboxMessage message)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"ID: {message.id}", EditorStyles.boldLabel);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = message.id;
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField($"Subject: {message.subject}");
             EditorGUILayout.LabelField($"Status: {message.status}");
             EditorGUILayout.LabelField($"Type: {message.message_type}");

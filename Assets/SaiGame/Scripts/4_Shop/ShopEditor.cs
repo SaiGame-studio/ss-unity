@@ -133,7 +133,10 @@ namespace SaiGame.Services
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
             EditorGUILayout.LabelField($"Name: {shop.name}", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"ID: {shop.id}");
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = shop.id;
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField($"Key: {shop.shop_key}");
             EditorGUILayout.LabelField($"Type: {shop.shop_type}  |  Active: {shop.is_active}");
             EditorGUILayout.LabelField($"Items: {shop.item_count}");
@@ -205,7 +208,10 @@ namespace SaiGame.Services
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
             EditorGUILayout.LabelField($"{item.display_name}", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"ID: {item.id}");
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = item.id;
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField($"Price: {item.price}  |  Stock: {item.stock}  |  Active: {item.is_active}");
             this.DrawPurchaseLimitInfo(item);
 

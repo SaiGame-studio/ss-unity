@@ -269,9 +269,18 @@ namespace SaiGame.Services
             if (this.itemFoldouts[defId])
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.LabelField("Item ID",             item.id);
-                EditorGUILayout.LabelField("Definition ID",       defId);
-                EditorGUILayout.LabelField("Container ID",        item.item_container_id);
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Item ID", item.id);
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = item.id;
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Definition ID", defId);
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = defId;
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Container ID", item.item_container_id);
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = item.item_container_id;
+                EditorGUILayout.EndHorizontal();
                 EditorGUILayout.LabelField("Quantity",            item.quantity.ToString());
                 if (item.definition != null)
                 {

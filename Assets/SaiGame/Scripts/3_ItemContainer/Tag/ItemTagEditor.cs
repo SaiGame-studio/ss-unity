@@ -115,9 +115,18 @@ namespace SaiGame.Services
                     {
                         EditorGUI.indentLevel++;
                         GUI.enabled = false;
+                        EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.TextField("Id", tag.id ?? "");
-                        EditorGUILayout.TextField("Studio Id", tag.studio_id ?? "");
+                        GUI.enabled = true;
+                        if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = tag.id ?? "";
+                        GUI.enabled = false;
+                        EditorGUILayout.EndHorizontal();
+                        EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.TextField("Game Id", tag.game_id ?? "");
+                        GUI.enabled = true;
+                        if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = tag.game_id ?? "";
+                        GUI.enabled = false;
+                        EditorGUILayout.EndHorizontal();
                         EditorGUILayout.TextField("Tag Key", tag.tag_key ?? "");
                         EditorGUILayout.TextField("Label", tag.label ?? "");
                         EditorGUILayout.TextField("Color", tag.color ?? "");
@@ -175,9 +184,24 @@ namespace SaiGame.Services
                                 {
                                     EditorGUI.indentLevel++;
                                     GUI.enabled = false;
+                                    EditorGUILayout.BeginHorizontal();
                                     EditorGUILayout.TextField("Id", item.id ?? "");
+                                    GUI.enabled = true;
+                                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = item.id ?? "";
+                                    GUI.enabled = false;
+                                    EditorGUILayout.EndHorizontal();
+                                    EditorGUILayout.BeginHorizontal();
                                     EditorGUILayout.TextField("Item Definition Id", item.item_definition_id ?? "");
+                                    GUI.enabled = true;
+                                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = item.item_definition_id ?? "";
+                                    GUI.enabled = false;
+                                    EditorGUILayout.EndHorizontal();
+                                    EditorGUILayout.BeginHorizontal();
                                     EditorGUILayout.TextField("Container Id", item.item_container_id ?? "");
+                                    GUI.enabled = true;
+                                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = item.item_container_id ?? "";
+                                    GUI.enabled = false;
+                                    EditorGUILayout.EndHorizontal();
                                     EditorGUILayout.IntField("Grid X", item.grid_x);
                                     EditorGUILayout.IntField("Grid Y", item.grid_y);
                                     EditorGUILayout.IntField("Quantity", item.quantity);

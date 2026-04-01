@@ -127,7 +127,10 @@ namespace SaiGame.Services
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
             EditorGUILayout.LabelField($"{chain.display_name}", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"ID: {chain.id}");
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = chain.id;
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField($"Key: {chain.chain_key}");
             EditorGUILayout.LabelField($"Type: {chain.chain_type}  |  Active: {chain.is_active}");
 
@@ -241,8 +244,14 @@ namespace SaiGame.Services
 
             string questName = member.definition != null ? member.definition.name : member.quest_definition_id;
             EditorGUILayout.LabelField(questName, EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"Member ID: {member.id}");
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = member.id;
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"Quest Def ID: {member.quest_definition_id}");
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = member.quest_definition_id;
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField($"Sort Order: {member.sort_order}");
 
             if (member.unlock_quest_ids != null && member.unlock_quest_ids.Length > 0)

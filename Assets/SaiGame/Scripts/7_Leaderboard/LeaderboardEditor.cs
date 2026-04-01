@@ -129,12 +129,18 @@ namespace SaiGame.Services
                 if (myRank != null && myRank.user_id != null)
                 {
                     EditorGUILayout.LabelField($"Rank: #{myRank.rank}");
+                    EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"User ID: {myRank.user_id}");
+                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = myRank.user_id;
+                    EditorGUILayout.EndHorizontal();
                     EditorGUILayout.LabelField($"Score: {myRank.score}");
                     if (!string.IsNullOrEmpty(myRank.metadata) && myRank.metadata != "null")
                         EditorGUILayout.LabelField($"Metadata: {myRank.metadata}");
                     if (myRank.season != null && !string.IsNullOrEmpty(myRank.season.id))
+                        EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.LabelField($"Season: #{myRank.season.season_number}  ({myRank.season.id})");
+                        if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = myRank.season.id;
+                        EditorGUILayout.EndHorizontal();
                     EditorGUILayout.LabelField($"Updated: {myRank.updated_at}");
                 }
                 else
@@ -198,7 +204,10 @@ namespace SaiGame.Services
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField($"#{entry.rank}", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"User ID: {entry.user_id}");
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = entry.user_id;
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField($"Score: {entry.score}");
             if (!string.IsNullOrEmpty(entry.metadata) && entry.metadata != "null")
                 EditorGUILayout.LabelField($"Metadata: {entry.metadata}");
@@ -222,11 +231,17 @@ namespace SaiGame.Services
             if (this.boardFoldouts[board.id])
             {
                 EditorGUI.indentLevel++;
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField($"ID: {board.id}");
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = board.id;
+                EditorGUILayout.EndHorizontal();
                 EditorGUILayout.LabelField($"Score Mode: {board.score_mode}   Sort: {board.sort_direction}   Reset: {board.reset_schedule}");
                 EditorGUILayout.LabelField($"Active: {board.is_active}   Source: {board.score_source_type}");
                 if (!string.IsNullOrEmpty(board.season_id))
+                    EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"Season ID: {board.season_id}");
+                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = board.season_id;
+                    EditorGUILayout.EndHorizontal();
                 EditorGUI.indentLevel--;
 
                 EditorGUILayout.BeginHorizontal();

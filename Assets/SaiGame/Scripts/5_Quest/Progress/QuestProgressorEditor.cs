@@ -186,7 +186,10 @@ namespace SaiGame.Services
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                     EditorGUILayout.LabelField("IDENTITY", sectionHdr);
                     EditorGUILayout.LabelField("Source",   selected.sourceLabel,          richStyle);
-                    EditorGUILayout.LabelField("Quest ID", selected.questDefinitionId,     richMini);
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("Quest ID", selected.questDefinitionId, richMini);
+                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = selected.questDefinitionId;
+                    EditorGUILayout.EndHorizontal();
                     EditorGUILayout.EndVertical();
 
                     // ── Quest Info (DailyQuest only) ──────────────────────────
@@ -225,7 +228,10 @@ namespace SaiGame.Services
                         DailyAssignmentData a = fullEntry.assignment;
                         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                         EditorGUILayout.LabelField("ASSIGNMENT", sectionHdr);
-                        EditorGUILayout.LabelField("ID",       a.id,           richMini);
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.LabelField("ID", a.id, richMini);
+                        if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = a.id;
+                        EditorGUILayout.EndHorizontal();
                         EditorGUILayout.LabelField("Assigned", a.assigned_date, richStyle);
                         EditorGUILayout.LabelField("Expires",  $"<color=#FF8888>{a.expires_at}</color>", richStyle);
                         EditorGUILayout.EndVertical();
@@ -267,9 +273,18 @@ namespace SaiGame.Services
                 {
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                     GUIStyle rich = new GUIStyle(EditorStyles.label) { richText = true };
+                    EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"Claim ID: {lastClaim.id}", rich);
+                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = lastClaim.id;
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"Quest Def ID: {lastClaim.quest_definition_id}");
+                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = lastClaim.quest_definition_id;
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"Progress ID: {lastClaim.progress_id}");
+                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = lastClaim.progress_id;
+                    EditorGUILayout.EndHorizontal();
                     EditorGUILayout.LabelField($"Claimed At: <color=#FFD700><b>{lastClaim.claimed_at}</b></color>", rich);
                     if (lastClaim.rewards_granted != null && lastClaim.rewards_granted.Length > 0)
                     {
@@ -310,8 +325,14 @@ namespace SaiGame.Services
                         EditorGUILayout.LabelField($"Quest: <b>{lastCheck.quest_definition.name}</b>", rich);
                         EditorGUILayout.LabelField($"Type: {lastCheck.quest_definition.quest_type}");
                     }
+                    EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"Progress ID: {lastCheck.progress.id}");
+                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = lastCheck.progress.id;
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"Quest Def ID: {lastCheck.progress.quest_definition_id}");
+                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = lastCheck.progress.quest_definition_id;
+                    EditorGUILayout.EndHorizontal();
                     EditorGUILayout.LabelField($"Version: {lastCheck.progress.version}");
                     EditorGUILayout.LabelField($"Updated: {lastCheck.progress.updated_at}");
                     if (!string.IsNullOrEmpty(lastCheck.progress.progress_data_json))
@@ -351,9 +372,18 @@ namespace SaiGame.Services
                                       : last.status == "completed"    ? "#00FF88"
                                       : "#AAAAAA";
                     EditorGUILayout.LabelField($"Status: <b><color={statusColor}>{last.status}</color></b>", rich);
+                    EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"Progress ID: {last.id}");
+                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = last.id;
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"Quest Def ID: {last.quest_definition_id}");
+                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = last.quest_definition_id;
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"User ID: {last.user_id}");
+                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = last.user_id;
+                    EditorGUILayout.EndHorizontal();
                     EditorGUILayout.LabelField($"Version: {last.version}");
                     EditorGUILayout.LabelField($"Created: {last.created_at}");
                     EditorGUILayout.EndVertical();

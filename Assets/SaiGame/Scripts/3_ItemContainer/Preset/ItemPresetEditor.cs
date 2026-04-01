@@ -224,6 +224,8 @@ namespace SaiGame.Services
                 
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField($"ID: {preset.id}");
+                if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                    GUIUtility.systemCopyBuffer = preset.id;
                 GUI.backgroundColor = Color.cyan;
                 if (GUILayout.Button("Get", GUILayout.Width(60)))
                 {
@@ -254,7 +256,11 @@ namespace SaiGame.Services
                 }
                 GUI.backgroundColor = Color.white;
                 EditorGUILayout.EndHorizontal();
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField($"Definition ID: {preset.definition_id}");
+                if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                    GUIUtility.systemCopyBuffer = preset.definition_id;
+                EditorGUILayout.EndHorizontal();
                 EditorGUILayout.LabelField($"Type: {preset.preset_type}  |  Max Slots: {preset.max_slots}  |  Is Temp: {preset.is_temp}");
                 EditorGUILayout.LabelField($"Created: {preset.created_at}");
 
@@ -265,7 +271,11 @@ namespace SaiGame.Services
                     EditorGUILayout.LabelField($"Name: {preset.definition.name}");
                     EditorGUILayout.LabelField($"Type: {preset.definition.preset_type}");
                     EditorGUILayout.LabelField($"Max Slots: {preset.definition.max_slots}");
+                    EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"Def ID: {preset.definition.id}");
+                    if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                        GUIUtility.systemCopyBuffer = preset.definition.id;
+                    EditorGUILayout.EndHorizontal();
                 }
                 else
                 {
@@ -303,14 +313,22 @@ namespace SaiGame.Services
                         if (this.presetSlotFoldouts[slotKey])
                         {
                             EditorGUI.indentLevel++;
+                            EditorGUILayout.BeginHorizontal();
                             EditorGUILayout.LabelField($"Inventory ID: {slot.inventory_item_id}");
+                            if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                                GUIUtility.systemCopyBuffer = slot.inventory_item_id;
+                            EditorGUILayout.EndHorizontal();
                             
                             if (itemInfo != null)
                             {
                                 EditorGUILayout.LabelField($"Quantity: {itemInfo.quantity}");
                                 if (itemInfo.definition != null)
                                 {
+                                    EditorGUILayout.BeginHorizontal();
                                     EditorGUILayout.LabelField($"Def ID: {itemInfo.definition.id}");
+                                    if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                                        GUIUtility.systemCopyBuffer = itemInfo.definition.id;
+                                    EditorGUILayout.EndHorizontal();
                                     EditorGUILayout.LabelField($"Category: {itemInfo.definition.category}");
                                     EditorGUILayout.LabelField($"Rarity: {itemInfo.definition.rarity}");
                                     EditorGUILayout.LabelField($"Item Code: {itemInfo.definition.item_code}");

@@ -462,6 +462,73 @@ MonoBehaviour:
   playerItem: {fileID: 8153881721212893719}
   itemAId: 
   itemBId: 
+--- !u!1 &5574195839657187037
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8448881463889205349}
+  - component: {fileID: 8438002230962336466}
+  - component: {fileID: 5292617345916487666}
+  m_Layer: 0
+  m_Name: Battle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8448881463889205349
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5574195839657187037}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8277413932139228352}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8438002230962336466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5574195839657187037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe8598ccc1b445942b788756e3147514, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.BattleSessions
+  autoLoadOnLogin: 1
+  currentSessions:
+    limit: 0
+    offset: 0
+    total: 0
+    sessions: []
+  sessionLimit: 50
+  sessionOffset: 0
+--- !u!114 &5292617345916487666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5574195839657187037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db608e07204a27a448e2db9b3934afa4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.BattleScript
+  scriptName: 
+  jsonResponse: 
 --- !u!1 &6971719431293405431
 GameObject:
   m_ObjectHideFlags: 0
@@ -499,6 +566,7 @@ Transform:
   m_Children:
   - {fileID: 750887673584618928}
   - {fileID: 3667272808700333575}
+  - {fileID: 8448881463889205349}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8686393883881292769
@@ -521,7 +589,7 @@ MonoBehaviour:
   playerContainer: {fileID: 4042283287993455742}
   itemPreset: {fileID: 770429900078848718}
   itemAddDeduct: {fileID: 7695481116977442798}
-  itemCrafting: {fileID: 0}
+  itemCrafting: {fileID: 3712696907917878105}
   itemGenerator: {fileID: 8359460651495667961}
   equipmentSlotManager: {fileID: 2893519870010327973}
   saiShop: {fileID: 7399820738238440333}
@@ -531,11 +599,13 @@ MonoBehaviour:
   dailyQuest: {fileID: 1892399005449690324}
   itemTag: {fileID: 9128749862781184251}
   leaderboard: {fileID: 1993458322055049526}
+  battleSessions: {fileID: 8438002230962336466}
+  battleScript: {fileID: 5292617345916487666}
   serverEndpoint: 0
   domainOption: 0
   port: 82
   useHttps: 0
-  gameId: 7f5b7268-7405-444f-819a-fc9aef2b8049
+  gameId: c49a3290-b9f4-4012-b32e-780cbd939797
   studioId: 
   requestTimeout: 30
   showButtonsLog: 1

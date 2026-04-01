@@ -204,7 +204,10 @@ namespace SaiGame.Services
             if (tx.recipe_detail != null)
                 EditorGUILayout.LabelField($"KEY: {tx.recipe_detail.recipe_key}", labelStyle);
 
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"ID: {tx.id}", idStyle);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = tx.id;
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField($"Date: {tx.created_at}", labelStyle);
 
             EditorGUILayout.Space(6);

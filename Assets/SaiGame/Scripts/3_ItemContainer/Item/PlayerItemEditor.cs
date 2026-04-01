@@ -282,12 +282,11 @@ namespace SaiGame.Services
 
                 // ── Item fields ──────────────────────────────────────────────
                 EditorGUILayout.LabelField("Item", EditorStyles.boldLabel);
-                EditorGUILayout.LabelField("ID",                  item.id);
-                EditorGUILayout.LabelField("Studio ID",           item.studio_id);
-                EditorGUILayout.LabelField("Game ID",             item.game_id);
-                EditorGUILayout.LabelField("User ID",             item.user_id);
-                EditorGUILayout.LabelField("Definition ID",       item.item_definition_id);
-                EditorGUILayout.LabelField("Container ID",        item.item_container_id);
+                DrawIdField("ID",             item.id);
+                DrawIdField("Game ID",        item.game_id);
+                DrawIdField("User ID",        item.user_id);
+                DrawIdField("Definition ID",  item.item_definition_id);
+                DrawIdField("Container ID",   item.item_container_id);
                 EditorGUILayout.LabelField("Quantity",            item.quantity.ToString());
                 EditorGUILayout.LabelField("Level",               item.level.ToString());
                 EditorGUILayout.LabelField("Grid",                $"({item.grid_x}, {item.grid_y})");
@@ -322,7 +321,7 @@ namespace SaiGame.Services
                     var d = item.definition;
                     EditorGUILayout.Space(4);
                     EditorGUILayout.LabelField("Definition", EditorStyles.boldLabel);
-                    EditorGUILayout.LabelField("Def ID",              d.id);
+                    DrawIdField("Def ID",              d.id);
                     EditorGUILayout.LabelField("Item Code",           d.item_code);
                     EditorGUILayout.LabelField("Name",                d.name);
                     EditorGUILayout.LabelField("Category",            d.category);
@@ -359,7 +358,7 @@ namespace SaiGame.Services
                             EditorGUILayout.LabelField("Icon", d.metadata.icon);
 
                         if (!string.IsNullOrEmpty(d.metadata.gacha_pack_id))
-                            EditorGUILayout.LabelField("Gacha Pack ID", d.metadata.gacha_pack_id);
+                            DrawIdField("Gacha Pack ID", d.metadata.gacha_pack_id);
 
                         if (d.metadata.gacha_pack_ids != null && d.metadata.gacha_pack_ids.Length > 0)
                         {
@@ -369,6 +368,8 @@ namespace SaiGame.Services
                             {
                                 EditorGUILayout.BeginHorizontal();
                                 EditorGUILayout.LabelField(packId);
+                                if (GUILayout.Button("Copy", GUILayout.Width(50), GUILayout.Height(18)))
+                                    GUIUtility.systemCopyBuffer = packId;
                                 GUI.backgroundColor = new Color(0.4f, 0.8f, 1.0f);
                                 if (GUILayout.Button("Gacha 🎰", GUILayout.Width(80), GUILayout.Height(18)))
                                     this.DoOpenGacha(packId, item.item_container_id);
@@ -386,6 +387,8 @@ namespace SaiGame.Services
                             {
                                 EditorGUILayout.BeginHorizontal();
                                 EditorGUILayout.LabelField(recipeInputId);
+                                if (GUILayout.Button("Copy", GUILayout.Width(50), GUILayout.Height(18)))
+                                    GUIUtility.systemCopyBuffer = recipeInputId;
                                 GUI.backgroundColor = new Color(0.3f, 1f, 0.5f);
                                 if (GUILayout.Button("Craft ⚒", GUILayout.Width(70), GUILayout.Height(18)))
                                     this.DoCraft(recipeInputId);
@@ -681,6 +684,15 @@ namespace SaiGame.Services
             }
 
             return sb.ToString();
+        }
+
+        private static void DrawIdField(string label, string value)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(label, value);
+            if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                GUIUtility.systemCopyBuffer = value ?? "";
+            EditorGUILayout.EndHorizontal();
         }
 
         private static int CountLines(string s)

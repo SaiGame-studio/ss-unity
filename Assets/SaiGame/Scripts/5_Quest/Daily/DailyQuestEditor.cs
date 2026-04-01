@@ -298,7 +298,10 @@ namespace SaiGame.Services
             {
                 QuestDefinitionData quest = entry.quest;
                 EditorGUILayout.LabelField(quest.name, EditorStyles.boldLabel);
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField($"ID: {quest.id}");
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = quest.id;
+                EditorGUILayout.EndHorizontal();
                 EditorGUILayout.LabelField($"Type: {quest.quest_type}  |  Active: {quest.is_active}");
 
                 if (!string.IsNullOrEmpty(quest.description))
@@ -322,7 +325,10 @@ namespace SaiGame.Services
             if (entry.assignment != null)
             {
                 DailyAssignmentData a = entry.assignment;
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField($"Assignment ID: {a.id}");
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = a.id;
+                EditorGUILayout.EndHorizontal();
                 EditorGUILayout.LabelField($"Expires: {a.expires_at}");
             }
 
@@ -400,7 +406,10 @@ namespace SaiGame.Services
             {
                 QuestDefinitionData quest = entry.quest;
                 EditorGUILayout.LabelField(quest.name, EditorStyles.boldLabel);
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField($"ID: {quest.id}");
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = quest.id;
+                EditorGUILayout.EndHorizontal();
                 EditorGUILayout.LabelField($"Type: {quest.quest_type}  |  Active: {quest.is_active}");
 
                 if (!string.IsNullOrEmpty(quest.description))
@@ -424,7 +433,10 @@ namespace SaiGame.Services
             if (entry.assignment != null)
             {
                 DailyAssignmentData a = entry.assignment;
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField($"Assignment ID: {a.id}");
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = a.id;
+                EditorGUILayout.EndHorizontal();
                 EditorGUILayout.LabelField($"Expires: {a.expires_at}");
             }
 

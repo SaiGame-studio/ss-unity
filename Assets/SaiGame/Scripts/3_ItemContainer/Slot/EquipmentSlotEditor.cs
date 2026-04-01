@@ -145,7 +145,10 @@ namespace SaiGame.Services
                 EditorGUILayout.Space(2);
                 return;
             }
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"ID: {slot.id}");
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = slot.id;
+            EditorGUILayout.EndHorizontal();
 
             if (!string.IsNullOrEmpty(slot.description))
                 EditorGUILayout.LabelField($"Description: {slot.description}");
@@ -191,7 +194,10 @@ namespace SaiGame.Services
                 string itemName = assignedItem.definition?.name ?? assignedItem.id;
                 string itemCategory = assignedItem.definition?.category ?? "-";
                 EditorGUILayout.LabelField($"{itemName}  |  Category: {itemCategory}  |  Qty: {assignedItem.quantity}");
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField($"Item ID: {assignedItem.id}");
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = assignedItem.id;
+                EditorGUILayout.EndHorizontal();
                 EditorGUILayout.EndVertical();
 
                 // Slot data editor
