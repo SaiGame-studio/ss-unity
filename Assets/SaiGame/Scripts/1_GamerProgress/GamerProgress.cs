@@ -466,15 +466,15 @@ namespace SaiGame.Services
                 {
                     ClearLocalProgress();
                     OnDeleteProgressSuccess?.Invoke();
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                        Debug.Log("Progress deleted successfully from server and local data cleared");
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.Log("<color=#66CCFF>[GamerProgress] ClearProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › ClearProgressCoroutine");
                 },
                 error =>
                 {
                     ClearLocalProgress();
                     OnDeleteProgressFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                        Debug.LogError($"Delete progress failed but local data cleared: {error}");
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[GamerProgress] ClearProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › ClearProgressCoroutine | {error}");
                 }
             );
         }

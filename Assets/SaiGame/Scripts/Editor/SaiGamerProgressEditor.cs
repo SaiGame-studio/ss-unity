@@ -8,7 +8,49 @@ namespace SaiGame.Services
     {
         public override void OnInspectorGUI()
         {
-            DrawDefaultInspector();
+            serializedObject.Update();
+
+            // Draw all properties except gameData
+            SerializedProperty prop = serializedObject.GetIterator();
+            bool enterChildren = true;
+            while (prop.NextVisible(enterChildren))
+            {
+                enterChildren = false;
+                if (prop.name == "gameData")
+                {
+                    EditorGUILayout.Space(5);
+                    // Draw label + Beautify button on same row
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("Game Data", GUILayout.Width(EditorGUIUtility.labelWidth - 4));
+                    GUI.backgroundColor = new Color(0.6f, 0.8f, 1f);
+                    if (GUILayout.Button("Beautify JSON", GUILayout.Height(18)))
+                    {
+                        GUI.FocusControl(null);
+                        string raw = prop.stringValue;
+                        if (!string.IsNullOrEmpty(raw) && raw != "{}")
+                        {
+                            try
+                            {
+                                prop.stringValue = BeautifyJson(raw);
+                            }
+                            catch (System.Exception e)
+                            {
+                                Debug.LogWarning($"[GamerProgress] Failed to beautify JSON: {e.Message}");
+                            }
+                        }
+                    }
+                    GUI.backgroundColor = Color.white;
+                    EditorGUILayout.EndHorizontal();
+
+                    // Draw the text area without label
+                    prop.stringValue = EditorGUILayout.TextArea(prop.stringValue, GUILayout.MinHeight(60));
+                    continue;
+                }
+                if (prop.name == "m_Script") { GUI.enabled = false; EditorGUILayout.PropertyField(prop); GUI.enabled = true; }
+                else EditorGUILayout.PropertyField(prop, true);
+            }
+
+            serializedObject.ApplyModifiedProperties();
 
             GamerProgress gamerProgress = (GamerProgress)target;
 
@@ -39,6 +81,7 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space(5);
 
+            EditorGUILayout.BeginHorizontal();
             SerializedProperty expDeltaProp = serializedObject.FindProperty("experienceDelta");
             SerializedProperty goldDeltaProp = serializedObject.FindProperty("goldDelta");
             int expDelta = expDeltaProp != null ? expDeltaProp.intValue : 100;
@@ -65,14 +108,57 @@ namespace SaiGame.Services
             }
             GUI.backgroundColor = Color.white;
 
-            EditorGUILayout.Space(5);
-
             GUI.backgroundColor = Color.red;
-            if (GUILayout.Button("Clear Progress", GUILayout.Height(20)))
+            if (GUILayout.Button("Clear Progress", GUILayout.Height(25)))
             {
                 gamerProgress.ClearProgress();
             }
             GUI.backgroundColor = Color.white;
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private string BeautifyJson(string json)
+        {
+            var sb = new System.Text.StringBuilder();
+            int indent = 0;
+            bool inString = false;
+            bool escaped = false;
+
+            foreach (char c in json)
+            {
+                if (escaped) { sb.Append(c); escaped = false; continue; }
+                if (c == '\\' && inString) { sb.Append(c); escaped = true; continue; }
+                if (c == '"') { inString = !inString; sb.Append(c); continue; }
+                if (inString) { sb.Append(c); continue; }
+                if (char.IsWhiteSpace(c)) continue;
+
+                switch (c)
+                {
+                    case '{':
+                    case '[':
+                        sb.Append(c).Append('\n');
+                        indent++;
+                        sb.Append(new string(' ', indent * 2));
+                        break;
+                    case '}':
+                    case ']':
+                        sb.Append('\n');
+                        indent--;
+                        sb.Append(new string(' ', indent * 2)).Append(c);
+                        break;
+                    case ',':
+                        sb.Append(c).Append('\n').Append(new string(' ', indent * 2));
+                        break;
+                    case ':':
+                        sb.Append(": ");
+                        break;
+                    default:
+                        sb.Append(c);
+                        break;
+                }
+            }
+            return sb.ToString();
         }
     }
 }

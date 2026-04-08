@@ -12,6 +12,7 @@ namespace SaiGame.Services
 
         // Serialized properties
         private SerializedProperty playerItemProp;
+        private SerializedProperty playerContainerProp;
         private SerializedProperty itemAIdProp;
         private SerializedProperty itemBIdProp;
 
@@ -20,6 +21,20 @@ namespace SaiGame.Services
         private bool showActions  = true;
 
         private readonly Dictionary<string, bool> itemFoldouts = new Dictionary<string, bool>();
+        private readonly Dictionary<string, Color> containerColorMap = new Dictionary<string, Color>();
+        private int containerColorIndex = 0;
+
+        private static readonly Color[] containerPalette = new Color[]
+        {
+            new Color(0.2f, 0.8f, 0.4f),   // green
+            new Color(0.3f, 0.6f, 1.0f),   // blue
+            new Color(1.0f, 0.6f, 0.2f),   // orange
+            new Color(0.8f, 0.3f, 0.8f),   // purple
+            new Color(1.0f, 0.85f, 0.2f),  // yellow
+            new Color(0.2f, 0.85f, 0.85f), // cyan
+            new Color(1.0f, 0.4f, 0.4f),   // red
+            new Color(0.6f, 0.8f, 0.2f),   // lime
+        };
 
         // Running state
         private bool isRunning = false;
@@ -27,9 +42,10 @@ namespace SaiGame.Services
         private void OnEnable()
         {
             this.itemSwap      = (ItemSwap)target;
-            this.playerItemProp = serializedObject.FindProperty("playerItem");
-            this.itemAIdProp    = serializedObject.FindProperty("itemAId");
-            this.itemBIdProp    = serializedObject.FindProperty("itemBId");
+            this.playerItemProp      = serializedObject.FindProperty("playerItem");
+            this.playerContainerProp = serializedObject.FindProperty("playerContainer");
+            this.itemAIdProp         = serializedObject.FindProperty("itemAId");
+            this.itemBIdProp         = serializedObject.FindProperty("itemBId");
         }
 
         public override void OnInspectorGUI()
@@ -51,6 +67,8 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("References", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(this.playerItemProp,
                 new GUIContent("Player Item", "Source for the item list"));
+            EditorGUILayout.PropertyField(this.playerContainerProp,
+                new GUIContent("Player Container", "Source for container name lookup"));
 
             EditorGUILayout.Space();
 
@@ -154,6 +172,7 @@ namespace SaiGame.Services
         private void DrawItemRow(InventoryItemData item)
         {
             string name  = item.definition?.name ?? item.item_definition_id;
+            string containerName = this.GetContainerName(item.item_container_id);
             string label = $"{name}  [{item.definition?.category ?? ""}]  ×{item.quantity}";
 
             bool isSelectedA = this.itemAIdProp.stringValue == item.id;
@@ -166,6 +185,21 @@ namespace SaiGame.Services
 
             EditorGUILayout.BeginHorizontal();
             this.itemFoldouts[item.id] = EditorGUILayout.Foldout(this.itemFoldouts[item.id], label, true);
+
+            // Container name tag (colored text)
+            if (!string.IsNullOrEmpty(containerName))
+            {
+                Color tagColor = this.GetContainerColor(item.item_container_id);
+                GUIStyle tagStyle = new GUIStyle(EditorStyles.miniLabel)
+                {
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                    normal    = { textColor = tagColor },
+                };
+                GUIContent tagContent = new GUIContent(containerName);
+                float tagWidth = tagStyle.CalcSize(tagContent).x + 8f;
+                GUILayout.Label(tagContent, tagStyle, GUILayout.Width(tagWidth), GUILayout.Height(20f));
+            }
 
             // Button A
             GUI.backgroundColor = isSelectedA ? new Color(0.4f, 1f, 0.6f) : Color.white;
@@ -205,6 +239,32 @@ namespace SaiGame.Services
             }
 
             EditorGUILayout.EndVertical();
+        }
+
+        // ── Container color helper ────────────────────────────────────────────
+
+        private Color GetContainerColor(string containerId)
+        {
+            if (this.containerColorMap.TryGetValue(containerId, out Color color))
+                return color;
+
+            color = containerPalette[this.containerColorIndex % containerPalette.Length];
+            this.containerColorIndex++;
+            this.containerColorMap[containerId] = color;
+            return color;
+        }
+
+        // ── Container name lookup ─────────────────────────────────────────────
+
+        private string GetContainerName(string containerId)
+        {
+            if (string.IsNullOrEmpty(containerId)) return null;
+
+            PlayerContainer playerContainer = this.itemSwap.PlayerContainerRef;
+            if (playerContainer == null || !playerContainer.HasContainers) return null;
+
+            ContainerData container = playerContainer.GetContainerById(containerId);
+            return container?.definition?.name;
         }
 
         // ── Button handlers ────────────────────────────────────────────────────

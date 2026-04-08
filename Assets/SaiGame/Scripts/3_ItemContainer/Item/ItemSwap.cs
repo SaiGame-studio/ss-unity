@@ -24,6 +24,7 @@ namespace SaiGame.Services
 
         [Header("References")]
         [SerializeField] protected PlayerItem playerItem;
+        [SerializeField] protected PlayerContainer playerContainer;
 
         [Header("Input")]
         [SerializeField] protected string itemAId = "";
@@ -34,6 +35,7 @@ namespace SaiGame.Services
         public string ItemBId => this.itemBId;
 
         public PlayerItem PlayerItemRef => this.playerItem;
+        public PlayerContainer PlayerContainerRef => this.playerContainer;
 
         protected override void LoadComponents()
         {
@@ -46,6 +48,10 @@ namespace SaiGame.Services
             if (this.playerItem == null)
                 this.playerItem = GetComponentInParent<PlayerItem>(true)
                     ?? FindObjectOfType<PlayerItem>(true);
+
+            if (this.playerContainer == null)
+                this.playerContainer = GetComponentInParent<PlayerContainer>(true)
+                    ?? FindObjectOfType<PlayerContainer>(true);
         }
 
         // ── Inspector-exposed setters ──────────────────────────────────────────
