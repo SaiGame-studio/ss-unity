@@ -6,18 +6,6 @@ using UnityEngine.Networking;
 
 namespace SaiGame.Services
 {
-    public enum DomainOption
-    {
-        Local,
-        Production
-    }
-
-    public enum ServerEndpointOption
-    {
-        LocalHttp,
-        ProductionHttps
-    }
-
     [DefaultExecutionOrder(-100)]
     public class SaiService : SaiSingleton<SaiService>
     {
@@ -40,6 +28,8 @@ namespace SaiGame.Services
         [SerializeField] protected QuestProgressor questProgressor;
         [SerializeField] protected QuestStatus questClaims;
         [SerializeField] protected DailyQuest dailyQuest;
+        [SerializeField] protected ItemMove itemMove;
+        [SerializeField] protected ItemSwap itemSwap;
         [SerializeField] protected ItemTag itemTag;
         [SerializeField] protected Leaderboard leaderboard;
         [SerializeField] protected BattleSessions battleSessions;
@@ -135,6 +125,10 @@ namespace SaiGame.Services
         public QuestStatus QuestClaims => this.questClaims;
 
         public DailyQuest DailyQuest => this.dailyQuest;
+
+        public ItemMove ItemMove => this.itemMove;
+
+        public ItemSwap ItemSwap => this.itemSwap;
 
         public ItemTag ItemTag => this.itemTag;
 
@@ -395,6 +389,8 @@ namespace SaiGame.Services
             this.LoadQuestStatus();
             this.LoadDailyQuest();
             this.LoadItemTag();
+            this.LoadItemMove();
+            this.LoadItemSwap();
             this.LoadBattleSessions();
             this.LoadBattleScript();
             this.LoadGameIdFromPlayerPrefs();
@@ -535,6 +531,22 @@ namespace SaiGame.Services
             this.questClaims = GetComponentInChildren<QuestStatus>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadQuestStatus", gameObject);
+        }
+
+        protected virtual void LoadItemMove()
+        {
+            if (this.itemMove != null) return;
+            this.itemMove = GetComponentInChildren<ItemMove>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadItemMove", gameObject);
+        }
+
+        protected virtual void LoadItemSwap()
+        {
+            if (this.itemSwap != null) return;
+            this.itemSwap = GetComponentInChildren<ItemSwap>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadItemSwap", gameObject);
         }
 
         protected virtual void LoadItemTag()

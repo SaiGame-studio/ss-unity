@@ -440,6 +440,58 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 27159321914394544, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: eventType
+      value: ending1
+      objectReference: {fileID: 0}
+    - target: {fileID: 390271473075436921, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoLoadOnLogin
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: password
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: username
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoLogin
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: saveEmail
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: savePassword
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1993458322055049526, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoLoadOnLogin
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3797376410084372741, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: gameData
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3797376410084372741, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: goldDelta
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3797376410084372741, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoLoadOnLogin
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3797376410084372741, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: experienceDelta
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3797376410084372741, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: m_EditorClassIdentifier
+      value: Assembly-CSharp::SaiGame.Services.GamerProgress
+      objectReference: {fileID: 0}
     - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_Name
       value: SaiService
@@ -490,7 +542,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: gameId
-      value: ab8b18d3-5a69-4fea-9dea-43a9f4c6e6d2
+      value: a52d72bc-6512-4bd3-9e2c-7471f9308387
       objectReference: {fileID: 0}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: useHttps

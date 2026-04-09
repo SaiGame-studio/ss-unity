@@ -460,6 +460,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemSwap
   playerItem: {fileID: 8153881721212893719}
+  playerContainer: {fileID: 0}
   itemAId: 
   itemBId: 
 --- !u!1 &5574195839657187037
@@ -598,15 +599,17 @@ MonoBehaviour:
   questProgressor: {fileID: 1733594213501630859}
   questClaims: {fileID: 2399963655362431771}
   dailyQuest: {fileID: 1892399005449690324}
+  itemMove: {fileID: 6379628580400705291}
+  itemSwap: {fileID: 6807877424875840272}
   itemTag: {fileID: 9128749862781184251}
   leaderboard: {fileID: 1993458322055049526}
   battleSessions: {fileID: 8438002230962336466}
   battleScript: {fileID: 5292617345916487666}
-  serverEndpoint: 1
-  domainOption: 1
-  port: 443
-  useHttps: 1
-  gameId: a52d72bc-6512-4bd3-9e2c-7471f9308387
+  serverEndpoint: 0
+  domainOption: 0
+  port: 82
+  useHttps: 0
+  gameId: 
   requestTimeout: 30
   showButtonsLog: 1
   showCallbackLog: 1
@@ -638,11 +641,11 @@ MonoBehaviour:
     is_verified: 0
     created_at: 0
   loginTime: 0
-  autoLogin: 0
+  autoLogin: 1
   autoRefreshToken: 1
   refreshBeforeExpire: 2
-  username: simonsai
-  password: 123qweasd
+  username: 
+  password: 
   saveEmail: 0
   savePassword: 0
   registerEmail: 
@@ -659,8 +662,8 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 955393e378c76224bb83c843d7a6411f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiGamerProgress
-  autoLoadOnLogin: 1
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.GamerProgress
+  autoLoadOnLogin: 0
   currentProgress:
     id: 
     user_id: 
@@ -672,9 +675,9 @@ MonoBehaviour:
     created_at: 0
     updated_at: 0
     version: 0
-  experienceDelta: 1
-  goldDelta: 1
-  gameData: '{}'
+  experienceDelta: 0
+  goldDelta: 0
+  gameData: 
 --- !u!114 &390271473075436921
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -687,7 +690,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 758266cf2b48d774c9c79233eb6a4e91, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.Mailbox
-  autoLoadOnLogin: 1
+  autoLoadOnLogin: 0
   currentMailBox:
     messages: []
     total: 0
@@ -706,7 +709,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerEvent
   sessionId: 
-  eventType: arrive
+  eventType: ending1
   eventDataJson: "{\n  \"source\": \"game\"\n}"
 --- !u!114 &1993458322055049526
 MonoBehaviour:
@@ -720,7 +723,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e6266713b40fa645aec9176b05fc4af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.Leaderboard
-  autoLoadOnLogin: 1
+  autoLoadOnLogin: 0
   currentBoards:
     boards: []
   currentTopRankings:
