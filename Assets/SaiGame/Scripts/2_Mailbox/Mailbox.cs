@@ -20,6 +20,8 @@ namespace SaiGame.Services
         public event Action<string> OnUnclaimMessageFailure;
         public event Action<MailboxMessage[]> OnClaimAllMessagesSuccess;
         public event Action<string> OnClaimAllMessagesFailure;
+        public event Action<string> OnDeleteMessageSuccess;
+        public event Action<string> OnDeleteMessageFailure;
 
         [Header("Auto Load Settings")]
         [SerializeField] protected bool autoLoadOnLogin = false;
@@ -535,6 +537,61 @@ namespace SaiGame.Services
                     Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimAllMessages</color> → <b><color=#FF4444>onError</color></b> callback | Mailbox.cs › ClaimAllMessagesCoroutine | {errorMsg}");
                 onError?.Invoke(errorMsg);
             }
+        }
+
+        public void DeleteMessage(string messageId, System.Action<string> onSuccess = null, System.Action<string> onError = null)
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#FF4444><b>[MailBox] ► Delete Message</b></color>", gameObject);
+
+            if (SaiService.Instance == null)
+            {
+                onError?.Invoke("SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            StartCoroutine(DeleteMessageCoroutine(messageId, onSuccess, onError));
+        }
+
+        private IEnumerator DeleteMessageCoroutine(string messageId, System.Action<string> onSuccess, System.Action<string> onError)
+        {
+            string gameId = SaiService.Instance.GameId;
+            string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{messageId}";
+
+            yield return SaiService.Instance.DeleteRequest(endpoint,
+                response =>
+                {
+                    // Remove message from local cache
+                    if (this.currentMailBox != null && this.currentMailBox.messages != null)
+                    {
+                        var list = new System.Collections.Generic.List<MailboxMessage>(this.currentMailBox.messages);
+                        list.RemoveAll(m => m.id == messageId);
+                        this.currentMailBox.messages = list.ToArray();
+                        this.currentMailBox.total = Mathf.Max(0, this.currentMailBox.total - 1);
+                    }
+
+                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        Debug.Log($"Message {messageId} deleted successfully");
+
+                    OnDeleteMessageSuccess?.Invoke(messageId);
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.Log("<color=#66CCFF>[MailBox] DeleteMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › DeleteMessageCoroutine");
+                    onSuccess?.Invoke(messageId);
+                },
+                error =>
+                {
+                    OnDeleteMessageFailure?.Invoke(error);
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[MailBox] DeleteMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › DeleteMessageCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
+            );
         }
 
         public void ClearMailBox()

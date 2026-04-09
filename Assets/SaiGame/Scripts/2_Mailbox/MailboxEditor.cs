@@ -20,6 +20,8 @@ namespace SaiGame.Services
         private bool showUtilityButtons = true;
         private MailboxStatusFilter statusFilter = MailboxStatusFilter.All;
 
+        private readonly Dictionary<string, bool> messageFoldouts = new Dictionary<string, bool>();
+
         private void OnEnable()
         {
             mailBox = (Mailbox)target;
@@ -159,51 +161,106 @@ namespace SaiGame.Services
 
         private void DrawMessageSummary(MailboxMessage message)
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField($"ID: {message.id}", EditorStyles.boldLabel);
-            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = message.id;
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.LabelField($"Subject: {message.subject}");
-            EditorGUILayout.LabelField($"Status: {message.status}");
-            EditorGUILayout.LabelField($"Type: {message.message_type}");
-            EditorGUILayout.LabelField($"Created: {message.created_at}");
-            if (!string.IsNullOrEmpty(message.read_at))
-                EditorGUILayout.LabelField($"Read: {message.read_at}");
-            if (!string.IsNullOrEmpty(message.claimed_at))
-                EditorGUILayout.LabelField($"Claimed: {message.claimed_at}");
-
-            if (message.attachments != null && message.attachments.Length > 0)
-            {
-                EditorGUILayout.LabelField($"Attachments: {message.attachments.Length}");
-                foreach (var attachment in message.attachments)
-                {
-                    EditorGUILayout.LabelField($"  - {attachment.definition_id} x{attachment.quantity}");
-                }
-            }
+            if (!this.messageFoldouts.ContainsKey(message.id))
+                this.messageFoldouts[message.id] = false;
 
             bool isClaimed = !string.IsNullOrEmpty(message.claimed_at);
             bool isRead = !string.IsNullOrEmpty(message.read_at);
+            bool isExpired = message.status == "expired";
+            bool hasAttachments = message.attachments != null && message.attachments.Length > 0;
+
+            // Build foldout label with status
+            string statusBadge = isClaimed ? " [Claimed]" : isRead ? " [Read]" : isExpired ? " [Expired]" : " [Unread]";
+            string label = message.subject;
+
+            GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
+            foldoutStyle.fontStyle = FontStyle.Bold;
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
             EditorGUILayout.BeginHorizontal();
-            // Claim: enabled when unclaimed
-            GUI.enabled = !isClaimed;
-            GUI.backgroundColor = isClaimed ? Color.gray : new Color(1f, 0.6f, 0f);
-            if (GUILayout.Button(isClaimed ? "Claimed ✓" : "Claim", GUILayout.Height(24)))
-                ClaimSpecificMessage(message.id);
-            // Read button: enabled only when not yet read AND not claimed
-            GUI.enabled = !isRead && !isClaimed;
-            GUI.backgroundColor = (isRead || isClaimed) ? Color.gray : new Color(0.4f, 0.8f, 1f);
-            if (GUILayout.Button(isRead ? "Read ✓" : "Read", GUILayout.Height(24)))
-                ReadSpecificMessage(message.id);
-            // Unread button: enabled only when already read AND not claimed
-            GUI.enabled = isRead && !isClaimed;
-            GUI.backgroundColor = (isRead && !isClaimed) ? new Color(1f, 0.55f, 0.55f) : Color.gray;
-            if (GUILayout.Button(isRead ? "Unread" : "Unread", GUILayout.Height(24)))
-                UnreadSpecificMessage(message.id);
-            GUI.enabled = true;
-            GUI.backgroundColor = Color.white;
+            this.messageFoldouts[message.id] = EditorGUILayout.Foldout(this.messageFoldouts[message.id], label, true, foldoutStyle);
+
+            // Status badge with color
+            Color badgeColor;
+            if (isClaimed)       badgeColor = new Color(1f, 0.84f, 0f);    // gold
+            else if (isRead)     badgeColor = new Color(0.6f, 0.6f, 0.6f); // gray
+            else if (isExpired)  badgeColor = new Color(0.6f, 0.6f, 0.6f); // gray
+            else                 badgeColor = new Color(0.3f, 1f, 0.5f);   // green
+
+            GUIStyle badgeStyle = new GUIStyle(EditorStyles.miniLabel);
+            badgeStyle.fontStyle = FontStyle.Bold;
+            badgeStyle.normal.textColor = badgeColor;
+            GUILayout.Label(statusBadge, badgeStyle, GUILayout.ExpandWidth(false));
             EditorGUILayout.EndHorizontal();
+
+            if (this.messageFoldouts[message.id])
+            {
+                EditorGUI.indentLevel++;
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"ID: {message.id}");
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = message.id;
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.LabelField($"Status: {message.status}");
+                EditorGUILayout.LabelField($"Type: {message.message_type}");
+                EditorGUILayout.LabelField($"Created: {message.created_at}");
+                if (!string.IsNullOrEmpty(message.read_at))
+                    EditorGUILayout.LabelField($"Read: {message.read_at}");
+                if (!string.IsNullOrEmpty(message.claimed_at))
+                    EditorGUILayout.LabelField($"Claimed: {message.claimed_at}");
+
+                if (hasAttachments)
+                {
+                    EditorGUILayout.LabelField($"Attachments: {message.attachments.Length}");
+                    foreach (var attachment in message.attachments)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.LabelField($"  - {attachment.definition_id}");
+                        GUIStyle qtyStyle = new GUIStyle(EditorStyles.boldLabel);
+                        qtyStyle.normal.textColor = new Color(0.4f, 1f, 0.9f);
+                        GUILayout.Label($"x{attachment.quantity}", qtyStyle, GUILayout.ExpandWidth(false));
+                        EditorGUILayout.EndHorizontal();
+                    }
+                }
+
+                // Action buttons
+                EditorGUILayout.BeginHorizontal();
+
+                // Claim: only show when message has attachments
+                if (hasAttachments)
+                {
+                    GUI.enabled = !isClaimed;
+                    GUI.backgroundColor = isClaimed ? Color.gray : new Color(1f, 0.6f, 0f);
+                    if (GUILayout.Button(isClaimed ? "Claimed ✓" : "Claim", GUILayout.Height(24)))
+                        ClaimSpecificMessage(message.id);
+                }
+
+                // Read button
+                GUI.enabled = !isRead && !isClaimed;
+                GUI.backgroundColor = (isRead || isClaimed) ? Color.gray : new Color(0.4f, 0.8f, 1f);
+                if (GUILayout.Button(isRead ? "Read ✓" : "Read", GUILayout.Height(24)))
+                    ReadSpecificMessage(message.id);
+
+                // Unread button
+                GUI.enabled = isRead && !isClaimed;
+                GUI.backgroundColor = (isRead && !isClaimed) ? new Color(1f, 0.55f, 0.55f) : Color.gray;
+                if (GUILayout.Button("Unread", GUILayout.Height(24)))
+                    UnreadSpecificMessage(message.id);
+
+                // Delete button
+                bool canDelete = (isRead && !isClaimed && !hasAttachments) || isClaimed || isExpired;
+                GUI.enabled = canDelete;
+                GUI.backgroundColor = canDelete ? new Color(0.9f, 0.2f, 0.2f) : Color.gray;
+                if (GUILayout.Button("Delete", GUILayout.Height(24)))
+                    DeleteSpecificMessage(message.id);
+
+                GUI.enabled = true;
+                GUI.backgroundColor = Color.white;
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUI.indentLevel--;
+            }
 
             EditorGUILayout.EndVertical();
         }
@@ -350,6 +407,36 @@ namespace SaiGame.Services
                 {
                     if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
                         Debug.LogError($"[MailBoxEditor] Read failed: {error}");
+                }
+            );
+        }
+
+        private void DeleteSpecificMessage(string messageId)
+        {
+            if (SaiService.Instance == null)
+            {
+                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
+                return;
+            }
+
+            mailBox.DeleteMessage(
+                messageId,
+                onSuccess: deletedId =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[MailBoxEditor] Message {deletedId} deleted successfully");
+                    Repaint();
+                },
+                onError: error =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[MailBoxEditor] Delete failed: {error}");
                 }
             );
         }
