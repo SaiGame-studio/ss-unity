@@ -28,17 +28,6 @@
                           password="true"
                           class="input-field" />
 
-            <!-- Remember toggles -->
-            <ui:VisualElement class="toggle-row">
-                <ui:Toggle name="SaveEmailToggle" class="toggle-row__checkbox" />
-                <ui:Label text="Remember email" class="toggle-row__label" />
-            </ui:VisualElement>
-
-            <ui:VisualElement class="toggle-row">
-                <ui:Toggle name="SavePasswordToggle" class="toggle-row__checkbox" />
-                <ui:Label text="Remember password" class="toggle-row__label" />
-            </ui:VisualElement>
-
             <!-- Divider -->
             <ui:VisualElement class="divider" />
 

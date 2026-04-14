@@ -14,8 +14,6 @@ namespace SaiGame.UI
 
         private TextField usernameField;
         private TextField passwordField;
-        private Toggle saveEmailToggle;
-        private Toggle savePasswordToggle;
         private Button loginButton;
 
         protected override void LoadComponents()
@@ -28,26 +26,11 @@ namespace SaiGame.UI
 
         protected override void OnBindElements(VisualElement root)
         {
-            this.usernameField      = this.Q<TextField>("UsernameField");
-            this.passwordField      = this.Q<TextField>("PasswordField");
-            this.saveEmailToggle    = this.Q<Toggle>("SaveEmailToggle");
-            this.savePasswordToggle = this.Q<Toggle>("SavePasswordToggle");
-            this.loginButton        = this.Q<Button>("LoginButton");
+            this.usernameField = this.Q<TextField>("UsernameField");
+            this.passwordField = this.Q<TextField>("PasswordField");
+            this.loginButton   = this.Q<Button>("LoginButton");
 
             this.loginButton.clicked += this.OnLoginButtonClicked;
-
-            // Sync UI → SaiAuth on every keystroke so Inspector stays in sync.
-            this.usernameField.RegisterValueChangedCallback(evt =>
-            {
-                if (this.saiAuth != null && this.saiAuth.GetSaveEmail())
-                    this.saiAuth.SetSaveEmail(true); // triggers SaveCredentialsToPlayerPrefs with latest value
-            });
-
-            this.saveEmailToggle.RegisterValueChangedCallback(evt =>
-                this.saiAuth?.SetSaveEmail(evt.newValue));
-
-            this.savePasswordToggle.RegisterValueChangedCallback(evt =>
-                this.saiAuth?.SetSavePassword(evt.newValue));
 
             this.SubscribeToAuthEvents();
         }
@@ -56,15 +39,8 @@ namespace SaiGame.UI
         {
             if (this.usernameField == null || this.saiAuth == null) return;
 
-            // Pre-populate fields from SaiAuth's saved Login Inputs.
-            this.usernameField.SetValueWithoutNotify(
-                this.saiAuth.GetSaveEmail() ? this.saiAuth.GetUsername() : string.Empty);
-
-            this.passwordField.SetValueWithoutNotify(
-                this.saiAuth.GetSavePassword() ? this.saiAuth.GetPassword() : string.Empty);
-
-            this.saveEmailToggle.SetValueWithoutNotify(this.saiAuth.GetSaveEmail());
-            this.savePasswordToggle.SetValueWithoutNotify(this.saiAuth.GetSavePassword());
+            this.usernameField.SetValueWithoutNotify(this.saiAuth.GetUsername());
+            this.passwordField.SetValueWithoutNotify(this.saiAuth.GetPassword());
 
             this.HideFeedback();
         }

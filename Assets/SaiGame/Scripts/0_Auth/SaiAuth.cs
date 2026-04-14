@@ -34,21 +34,15 @@ namespace SaiGame.Services
         [SerializeField] protected bool autoRefreshToken = true;
         [SerializeField] protected int refreshBeforeExpire = 2;
 
-        [Header("Login Inputs")]
         [SerializeField] protected string username = "";
         [SerializeField] protected string password = "";
-        [SerializeField] protected bool saveEmail = false;
-        [SerializeField] protected bool savePassword = false;
 
-        [Header("Register Inputs")]
         [SerializeField] protected string registerEmail = "";
         [SerializeField] protected string registerUsername = "";
         [SerializeField] protected string registerPassword = "";
 
         private const string PREF_EMAIL = "SaiGame_SavedEmail";
         private const string PREF_PASSWORD = "SaiGame_SavedPassword";
-        private const string PREF_SAVE_EMAIL_FLAG = "SaiGame_SaveEmailFlag";
-        private const string PREF_SAVE_PASSWORD_FLAG = "SaiGame_SavePasswordFlag";
         private const string PREF_AUTO_LOGIN_FLAG = "SaiGame_AutoLoginFlag";
 
         public bool IsAuthenticated => !string.IsNullOrEmpty(accessToken);
@@ -67,13 +61,11 @@ namespace SaiGame.Services
         protected override void LoadComponents()
         {
             base.LoadComponents();
-            this.LoadCredentialsFromPlayerPrefs();
         }
 
         protected override void ResetValue()
         {
             base.ResetValue();
-            this.ManualClearCredentials();
         }
 
         protected virtual void Start()
@@ -98,72 +90,68 @@ namespace SaiGame.Services
             }
         }
 
-        protected virtual void LoadCredentialsFromPlayerPrefs()
+        public void SaveUsername()
         {
-            // If there's already a SaiService singleton instance with authenticated SaiAuth, skip loading
-            if (SaiService.Instance != null && this.GetComponent<SaiService>() != SaiService.Instance)
-            {
-                SaiAuth existingAuth = SaiService.Instance.GetComponent<SaiAuth>();
-                if (existingAuth != null && existingAuth.IsAuthenticated)
-                {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                        Debug.Log("[SaiAuth] Singleton instance already authenticated, skipping credential load");
-                    return;
-                }
-            }
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#FFD700><b>[SaiAuth] ► Save Username</b></color>", gameObject);
 
-            this.saveEmail = PlayerPrefs.GetInt(PREF_SAVE_EMAIL_FLAG, 0) == 1;
-            this.savePassword = PlayerPrefs.GetInt(PREF_SAVE_PASSWORD_FLAG, 0) == 1;
+            this.username = this.NormalizeInput(this.username);
+            PlayerPrefs.SetString(PREF_EMAIL, this.username);
+            PlayerPrefs.Save();
 
-            if (this.saveEmail && PlayerPrefs.HasKey(PREF_EMAIL))
-            {
-                this.username = this.NormalizeInput(PlayerPrefs.GetString(PREF_EMAIL));
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                    Debug.Log($"[SaiAuth] Loaded email from PlayerPrefs: {this.username}");
-            }
-
-            if (this.savePassword && PlayerPrefs.HasKey(PREF_PASSWORD))
-            {
-                string encryptedPassword = PlayerPrefs.GetString(PREF_PASSWORD);
-                this.password = this.NormalizeInput(SaiEncryption.Decrypt(encryptedPassword));
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                    Debug.Log("[SaiAuth] Loaded password from PlayerPrefs");
-            }
+            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                Debug.Log($"<color=#FFD700>[SaiAuth] Saved username to PlayerPrefs: {this.username}</color>");
         }
 
-        protected virtual void SaveCredentialsToPlayerPrefs()
+        public void LoadUsername()
         {
-            this.username = this.NormalizeInput(this.username);
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#7FFFD4><b>[SaiAuth] ► Load Username</b></color>", gameObject);
+
+            if (!PlayerPrefs.HasKey(PREF_EMAIL))
+            {
+                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    Debug.Log("<color=#7FFFD4>[SaiAuth] No saved username found in PlayerPrefs</color>");
+                return;
+            }
+
+            this.username = this.NormalizeInput(PlayerPrefs.GetString(PREF_EMAIL));
+
+            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                Debug.Log($"<color=#7FFFD4>[SaiAuth] Loaded username from PlayerPrefs: {this.username}</color>");
+        }
+
+        public void SavePassword()
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#FFA500><b>[SaiAuth] ► Save Password</b></color>", gameObject);
+
             this.password = this.NormalizeInput(this.password);
-
-            PlayerPrefs.SetInt(PREF_SAVE_EMAIL_FLAG, this.saveEmail ? 1 : 0);
-            PlayerPrefs.SetInt(PREF_SAVE_PASSWORD_FLAG, this.savePassword ? 1 : 0);
-            PlayerPrefs.SetInt(PREF_AUTO_LOGIN_FLAG, this.autoLogin ? 1 : 0);
-
-            if (this.saveEmail)
-            {
-                PlayerPrefs.SetString(PREF_EMAIL, this.username);
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                    Debug.Log($"Saved email to PlayerPrefs: {this.username}");
-            }
-            else
-            {
-                PlayerPrefs.DeleteKey(PREF_EMAIL);
-            }
-
-            if (this.savePassword)
-            {
-                string encryptedPassword = SaiEncryption.Encrypt(this.password);
-                PlayerPrefs.SetString(PREF_PASSWORD, encryptedPassword);
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                    Debug.Log("Saved encrypted password to PlayerPrefs");
-            }
-            else
-            {
-                PlayerPrefs.DeleteKey(PREF_PASSWORD);
-            }
-
+            string encryptedPassword = SaiEncryption.Encrypt(this.password);
+            PlayerPrefs.SetString(PREF_PASSWORD, encryptedPassword);
             PlayerPrefs.Save();
+
+            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                Debug.Log("<color=#FFA500>[SaiAuth] Saved encrypted password to PlayerPrefs</color>");
+        }
+
+        public void LoadPassword()
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#FF69B4><b>[SaiAuth] ► Load Password</b></color>", gameObject);
+
+            if (!PlayerPrefs.HasKey(PREF_PASSWORD))
+            {
+                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    Debug.Log("<color=#FF69B4>[SaiAuth] No saved password found in PlayerPrefs</color>");
+                return;
+            }
+
+            string encryptedPassword = PlayerPrefs.GetString(PREF_PASSWORD);
+            this.password = this.NormalizeInput(SaiEncryption.Decrypt(encryptedPassword));
+
+            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                Debug.Log("<color=#FF69B4>[SaiAuth] Loaded password from PlayerPrefs</color>");
         }
 
         protected virtual void OnDestroy()
@@ -328,7 +316,6 @@ namespace SaiGame.Services
 
                         this.username = username;
                         this.password = password;
-                        this.SaveCredentialsToPlayerPrefs();
 
                         StartTokenExpirationCheck();
 
@@ -487,16 +474,6 @@ namespace SaiGame.Services
             this.expiresIn = 0;
             this.userData = null;
             this.loginTime = 0;
-
-            if (!this.saveEmail)
-            {
-                this.username = "";
-            }
-
-            if (!this.savePassword)
-            {
-                this.password = "";
-            }
         }
 
         public void GetMyProfile(System.Action<UserData> onSuccess = null, System.Action<string> onError = null)
@@ -564,32 +541,11 @@ namespace SaiGame.Services
             this.userData = user;
         }
 
-        public void SetSaveEmail(bool save)
-        {
-            this.saveEmail = save;
-            this.SaveCredentialsToPlayerPrefs();
-        }
-
-        public void SetSavePassword(bool save)
-        {
-            this.savePassword = save;
-            this.SaveCredentialsToPlayerPrefs();
-        }
-
-        public bool GetSaveEmail()
-        {
-            return this.saveEmail;
-        }
-
-        public bool GetSavePassword()
-        {
-            return this.savePassword;
-        }
-
         public void SetAutoLogin(bool auto)
         {
             this.autoLogin = auto;
-            this.SaveCredentialsToPlayerPrefs();
+            PlayerPrefs.SetInt(PREF_AUTO_LOGIN_FLAG, this.autoLogin ? 1 : 0);
+            PlayerPrefs.Save();
         }
 
         public bool GetAutoLogin()
@@ -607,28 +563,17 @@ namespace SaiGame.Services
             return this.password;
         }
 
-        public void ManualSaveCredentials()
-        {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
-                Debug.Log("<color=#FFD700><b>[SaiAuth] ► Save Credentials to PlayerPrefs</b></color>", gameObject);
-            this.SaveCredentialsToPlayerPrefs();
-        }
-
         public void ManualClearCredentials()
         {
             if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[SaiAuth] ► Clear PlayerPrefs</b></color>", gameObject);
             PlayerPrefs.DeleteKey(PREF_EMAIL);
             PlayerPrefs.DeleteKey(PREF_PASSWORD);
-            PlayerPrefs.DeleteKey(PREF_SAVE_EMAIL_FLAG);
-            PlayerPrefs.DeleteKey(PREF_SAVE_PASSWORD_FLAG);
             PlayerPrefs.DeleteKey(PREF_AUTO_LOGIN_FLAG);
             PlayerPrefs.Save();
 
             this.username = string.Empty;
             this.password = string.Empty;
-            this.saveEmail = false;
-            this.savePassword = false;
             this.autoLogin = false;
 
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)

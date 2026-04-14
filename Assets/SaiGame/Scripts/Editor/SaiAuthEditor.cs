@@ -35,6 +35,39 @@ namespace SaiGame.Services
             set => EditorPrefs.SetBool(PREF_REGISTER_INPUTS, value);
         }
 
+        private void DrawInputWithSaveLoad(SerializedProperty property, string label, System.Action onSave, System.Action onLoad)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PropertyField(property, new GUIContent(label));
+
+            Color prevColor = GUI.backgroundColor;
+
+            GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
+            if (GUILayout.Button("Clean", GUILayout.Width(50)))
+            {
+                property.stringValue = string.Empty;
+                serializedObject.ApplyModifiedProperties();
+            }
+
+            GUI.backgroundColor = new Color(1f, 0.8f, 0.2f);
+            if (GUILayout.Button("Save", GUILayout.Width(50)))
+            {
+                serializedObject.ApplyModifiedProperties();
+                onSave?.Invoke();
+                serializedObject.Update();
+            }
+
+            GUI.backgroundColor = new Color(0.6f, 1f, 0.6f);
+            if (GUILayout.Button("Load", GUILayout.Width(50)))
+            {
+                onLoad?.Invoke();
+                serializedObject.Update();
+            }
+
+            GUI.backgroundColor = prevColor;
+            EditorGUILayout.EndHorizontal();
+        }
+
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
@@ -82,10 +115,16 @@ namespace SaiGame.Services
             if (this.showLoginInputs)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("username"), new GUIContent("Username"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("password"), new GUIContent("Password"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("saveEmail"), new GUIContent("Save Email"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("savePassword"), new GUIContent("Save Password"));
+                this.DrawInputWithSaveLoad(
+                    serializedObject.FindProperty("username"),
+                    "Username",
+                    saiAuth.SaveUsername,
+                    saiAuth.LoadUsername);
+                this.DrawInputWithSaveLoad(
+                    serializedObject.FindProperty("password"),
+                    "Password",
+                    saiAuth.SavePassword,
+                    saiAuth.LoadPassword);
                 EditorGUI.indentLevel--;
             }
 
@@ -107,20 +146,6 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Actions", EditorStyles.boldLabel);
-            
-            EditorGUILayout.BeginHorizontal();
-            GUI.backgroundColor = new Color(1f, 0.8f, 0.2f);
-            if (GUILayout.Button("Save Credentials", GUILayout.Height(25)))
-            {
-                saiAuth.ManualSaveCredentials();
-            }
-            GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
-            if (GUILayout.Button("Clear PlayerPrefs", GUILayout.Height(25)))
-            {
-                saiAuth.ManualClearCredentials();
-            }
-            GUI.backgroundColor = Color.white;
-            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(5);
 
@@ -137,7 +162,7 @@ namespace SaiGame.Services
                 );
             }
             GUI.backgroundColor = Color.white;
-            
+
             GUI.backgroundColor = Color.green;
             if (GUILayout.Button("Login", GUILayout.Height(25)))
             {
@@ -195,7 +220,13 @@ namespace SaiGame.Services
                         Debug.LogWarning("[Editor] Not authenticated! Please login first.");
                 }
             }
+            GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
+            if (GUILayout.Button("Clear PlayerPrefs", GUILayout.Height(25)))
+            {
+                saiAuth.ManualClearCredentials();
+            }
             GUI.backgroundColor = Color.white;
+
             EditorGUILayout.EndHorizontal();
         }
     }
