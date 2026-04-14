@@ -70,24 +70,36 @@ namespace SaiGame.Services
 
         protected virtual void Start()
         {
-            if (this.autoLogin && !string.IsNullOrEmpty(this.username) && !string.IsNullOrEmpty(this.password))
+            if (this.autoLogin) this.AutoLogin();
+        }
+
+        public void AutoLogin()
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log("<color=#00FFFF><b>[SaiAuth] ► Auto Login</b></color>", gameObject);
+
+            this.LoadUsername();
+            this.LoadPassword();
+
+            if (string.IsNullOrEmpty(this.username) || string.IsNullOrEmpty(this.password))
             {
                 if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                    Debug.Log("[SaiAuth] Auto-login enabled, attempting to login...");
-
-                this.Login(this.username, this.password,
-                    response =>
-                    {
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                            Debug.Log($"[SaiAuth] Auto-login successful! Welcome {response.user.username}");
-                    },
-                    error =>
-                    {
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                            Debug.LogWarning($"[SaiAuth] Auto-login failed: {error}");
-                    }
-                );
+                    Debug.LogWarning("<color=#00FFFF>[SaiAuth] Auto-login skipped: missing username or password</color>");
+                return;
             }
+
+            this.Login(this.username, this.password,
+                response =>
+                {
+                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        Debug.Log($"<color=#00FFFF>[SaiAuth] Auto-login successful! Welcome {response.user.username}</color>");
+                },
+                error =>
+                {
+                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        Debug.LogWarning($"<color=#00FFFF>[SaiAuth] Auto-login failed: {error}</color>");
+                }
+            );
         }
 
         public void SaveUsername()

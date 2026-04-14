@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace SaiGame.Services
 {
@@ -17,7 +18,9 @@ namespace SaiGame.Services
         public event Action<string> OnUnequipFailure;
 
         [Header("Auto Load Settings")]
-        [SerializeField] protected bool autoLoadOnLogin = false;
+        [FormerlySerializedAs("autoLoadOnLogin")]
+        [SerializeField] protected bool autoGetSlots = false;
+        [SerializeField] protected bool autoGetEquipped = false;
 
         [Header("Current Equipment Slot Data")]
         [SerializeField] protected EquipmentSlotsResponse currentSlots;
@@ -61,23 +64,15 @@ namespace SaiGame.Services
 
         protected virtual void HandleLoginSuccess(LoginResponse response)
         {
-            if (!this.autoLoadOnLogin) return;
+            if (this.autoGetSlots)
+            {
+                this.GetSlots(
+                    onSuccess: _ => { if (this.autoGetEquipped) this.GetEquippedItems(); }
+                );
+                return;
+            }
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                Debug.Log("[EquipmentSlot] Auto-loading equipment slots after successful login...");
-
-            this.GetSlots(
-                onSuccess: slots =>
-                {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                        Debug.Log($"[EquipmentSlot] Slots auto-loaded: {slots.slots.Length} slots (total: {slots.total})");
-                },
-                onError: error =>
-                {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                        Debug.LogWarning($"[EquipmentSlot] Auto-load slots failed: {error}");
-                }
-            );
+            if (this.autoGetEquipped) this.GetEquippedItems();
         }
 
         protected virtual void HandleLogoutSuccess()

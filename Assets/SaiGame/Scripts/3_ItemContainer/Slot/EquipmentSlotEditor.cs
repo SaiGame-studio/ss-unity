@@ -9,7 +9,8 @@ namespace SaiGame.Services
     public class EquipmentSlotEditor : Editor
     {
         private EquipmentSlot equipmentSlotManager;
-        private SerializedProperty autoLoadOnLogin;
+        private SerializedProperty autoGetSlots;
+        private SerializedProperty autoGetEquipped;
 
         private bool showCurrentSlots = true;
         private bool showSlotList = true;
@@ -28,7 +29,32 @@ namespace SaiGame.Services
         private void OnEnable()
         {
             this.equipmentSlotManager = (EquipmentSlot)target;
-            this.autoLoadOnLogin = serializedObject.FindProperty("autoLoadOnLogin");
+            this.autoGetSlots = serializedObject.FindProperty("autoGetSlots");
+            this.autoGetEquipped = serializedObject.FindProperty("autoGetEquipped");
+
+            this.equipmentSlotManager.OnGetEquippedSuccess += this.HandleEquippedLoaded;
+            this.equipmentSlotManager.OnGetSlotsSuccess += this.HandleSlotsLoaded;
+        }
+
+        private void OnDisable()
+        {
+            if (this.equipmentSlotManager == null) return;
+            this.equipmentSlotManager.OnGetEquippedSuccess -= this.HandleEquippedLoaded;
+            this.equipmentSlotManager.OnGetSlotsSuccess -= this.HandleSlotsLoaded;
+        }
+
+        private void HandleEquippedLoaded(EquippedItemsResponse response)
+        {
+            this.PopulateSlotAssignmentsFromEquipped(response);
+            this.Repaint();
+        }
+
+        private void HandleSlotsLoaded(EquipmentSlotsResponse response)
+        {
+            // Re-apply any previously loaded equipped data now that slots are available
+            if (this.equipmentSlotManager.CurrentEquipped != null)
+                this.PopulateSlotAssignmentsFromEquipped(this.equipmentSlotManager.CurrentEquipped);
+            this.Repaint();
         }
 
         public override void OnInspectorGUI()
@@ -39,7 +65,8 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("Equipment Slot Configuration", EditorStyles.boldLabel);
             EditorGUILayout.Space();
 
-            EditorGUILayout.PropertyField(this.autoLoadOnLogin, new GUIContent("Auto Load on Login", "Automatically load equipment slots when user logs in"));
+            EditorGUILayout.PropertyField(this.autoGetSlots, new GUIContent("Auto Get Slots", "Automatically load equipment slots after successful login"));
+            EditorGUILayout.PropertyField(this.autoGetEquipped, new GUIContent("Auto Get Equipped", "Automatically load equipped items after successful login"));
 
             EditorGUILayout.Space();
 
@@ -88,13 +115,6 @@ namespace SaiGame.Services
 
                 EditorGUILayout.BeginHorizontal();
 
-                GUI.backgroundColor = isLoadingItems ? Color.gray : Color.cyan;
-                EditorGUI.BeginDisabledGroup(isLoadingItems);
-                if (GUILayout.Button(isLoadingItems ? "Loading Items..." : "Get Items", GUILayout.Height(30)))
-                    this.LoadItems();
-                EditorGUI.EndDisabledGroup();
-                GUI.backgroundColor = Color.white;
-
                 GUI.backgroundColor = Color.green;
                 if (GUILayout.Button("Get Slots", GUILayout.Height(30)))
                     this.LoadSlots();
@@ -104,6 +124,17 @@ namespace SaiGame.Services
                 EditorGUI.BeginDisabledGroup(isLoadingEquipped);
                 if (GUILayout.Button(isLoadingEquipped ? "Loading..." : "Get Equipped", GUILayout.Height(30)))
                     this.LoadEquipped();
+                EditorGUI.EndDisabledGroup();
+                GUI.backgroundColor = Color.white;
+
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.BeginHorizontal();
+
+                GUI.backgroundColor = isLoadingItems ? Color.gray : Color.cyan;
+                EditorGUI.BeginDisabledGroup(isLoadingItems);
+                if (GUILayout.Button(isLoadingItems ? "Syncing..." : "Sync with Player Item", GUILayout.Height(30)))
+                    this.LoadItems();
                 EditorGUI.EndDisabledGroup();
                 GUI.backgroundColor = Color.white;
 
