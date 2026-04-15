@@ -22,7 +22,12 @@ namespace SaiGame.Services
         private readonly Dictionary<string, bool> expandedTransactions = new Dictionary<string, bool>();
 
         private string testRecipeId = "";
+        private string testRecipeKey = "";
         private string testIdempotencyKey = "";
+
+        private string fetchRecipeKey = "";
+        private RecipeDetail fetchedRecipe;
+        private bool showFetchedRecipe = true;
 
         private void OnEnable()
         {
@@ -115,24 +120,46 @@ namespace SaiGame.Services
             {
                 EditorGUI.indentLevel++;
 
-                // Recipe ID belongs to the crafting receipt definition, not the item recipe definition
-                EditorGUILayout.HelpBox("Recipe ID: ID of the crafting receipt definition (not the item recipe definition).", MessageType.None);
+                // Recipe ID / Key both target the crafting receipt definition
+                EditorGUILayout.HelpBox("Craft by Recipe ID or Recipe Key (code). The API accepts either.", MessageType.None);
 
                 EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.BeginVertical();
                 this.testRecipeId = EditorGUILayout.TextField("Recipe ID", this.testRecipeId);
+                this.testRecipeKey = EditorGUILayout.TextField("Recipe Key", this.testRecipeKey);
+                EditorGUILayout.EndVertical();
+
                 GUI.backgroundColor = new Color(1f, 0.84f, 0f);
-                if (GUILayout.Button("Craft", GUILayout.Width(80), GUILayout.Height(18)))
-                    this.CraftTest();
+                if (GUILayout.Button("Craft", GUILayout.Width(80), GUILayout.ExpandHeight(true)))
+                    this.CraftTestSmart();
                 GUI.backgroundColor = Color.white;
                 EditorGUILayout.EndHorizontal();
 
                 EditorGUILayout.BeginHorizontal();
                 this.testIdempotencyKey = EditorGUILayout.TextField("Idempotency Key", this.testIdempotencyKey);
                 GUI.backgroundColor = new Color(0.5f, 0.8f, 1f);
-                if (GUILayout.Button("UUID", GUILayout.Width(50), GUILayout.Height(18)))
+                if (GUILayout.Button("Random UUID", GUILayout.Width(120), GUILayout.Height(18)))
                     this.testIdempotencyKey = System.Guid.NewGuid().ToString();
                 GUI.backgroundColor = Color.white;
                 EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.Space(6);
+
+                // Get Recipe By Key
+                EditorGUILayout.LabelField("Fetch Recipe By Key", EditorStyles.boldLabel);
+                EditorGUILayout.BeginHorizontal();
+                this.fetchRecipeKey = EditorGUILayout.TextField("Recipe Key", this.fetchRecipeKey);
+                GUI.backgroundColor = new Color(0.4f, 0.8f, 1f);
+                if (GUILayout.Button("Get", GUILayout.Width(80), GUILayout.Height(18)))
+                    this.GetRecipeByKeyTest();
+                GUI.backgroundColor = Color.white;
+                EditorGUILayout.EndHorizontal();
+
+                if (this.fetchedRecipe != null)
+                {
+                    this.showFetchedRecipe = EditorGUILayout.Foldout(this.showFetchedRecipe, "Fetched Recipe", true);
+                    if (this.showFetchedRecipe) this.DrawFetchedRecipe(this.fetchedRecipe);
+                }
 
                 EditorGUI.indentLevel--;
             }
@@ -356,6 +383,159 @@ namespace SaiGame.Services
             );
         }
 
+        private void GetRecipeByKeyTest()
+        {
+            if (string.IsNullOrEmpty(this.fetchRecipeKey))
+            {
+                Debug.LogError("[ItemCraftingEditor] Recipe Key cannot be empty.");
+                return;
+            }
+
+            if (SaiService.Instance == null)
+            {
+                Debug.LogError("[ItemCraftingEditor] SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                Debug.LogError("[ItemCraftingEditor] Not authenticated!");
+                return;
+            }
+
+            this.crafting.GetRecipeByKey(
+                this.fetchRecipeKey,
+                onSuccess: recipe =>
+                {
+                    this.fetchedRecipe = recipe;
+                    Debug.Log($"[ItemCraftingEditor] Recipe fetched: {recipe.name} ({recipe.recipe_key})");
+                    this.Repaint();
+                },
+                onError: error =>
+                {
+                    Debug.LogError($"[ItemCraftingEditor] Fetch recipe failed: {error}");
+                }
+            );
+        }
+
+        private void DrawFetchedRecipe(RecipeDetail recipe)
+        {
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            GUIStyle nameStyle = new GUIStyle(EditorStyles.boldLabel);
+            nameStyle.fontSize = 12;
+            nameStyle.normal.textColor = new Color(0.7f, 0.9f, 1f);
+            EditorGUILayout.LabelField($"★ {recipe.name}", nameStyle);
+
+            GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
+            labelStyle.fontSize = 10;
+            labelStyle.normal.textColor = new Color(0.7f, 0.7f, 0.7f);
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"ID: {recipe.id}", labelStyle);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = recipe.id;
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.LabelField($"Key: {recipe.recipe_key}", labelStyle);
+            EditorGUILayout.LabelField($"Category: {recipe.category}", labelStyle);
+            if (!string.IsNullOrEmpty(recipe.description))
+                EditorGUILayout.LabelField($"Desc: {recipe.description}", labelStyle);
+            EditorGUILayout.LabelField($"Success Rate: {recipe.success_rate / 100f}%  |  Bonus Rate: {recipe.bonus_rate / 100f}%", labelStyle);
+            EditorGUILayout.LabelField($"Active: {(recipe.is_active ? "✔" : "✘")}", labelStyle);
+            if (recipe.metadata != null)
+                EditorGUILayout.LabelField($"Difficulty: {recipe.metadata.difficulty}  |  Icon: {recipe.metadata.icon}", labelStyle);
+
+            EditorGUILayout.Space(4);
+
+            if (recipe.inputs != null && recipe.inputs.Length > 0)
+            {
+                GUIStyle sectionHeader = new GUIStyle(EditorStyles.boldLabel);
+                sectionHeader.fontSize = 11;
+                sectionHeader.normal.textColor = new Color(1f, 0.7f, 0.5f);
+                EditorGUILayout.LabelField($"🧱 INPUTS ({recipe.inputs.Length})", sectionHeader);
+                foreach (RecipeInput input in recipe.inputs)
+                {
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    this.DrawItemDefinition(input.item_definition, input.item_definition_id, new Color(1f, 0.7f, 0.5f));
+                    EditorGUILayout.LabelField($"Qty: x{input.quantity}  |  Consumed: {(input.is_consumed ? "✘" : "✔ Kept")}", labelStyle);
+                    EditorGUILayout.EndVertical();
+                }
+            }
+
+            if (recipe.outputs != null && recipe.outputs.Length > 0)
+            {
+                GUIStyle sectionHeader = new GUIStyle(EditorStyles.boldLabel);
+                sectionHeader.fontSize = 11;
+                sectionHeader.normal.textColor = new Color(0.7f, 0.9f, 1f);
+                EditorGUILayout.LabelField($"📤 OUTPUTS ({recipe.outputs.Length})", sectionHeader);
+                foreach (RecipeOutput output in recipe.outputs)
+                {
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    this.DrawItemDefinition(output.item_definition, output.item_definition_id, new Color(0.7f, 0.9f, 1f));
+                    EditorGUILayout.LabelField($"Qty: {output.quantity_min}-{output.quantity_max}  |  Type: {output.output_type}  |  Sort: {output.sort_order}", labelStyle);
+                    EditorGUILayout.EndVertical();
+                }
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawItemDefinition(ItemDefinitionData def, string fallbackId, Color accent)
+        {
+            GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
+            labelStyle.fontSize = 10;
+            labelStyle.normal.textColor = new Color(0.7f, 0.7f, 0.7f);
+
+            if (def == null || string.IsNullOrEmpty(def.id))
+            {
+                EditorGUILayout.LabelField($"Item Def: {fallbackId}", labelStyle);
+                return;
+            }
+
+            GUIStyle nameStyle = new GUIStyle(EditorStyles.boldLabel);
+            nameStyle.fontSize = 11;
+            nameStyle.normal.textColor = accent;
+            EditorGUILayout.LabelField($"● {def.name}  [{def.item_code}]", nameStyle);
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"ID: {def.id}", labelStyle);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = def.id;
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.LabelField($"Category: {def.category}  |  Rarity: {def.rarity}", labelStyle);
+            EditorGUILayout.LabelField($"Stackable: {(def.is_stackable ? "✔" : "✘")}  |  Max Stack: {def.max_stack_size}  |  Grid: {def.grid_width}x{def.grid_height}", labelStyle);
+
+            if (def.metadata != null)
+            {
+                if (!string.IsNullOrEmpty(def.metadata.icon))
+                    EditorGUILayout.LabelField($"Icon: {def.metadata.icon}", labelStyle);
+                if (!string.IsNullOrEmpty(def.metadata.flavor_text))
+                    EditorGUILayout.LabelField($"Flavor: {def.metadata.flavor_text}", labelStyle);
+                if (!string.IsNullOrEmpty(def.metadata.currency_code))
+                    EditorGUILayout.LabelField($"Currency: {def.metadata.currency_code}{(def.metadata.is_default_currency ? " (default)" : "")}", labelStyle);
+                if (!string.IsNullOrEmpty(def.metadata.description))
+                    EditorGUILayout.LabelField($"Desc: {def.metadata.description}", labelStyle);
+            }
+
+            if (!string.IsNullOrEmpty(def.base_stats) && def.base_stats != "{}")
+                EditorGUILayout.LabelField($"Stats: {def.base_stats}", labelStyle);
+        }
+
+        private void CraftTestSmart()
+        {
+            bool hasId = !string.IsNullOrEmpty(this.testRecipeId);
+            bool hasKey = !string.IsNullOrEmpty(this.testRecipeKey);
+
+            if (!hasId && !hasKey)
+            {
+                Debug.LogError("[ItemCraftingEditor] Provide Recipe ID or Recipe Key.");
+                return;
+            }
+
+            if (hasId) this.CraftTest();
+            else this.CraftByKeyTest();
+        }
+
         private void CraftTest()
         {
             if (string.IsNullOrEmpty(this.testRecipeId))
@@ -391,6 +571,45 @@ namespace SaiGame.Services
                 onError: error =>
                 {
                     Debug.LogError($"[ItemCraftingEditor] Craft failed: {error}");
+                }
+            );
+        }
+
+        private void CraftByKeyTest()
+        {
+            if (string.IsNullOrEmpty(this.testRecipeKey))
+            {
+                Debug.LogError("[ItemCraftingEditor] Recipe Key cannot be empty.");
+                return;
+            }
+
+            if (SaiService.Instance == null)
+            {
+                Debug.LogError("[ItemCraftingEditor] SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                Debug.LogError("[ItemCraftingEditor] Not authenticated!");
+                return;
+            }
+
+            string idempotencyKey = string.IsNullOrEmpty(this.testIdempotencyKey)
+                ? null
+                : this.testIdempotencyKey;
+
+            this.crafting.CraftByKey(
+                this.testRecipeKey,
+                idempotencyKey: idempotencyKey,
+                onSuccess: response =>
+                {
+                    Debug.Log($"[ItemCraftingEditor] CraftByKey OK. Tx: {response.transaction_id}");
+                    this.Repaint();
+                },
+                onError: error =>
+                {
+                    Debug.LogError($"[ItemCraftingEditor] CraftByKey failed: {error}");
                 }
             );
         }

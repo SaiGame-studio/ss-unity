@@ -14,6 +14,9 @@ namespace SaiGame.Services
         public event Action<CraftingHistoryResponse> OnGetHistorySuccess;
         public event Action<string> OnGetHistoryFailure;
 
+        public event Action<RecipeDetail> OnGetRecipeByKeySuccess;
+        public event Action<string> OnGetRecipeByKeyFailure;
+
         [Header("Auto Load Settings")]
         [SerializeField] protected bool autoLoadOnLogin = false;
 
@@ -120,6 +123,34 @@ namespace SaiGame.Services
             StartCoroutine(this.CraftCoroutine(recipeId, idempotencyKey, onSuccess, onError));
         }
 
+        /// <summary>
+        /// Crafts an item using the recipe key (code) instead of id.
+        /// Endpoint: POST /api/v1/games/{game_id}/crafting/craft
+        /// </summary>
+        public void CraftByKey(
+            string recipeKey,
+            string idempotencyKey = null,
+            System.Action<CraftingResponse> onSuccess = null,
+            System.Action<string> onError = null)
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log($"<color=#FFD700><b>[ItemCrafting] ► CraftByKey: {recipeKey}</b></color>", gameObject);
+
+            if (SaiService.Instance == null)
+            {
+                onError?.Invoke("SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            StartCoroutine(this.CraftByKeyCoroutine(recipeKey, idempotencyKey, onSuccess, onError));
+        }
+
         private IEnumerator CraftCoroutine(
             string recipeId,
             string idempotencyKey,
@@ -139,6 +170,36 @@ namespace SaiGame.Services
                 idempotency_key = idempotencyKey
             });
 
+            yield return this.SendCraftRequest(endpoint, body, onSuccess, onError);
+        }
+
+        private IEnumerator CraftByKeyCoroutine(
+            string recipeKey,
+            string idempotencyKey,
+            System.Action<CraftingResponse> onSuccess,
+            System.Action<string> onError)
+        {
+            string gameId = SaiService.Instance.GameId;
+            string endpoint = $"/api/v1/games/{gameId}/crafting/craft";
+
+            if (string.IsNullOrEmpty(idempotencyKey))
+                idempotencyKey = Guid.NewGuid().ToString();
+
+            string body = JsonUtility.ToJson(new CraftByKeyRequest
+            {
+                recipe_key = recipeKey,
+                idempotency_key = idempotencyKey
+            });
+
+            yield return this.SendCraftRequest(endpoint, body, onSuccess, onError);
+        }
+
+        private IEnumerator SendCraftRequest(
+            string endpoint,
+            string body,
+            System.Action<CraftingResponse> onSuccess,
+            System.Action<string> onError)
+        {
             yield return SaiService.Instance.PostRequest(endpoint, body,
                 response =>
                 {
@@ -254,6 +315,82 @@ namespace SaiGame.Services
                     if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemCrafting] GetCraftingHistory</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemCrafting.cs › GetCraftingHistoryCoroutine | {error}");
                     this.OnGetHistoryFailure?.Invoke(error);
+                    onError?.Invoke(error);
+                }
+            );
+        }
+
+        /// <summary>
+        /// Fetches a recipe definition by its recipe_key.
+        /// Endpoint: GET /api/v1/games/{game_id}/crafting/recipes-by-key/{recipe_key}
+        /// </summary>
+        public void GetRecipeByKey(
+            string recipeKey,
+            System.Action<RecipeDetail> onSuccess = null,
+            System.Action<string> onError = null)
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log($"<color=#66CCFF><b>[ItemCrafting] ► Get Recipe By Key: {recipeKey}</b></color>", gameObject);
+
+            if (SaiService.Instance == null)
+            {
+                onError?.Invoke("SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(recipeKey))
+            {
+                onError?.Invoke("Recipe key cannot be empty.");
+                return;
+            }
+
+            StartCoroutine(this.GetRecipeByKeyCoroutine(recipeKey, onSuccess, onError));
+        }
+
+        private IEnumerator GetRecipeByKeyCoroutine(
+            string recipeKey,
+            System.Action<RecipeDetail> onSuccess,
+            System.Action<string> onError)
+        {
+            string gameId = SaiService.Instance.GameId;
+            string endpoint = $"/api/v1/games/{gameId}/crafting/recipes-by-key/{recipeKey}";
+
+            yield return SaiService.Instance.GetRequest(endpoint,
+                response =>
+                {
+                    try
+                    {
+                        var recipe = JsonUtility.FromJson<RecipeDetail>(response);
+
+                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                            Debug.Log($"[ItemCrafting] Recipe loaded: {recipe.name} ({recipe.recipe_key})");
+
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[ItemCrafting] GetRecipeByKey</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemCrafting.cs › GetRecipeByKeyCoroutine");
+
+                        this.OnGetRecipeByKeySuccess?.Invoke(recipe);
+                        onSuccess?.Invoke(recipe);
+                    }
+                    catch (System.Exception e)
+                    {
+                        string errorMsg = $"Parse recipe response error: {e.Message}";
+                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[ItemCrafting] GetRecipeByKey</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemCrafting.cs › GetRecipeByKeyCoroutine | {errorMsg}");
+                        this.OnGetRecipeByKeyFailure?.Invoke(errorMsg);
+                        onError?.Invoke(errorMsg);
+                    }
+                },
+                error =>
+                {
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[ItemCrafting] GetRecipeByKey</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemCrafting.cs › GetRecipeByKeyCoroutine | {error}");
+                    this.OnGetRecipeByKeyFailure?.Invoke(error);
                     onError?.Invoke(error);
                 }
             );

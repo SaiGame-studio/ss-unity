@@ -10,6 +10,13 @@ namespace SaiGame.Services
     }
 
     [Serializable]
+    public class CraftByKeyRequest
+    {
+        public string recipe_key;
+        public string idempotency_key;
+    }
+
+    [Serializable]
     public class CraftingOutputItem
     {
         public string item_definition_id;
@@ -48,6 +55,7 @@ namespace SaiGame.Services
         public bool is_consumed;
         public string created_at;
         public string updated_at;
+        public ItemDefinitionData item_definition;
     }
 
     [Serializable]
@@ -64,6 +72,7 @@ namespace SaiGame.Services
         public int sort_order;
         public string created_at;
         public string updated_at;
+        public ItemDefinitionData item_definition;
     }
 
     [Serializable]
