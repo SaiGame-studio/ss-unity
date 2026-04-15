@@ -164,7 +164,7 @@ namespace SaiGame.Services
             keyStyle.normal.textColor = tagColor;
             keyStyle.fontStyle = FontStyle.Bold;
             keyStyle.alignment = TextAnchor.MiddleRight;
-            EditorGUILayout.LabelField(foldoutKey.ToUpper(), keyStyle, GUILayout.MinWidth(80));
+            EditorGUILayout.LabelField(foldoutKey, keyStyle, GUILayout.MinWidth(80));
             EditorGUILayout.EndHorizontal();
 
             if (!this.tagFoldouts[foldoutKey])
@@ -188,17 +188,17 @@ namespace SaiGame.Services
             labelStyle.fontSize = 10;
             labelStyle.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
 
-            EditorGUILayout.LabelField($"KEY: {tag.tag_key}", labelStyle);
+            EditorGUILayout.LabelField($"key: {tag.tag_key}", labelStyle);
             if (!string.IsNullOrEmpty(tag.label))
-                EditorGUILayout.LabelField($"LABEL: {tag.label}", labelStyle);
-            EditorGUILayout.LabelField($"ITEMS: {tag.item_count}", labelStyle);
+                EditorGUILayout.LabelField($"label: {tag.label}", labelStyle);
+            EditorGUILayout.LabelField($"items: {tag.item_count}", labelStyle);
 
             // ID with copy
             GUIStyle idStyle = new GUIStyle(EditorStyles.label);
             idStyle.fontSize = 10;
             idStyle.normal.textColor = new Color(1f, 0.84f, 0f);
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField($"ID: {tag.id}", idStyle);
+            EditorGUILayout.LabelField($"id: {tag.id}", idStyle);
             if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = tag.id ?? "";
             EditorGUILayout.EndHorizontal();
 
@@ -207,7 +207,7 @@ namespace SaiGame.Services
             GUIStyle subIdStyle = new GUIStyle(EditorStyles.label);
             subIdStyle.fontSize = 10;
             subIdStyle.normal.textColor = new Color(0.55f, 0.55f, 0.55f);
-            EditorGUILayout.LabelField($"GAME: {tag.game_id}", subIdStyle);
+            EditorGUILayout.LabelField($"game: {tag.game_id}", subIdStyle);
             if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = tag.game_id ?? "";
             EditorGUILayout.EndHorizontal();
 
@@ -292,7 +292,7 @@ namespace SaiGame.Services
                 GUIStyle itemsHeader = new GUIStyle(EditorStyles.boldLabel);
                 itemsHeader.fontSize = 11;
                 itemsHeader.normal.textColor = new Color(0.7f, 0.9f, 1f);
-                EditorGUILayout.LabelField($"📦 ITEMS ({cachedItems.items.Length} / {cachedItems.total})", itemsHeader);
+                EditorGUILayout.LabelField($"📦 items ({cachedItems.items.Length} / {cachedItems.total})", itemsHeader);
 
                 EditorGUILayout.Space(3);
 
@@ -341,7 +341,7 @@ namespace SaiGame.Services
                 rarityStyle.normal.textColor = rarityColor;
                 rarityStyle.fontStyle = FontStyle.Bold;
                 rarityStyle.alignment = TextAnchor.MiddleRight;
-                EditorGUILayout.LabelField(item.definition.rarity.ToUpper(), rarityStyle, GUILayout.MinWidth(70));
+                EditorGUILayout.LabelField(item.definition.rarity, rarityStyle, GUILayout.MinWidth(70));
             }
             EditorGUILayout.EndHorizontal();
 
@@ -366,25 +366,25 @@ namespace SaiGame.Services
             if (item.definition != null)
             {
                 if (!string.IsNullOrEmpty(item.definition.item_code))
-                    EditorGUILayout.LabelField($"CODE: {item.definition.item_code}", labelStyle);
+                    EditorGUILayout.LabelField($"code: {item.definition.item_code}", labelStyle);
                 if (!string.IsNullOrEmpty(item.definition.category))
-                    EditorGUILayout.LabelField($"CATEGORY: {item.definition.category}", labelStyle);
-                EditorGUILayout.LabelField($"GRID: {item.grid_x}, {item.grid_y}", labelStyle);
-                EditorGUILayout.LabelField($"STACK: {(item.definition.is_stackable ? "yes" : "no")}  (max {item.definition.max_stack_size})", labelStyle);
+                    EditorGUILayout.LabelField($"category: {item.definition.category}", labelStyle);
+                EditorGUILayout.LabelField($"grid: {item.grid_x}, {item.grid_y}", labelStyle);
+                EditorGUILayout.LabelField($"stack: {(item.definition.is_stackable ? "yes" : "no")}  (max {item.definition.max_stack_size})", labelStyle);
             }
             else
             {
-                EditorGUILayout.LabelField($"GRID: {item.grid_x}, {item.grid_y}", labelStyle);
+                EditorGUILayout.LabelField($"grid: {item.grid_x}, {item.grid_y}", labelStyle);
             }
 
-            EditorGUILayout.LabelField($"LEVEL: {item.level}    QTY: {item.quantity}    v{item.version}", labelStyle);
+            EditorGUILayout.LabelField($"level: {item.level}    quantity: {item.quantity}    version: {item.version}", labelStyle);
 
             // Item ID with copy
             GUIStyle idStyle = new GUIStyle(EditorStyles.label);
             idStyle.fontSize = 10;
             idStyle.normal.textColor = new Color(1f, 0.84f, 0f);
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField($"ID: {item.id}", idStyle);
+            EditorGUILayout.LabelField($"id: {item.id}", idStyle);
             if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = item.id ?? "";
             EditorGUILayout.EndHorizontal();
 
@@ -393,7 +393,7 @@ namespace SaiGame.Services
             subIdStyle.fontSize = 10;
             subIdStyle.normal.textColor = new Color(0.7f, 0.9f, 1f);
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField($"DEF: {item.item_definition_id}", subIdStyle);
+            EditorGUILayout.LabelField($"definition: {item.item_definition_id}", subIdStyle);
             if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = item.item_definition_id ?? "";
             EditorGUILayout.EndHorizontal();
 
@@ -402,7 +402,7 @@ namespace SaiGame.Services
             GUIStyle containerStyle = new GUIStyle(EditorStyles.label);
             containerStyle.fontSize = 10;
             containerStyle.normal.textColor = new Color(0.55f, 0.55f, 0.55f);
-            EditorGUILayout.LabelField($"CONT: {item.item_container_id}", containerStyle);
+            EditorGUILayout.LabelField($"container: {item.item_container_id}", containerStyle);
             if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = item.item_container_id ?? "";
             EditorGUILayout.EndHorizontal();
 
@@ -422,7 +422,7 @@ namespace SaiGame.Services
 
         private void DrawColorBanner(string colorString, Color resolvedColor)
         {
-            string display = string.IsNullOrEmpty(colorString) ? "—" : colorString.ToUpper();
+            string display = string.IsNullOrEmpty(colorString) ? "—" : colorString;
 
             Rect line = EditorGUILayout.GetControlRect(false, 14);
             Rect swatch = new Rect(line.x, line.y + 2, 18, 10);
@@ -437,7 +437,7 @@ namespace SaiGame.Services
             labelStyle.fontSize = 10;
             labelStyle.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
             Rect textRect = new Rect(swatch.xMax + 6, line.y, line.width - swatch.width - 6, line.height);
-            GUI.Label(textRect, $"COLOR  {display}", labelStyle);
+            GUI.Label(textRect, $"color  {display}", labelStyle);
 
             EditorGUILayout.Space(2);
         }
