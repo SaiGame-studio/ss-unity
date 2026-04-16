@@ -10,7 +10,10 @@ namespace SaiGame.Services
     {
         private ItemPreset itemPreset;
         private SerializedProperty autoLoadOnLogin;
+        private SerializedProperty createMode;
+        private SerializedProperty codeName;
         private SerializedProperty definitionId;
+        private SerializedProperty presetName;
 
         private bool showCurrentPresets = true;
         private bool showPresetList = true;
@@ -25,7 +28,10 @@ namespace SaiGame.Services
         {
             this.itemPreset = (ItemPreset)target;
             this.autoLoadOnLogin = serializedObject.FindProperty("autoLoadOnLogin");
+            this.createMode = serializedObject.FindProperty("createMode");
+            this.codeName = serializedObject.FindProperty("codeName");
             this.definitionId = serializedObject.FindProperty("definitionId");
+            this.presetName = serializedObject.FindProperty("presetName");
         }
 
         public override void OnInspectorGUI()
@@ -41,30 +47,35 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Create Preset Input", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Get Definition ID from admin /games/id/items (tab preset)", MessageType.Info);
+            EditorGUILayout.HelpBox("pick create mode: code name or definition id (from admin /games/id/items, tab preset)", MessageType.Info);
+
+            EditorGUILayout.PropertyField(this.createMode,
+                new GUIContent("create mode", "Choose whether to create the preset by code_name or definition_id"));
+
+            ItemPreset.CreatePresetMode mode = (ItemPreset.CreatePresetMode)this.createMode.enumValueIndex;
+
+            if (mode == ItemPreset.CreatePresetMode.CodeName)
+            {
+                this.codeName.stringValue = EditorGUILayout.TextField(
+                    new GUIContent("code name", "Preset definition code_name (e.g. deck_492)"),
+                    this.codeName.stringValue);
+            }
+            else
+            {
+                this.definitionId.stringValue = EditorGUILayout.TextField(
+                    new GUIContent("definition id", "Preset definition id (uuid)"),
+                    this.definitionId.stringValue);
+            }
+
             EditorGUILayout.BeginHorizontal();
-            
-            this.definitionId.stringValue = EditorGUILayout.TextField(
-                new GUIContent("Definition ID", "Get Definition ID from admin /games/id/items (tab preset)"),
-                this.definitionId.stringValue);
-            
+            this.presetName.stringValue = EditorGUILayout.TextField(
+                new GUIContent("preset name", "Optional display name for the new preset"),
+                this.presetName.stringValue);
+
             GUI.backgroundColor = Color.green;
             if (GUILayout.Button("Create", GUILayout.Width(60)))
             {
-                this.itemPreset.CreatePreset(
-                    this.definitionId.stringValue,
-                    onSuccess: preset =>
-                    {
-                        if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                            Debug.Log($"[Editor] Preset created! ID: {preset.id} | Type: {preset.preset_type} | Max Slots: {preset.max_slots}");
-                        Repaint();
-                    },
-                    onError: error =>
-                    {
-                        if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                            Debug.LogError($"[Editor] Create preset failed: {error}");
-                    }
-                );
+                this.InvokeCreatePreset(mode);
             }
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
@@ -147,20 +158,7 @@ namespace SaiGame.Services
                 GUI.backgroundColor = Color.green;
                 if (GUILayout.Button("Create Preset", GUILayout.Height(30)))
                 {
-                    this.itemPreset.CreatePreset(
-                        this.definitionId.stringValue,
-                        onSuccess: preset =>
-                        {
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                                Debug.Log($"[Editor] Preset created! ID: {preset.id} | Type: {preset.preset_type} | Max Slots: {preset.max_slots}");
-                            Repaint();
-                        },
-                        onError: error =>
-                        {
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                                Debug.LogError($"[Editor] Create preset failed: {error}");
-                        }
-                    );
+                    this.InvokeCreatePreset((ItemPreset.CreatePresetMode)this.createMode.enumValueIndex);
                 }
                 GUI.backgroundColor = Color.white;
 
@@ -201,6 +199,39 @@ namespace SaiGame.Services
             serializedObject.ApplyModifiedProperties();
         }
 
+        private void InvokeCreatePreset(ItemPreset.CreatePresetMode mode)
+        {
+            System.Action<PresetData> onSuccess = preset =>
+            {
+                if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    Debug.Log($"[Editor] Preset created! ID: {preset.id} | Type: {preset.preset_type} | Max Slots: {preset.max_slots}");
+                Repaint();
+            };
+
+            System.Action<string> onError = error =>
+            {
+                if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    Debug.LogError($"[Editor] Create preset failed: {error}");
+            };
+
+            if (mode == ItemPreset.CreatePresetMode.CodeName)
+            {
+                this.itemPreset.CreatePresetByCodeName(
+                    this.codeName.stringValue,
+                    this.presetName.stringValue,
+                    onSuccess,
+                    onError);
+            }
+            else
+            {
+                this.itemPreset.CreatePresetByDefinitionId(
+                    this.definitionId.stringValue,
+                    this.presetName.stringValue,
+                    onSuccess,
+                    onError);
+            }
+        }
+
         private void DrawPresetSummary(PresetData preset)
         {
             string presetId = string.IsNullOrEmpty(preset.id) ? "unknown" : preset.id;
@@ -210,218 +241,435 @@ namespace SaiGame.Services
                 this.presetFoldouts[presetId] = isExpanded;
             }
 
-            string displayName = preset.definition != null && !string.IsNullOrEmpty(preset.definition.name) 
-                ? preset.definition.name 
-                : $"Preset: {preset.id}";
+            string displayName = !string.IsNullOrEmpty(preset.name)
+                ? preset.name
+                : (preset.definition != null && !string.IsNullOrEmpty(preset.definition.name)
+                    ? preset.definition.name
+                    : $"Preset: {preset.id}");
+
+            int slotCount = preset.slots != null ? preset.slots.Length : 0;
 
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            
-            this.presetFoldouts[presetId] = EditorGUILayout.Foldout(isExpanded, displayName, true, EditorStyles.foldoutHeader);
-            
-            if (this.presetFoldouts[presetId])
+
+            // === COLLAPSIBLE HEADER ===
+            string headerLabel = $"★ {displayName}  [{slotCount}/{preset.max_slots}]";
+
+            Color typeColor = this.GetPresetTypeColor(preset.preset_type);
+            GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
+            foldoutStyle.fontSize = 13;
+            foldoutStyle.fontStyle = FontStyle.Bold;
+            foldoutStyle.normal.textColor = typeColor;
+            foldoutStyle.onNormal.textColor = typeColor;
+            foldoutStyle.focused.textColor = typeColor;
+            foldoutStyle.onFocused.textColor = typeColor;
+            foldoutStyle.active.textColor = typeColor;
+            foldoutStyle.onActive.textColor = typeColor;
+
+            EditorGUILayout.BeginHorizontal();
+            this.presetFoldouts[presetId] = EditorGUILayout.Foldout(isExpanded, headerLabel, true, foldoutStyle);
+
+            // Type badge (right-aligned)
+            if (!string.IsNullOrEmpty(preset.preset_type))
             {
-                EditorGUI.indentLevel++;
-                
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField($"ID: {preset.id}");
-                if (GUILayout.Button("Copy", GUILayout.Width(50)))
-                    GUIUtility.systemCopyBuffer = preset.id;
-                GUI.backgroundColor = Color.cyan;
-                if (GUILayout.Button("Get", GUILayout.Width(60)))
-                {
-                    this.itemPreset.GetPreset(preset.id, 
-                        onSuccess: updatedPreset => 
+                GUIStyle typeBadgeStyle = new GUIStyle(EditorStyles.label);
+                typeBadgeStyle.fontSize = 11;
+                typeBadgeStyle.fontStyle = FontStyle.Bold;
+                typeBadgeStyle.normal.textColor = typeColor;
+                typeBadgeStyle.alignment = TextAnchor.MiddleRight;
+                EditorGUILayout.LabelField(preset.preset_type.ToUpper(), typeBadgeStyle, GUILayout.MinWidth(70));
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (!this.presetFoldouts[presetId])
+            {
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space(4);
+                return;
+            }
+
+            // Separator
+            GUIStyle separatorStyle = new GUIStyle(EditorStyles.label);
+            separatorStyle.fontSize = 8;
+            separatorStyle.normal.textColor = new Color(0.3f, 0.3f, 0.3f);
+            EditorGUILayout.LabelField("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", separatorStyle);
+
+            // === PRESET TYPE BANNER ===
+            this.DrawPresetTypeBanner(preset.preset_type, preset.is_temp);
+
+            // === COMPACT INFO ===
+            GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
+            labelStyle.fontSize = 10;
+            labelStyle.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
+
+            GUIStyle idStyle = new GUIStyle(EditorStyles.label);
+            idStyle.fontSize = 10;
+            idStyle.normal.textColor = new Color(1f, 0.84f, 0f);
+
+            if (!string.IsNullOrEmpty(preset.name))
+                EditorGUILayout.LabelField($"NAME: {preset.name}", labelStyle);
+            EditorGUILayout.LabelField($"MAX SLOTS: {preset.max_slots}    USED: {slotCount}    IS TEMP: {preset.is_temp}", labelStyle);
+            if (!string.IsNullOrEmpty(preset.created_at))
+                EditorGUILayout.LabelField($"CREATED: {preset.created_at}", labelStyle);
+            if (!string.IsNullOrEmpty(preset.updated_at))
+                EditorGUILayout.LabelField($"UPDATED: {preset.updated_at}", labelStyle);
+
+            // Preset ID + actions
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"ID: {preset.id}", idStyle);
+            if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                GUIUtility.systemCopyBuffer = preset.id;
+            GUI.backgroundColor = new Color(0.3f, 0.8f, 1f);
+            if (GUILayout.Button("🔄 Get", GUILayout.Width(70)))
+            {
+                this.itemPreset.GetPreset(preset.id,
+                    onSuccess: updatedPreset =>
+                    {
+                        if (this.itemPreset.CurrentPresets != null && this.itemPreset.CurrentPresets.containers != null)
                         {
+                            for (int i = 0; i < this.itemPreset.CurrentPresets.containers.Length; i++)
+                            {
+                                if (this.itemPreset.CurrentPresets.containers[i].id == updatedPreset.id)
+                                {
+                                    this.itemPreset.CurrentPresets.containers[i] = updatedPreset;
+                                    break;
+                                }
+                            }
+                        }
+                        if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                            Debug.Log($"[Editor] Refreshed preset {preset.id} from server");
+                        Repaint();
+                    },
+                    onError: err =>
+                    {
+                        if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                            Debug.LogError($"[Editor] Failed to refresh preset: {err}");
+                    }
+                );
+            }
+            GUI.backgroundColor = Color.white;
+            EditorGUILayout.EndHorizontal();
+
+            // Definition ID
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"DEF: {preset.definition_id}", labelStyle);
+            if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                GUIUtility.systemCopyBuffer = preset.definition_id;
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(6);
+
+            // === DEFINITION CARD ===
+            if (preset.definition != null)
+            {
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+                GUIStyle defHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
+                defHeaderStyle.fontSize = 11;
+                defHeaderStyle.normal.textColor = new Color(0.7f, 0.9f, 1f);
+                EditorGUILayout.LabelField("📐 DEFINITION", defHeaderStyle);
+
+                EditorGUILayout.Space(2);
+
+                GUIStyle defValueStyle = new GUIStyle(EditorStyles.label);
+                defValueStyle.fontSize = 10;
+                defValueStyle.normal.textColor = new Color(0.85f, 0.85f, 0.85f);
+
+                if (!string.IsNullOrEmpty(preset.definition.name))
+                    EditorGUILayout.LabelField($"Name: {preset.definition.name}", defValueStyle);
+                if (!string.IsNullOrEmpty(preset.definition.code_name))
+                    EditorGUILayout.LabelField($"Code Name: {preset.definition.code_name}", defValueStyle);
+                EditorGUILayout.LabelField($"Type: {preset.definition.preset_type}    Max Slots: {preset.definition.max_slots}", defValueStyle);
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"Def ID: {preset.definition.id}", labelStyle);
+                if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                    GUIUtility.systemCopyBuffer = preset.definition.id;
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.EndVertical();
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("No Definition payload received", MessageType.Warning);
+            }
+
+            EditorGUILayout.Space(6);
+
+            // === SLOTS SECTION ===
+            GUIStyle slotsHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
+            slotsHeaderStyle.fontSize = 11;
+            slotsHeaderStyle.normal.textColor = new Color(0.7f, 0.9f, 1f);
+            EditorGUILayout.LabelField($"🎰 PRESET SLOTS ({slotCount}/{preset.max_slots})", slotsHeaderStyle);
+            EditorGUILayout.Space(3);
+
+            if (preset.slots != null && preset.slots.Length > 0)
+            {
+                PlayerItem pItemInfo = FindObjectOfType<PlayerItem>();
+                var sortedSlots = System.Linq.Enumerable.OrderBy(preset.slots, s => s.slot_index).ToArray();
+
+                foreach (var slot in sortedSlots)
+                {
+                    string slotKey = $"{preset.id}_{slot.slot_index}";
+                    if (!this.presetSlotFoldouts.ContainsKey(slotKey))
+                        this.presetSlotFoldouts[slotKey] = false;
+
+                    InventoryItemData itemInfo = null;
+                    if (pItemInfo != null && pItemInfo.CurrentInventory != null && pItemInfo.CurrentInventory.items != null)
+                    {
+                        itemInfo = System.Array.Find(pItemInfo.CurrentInventory.items, i => i.id == slot.inventory_item_id);
+                    }
+
+                    string itemName = (itemInfo != null && itemInfo.definition != null && !string.IsNullOrEmpty(itemInfo.definition.name))
+                        ? itemInfo.definition.name
+                        : "Unknown Item";
+
+                    Color slotRarityColor = (itemInfo != null && itemInfo.definition != null)
+                        ? this.GetRarityColor(itemInfo.definition.rarity)
+                        : new Color(0.7f, 0.7f, 0.7f);
+
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+                    GUIStyle slotFoldoutStyle = new GUIStyle(EditorStyles.foldout);
+                    slotFoldoutStyle.fontSize = 12;
+                    slotFoldoutStyle.fontStyle = FontStyle.Bold;
+                    slotFoldoutStyle.normal.textColor = slotRarityColor;
+                    slotFoldoutStyle.onNormal.textColor = slotRarityColor;
+                    slotFoldoutStyle.focused.textColor = slotRarityColor;
+                    slotFoldoutStyle.onFocused.textColor = slotRarityColor;
+                    slotFoldoutStyle.active.textColor = slotRarityColor;
+                    slotFoldoutStyle.onActive.textColor = slotRarityColor;
+
+                    string slotDisplayName = $"🎯 Slot {slot.slot_index}  ·  {itemName}";
+                    if (itemInfo != null)
+                        slotDisplayName += $"  ×{itemInfo.quantity}";
+
+                    EditorGUILayout.BeginHorizontal();
+                    this.presetSlotFoldouts[slotKey] = EditorGUILayout.Foldout(this.presetSlotFoldouts[slotKey], slotDisplayName, true, slotFoldoutStyle);
+
+                    if (itemInfo != null && itemInfo.definition != null && !string.IsNullOrEmpty(itemInfo.definition.rarity))
+                    {
+                        GUIStyle rarityBadge = new GUIStyle(EditorStyles.label);
+                        rarityBadge.fontSize = 10;
+                        rarityBadge.fontStyle = FontStyle.Bold;
+                        rarityBadge.normal.textColor = slotRarityColor;
+                        rarityBadge.alignment = TextAnchor.MiddleRight;
+                        EditorGUILayout.LabelField(itemInfo.definition.rarity.ToUpper(), rarityBadge, GUILayout.MinWidth(70));
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    if (this.presetSlotFoldouts[slotKey])
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.LabelField($"Inventory ID: {slot.inventory_item_id}", labelStyle);
+                        if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                            GUIUtility.systemCopyBuffer = slot.inventory_item_id;
+                        EditorGUILayout.EndHorizontal();
+
+                        if (itemInfo != null)
+                        {
+                            GUIStyle slotValueStyle = new GUIStyle(EditorStyles.label);
+                            slotValueStyle.fontSize = 10;
+                            slotValueStyle.normal.textColor = new Color(0.85f, 0.85f, 0.85f);
+                            EditorGUILayout.LabelField($"Quantity: {itemInfo.quantity}", slotValueStyle);
+
+                            if (itemInfo.definition != null)
+                            {
+                                EditorGUILayout.BeginHorizontal();
+                                EditorGUILayout.LabelField($"Def ID: {itemInfo.definition.id}", labelStyle);
+                                if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                                    GUIUtility.systemCopyBuffer = itemInfo.definition.id;
+                                EditorGUILayout.EndHorizontal();
+                                EditorGUILayout.LabelField($"Category: {itemInfo.definition.category}", slotValueStyle);
+                                EditorGUILayout.LabelField($"Item Code: {itemInfo.definition.item_code}", slotValueStyle);
+                            }
+                        }
+                        else
+                        {
+                            EditorGUILayout.HelpBox("Full item data not found in PlayerItem inventory. Click 'Sync Player Inventory'.", MessageType.None);
+                        }
+                    }
+                    EditorGUILayout.EndVertical();
+                    EditorGUILayout.Space(2);
+                }
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("No items in this preset.", MessageType.None);
+            }
+
+            EditorGUILayout.Space(6);
+
+            // === ADD ITEM TO SLOT ===
+            GUIStyle addHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
+            addHeaderStyle.fontSize = 11;
+            addHeaderStyle.normal.textColor = new Color(0.4f, 1f, 0.6f);
+            EditorGUILayout.LabelField("➕ ADD ITEM TO SLOT", addHeaderStyle);
+
+            PlayerItem playerItem = FindObjectOfType<PlayerItem>();
+            if (playerItem == null || playerItem.CurrentInventory == null || playerItem.CurrentInventory.items == null || playerItem.CurrentInventory.items.Length == 0)
+            {
+                EditorGUILayout.HelpBox("No PlayerItem or Inventory data found. Click 'Sync Player Inventory' under Utility Actions first.", MessageType.Warning);
+            }
+            else
+            {
+                var items = playerItem.CurrentInventory.items;
+                string[] options = new string[items.Length];
+                for (int i = 0; i < items.Length; i++)
+                {
+                    string name = items[i].definition != null && !string.IsNullOrEmpty(items[i].definition.name)
+                        ? items[i].definition.name
+                        : "Unknown";
+                    options[i] = $"{name} (x{items[i].quantity}) - {items[i].id}";
+                }
+
+                if (!this.presetDropdownIndices.ContainsKey(presetId))
+                    this.presetDropdownIndices[presetId] = 0;
+
+                if (!this.presetSlotIndices.ContainsKey(presetId))
+                    this.presetSlotIndices[presetId] = 0;
+
+                int selectedIndex = this.presetDropdownIndices[presetId];
+                if (selectedIndex >= items.Length) selectedIndex = 0;
+
+                this.presetSlotIndices[presetId] = EditorGUILayout.IntField("Target Slot Index:", this.presetSlotIndices[presetId]);
+
+                EditorGUILayout.BeginHorizontal();
+                this.presetDropdownIndices[presetId] = EditorGUILayout.Popup(selectedIndex, options);
+
+                GUI.backgroundColor = new Color(0.3f, 0.9f, 0.5f);
+                if (GUILayout.Button("Add", GUILayout.Width(60), GUILayout.Height(22)))
+                {
+                    string selectedInventoryId = items[this.presetDropdownIndices[presetId]].id;
+                    int selectedSlotIndex = this.presetSlotIndices[presetId];
+                    this.itemPreset.AddItemToPreset(preset.id, selectedSlotIndex, selectedInventoryId,
+                        onSuccess: p =>
+                        {
+                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                                Debug.Log($"[Editor] Item {selectedInventoryId} added to preset {preset.id} at slot {selectedSlotIndex}");
+
                             if (this.itemPreset.CurrentPresets != null && this.itemPreset.CurrentPresets.containers != null)
                             {
-                                for (int i = 0; i < this.itemPreset.CurrentPresets.containers.Length; i++)
+                                for (int j = 0; j < this.itemPreset.CurrentPresets.containers.Length; j++)
                                 {
-                                    if (this.itemPreset.CurrentPresets.containers[i].id == updatedPreset.id)
+                                    if (this.itemPreset.CurrentPresets.containers[j].id == p.id)
                                     {
-                                        this.itemPreset.CurrentPresets.containers[i] = updatedPreset;
+                                        this.itemPreset.CurrentPresets.containers[j] = p;
                                         break;
                                     }
                                 }
                             }
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                                Debug.Log($"[Editor] Refreshed preset {preset.id} from server");
                             Repaint();
                         },
-                        onError: err => 
+                        onError: err =>
                         {
                             if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                                Debug.LogError($"[Editor] Failed to refresh preset: {err}");
+                                Debug.LogError($"[Editor] Failed to add item: {err}");
                         }
                     );
                 }
                 GUI.backgroundColor = Color.white;
                 EditorGUILayout.EndHorizontal();
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField($"Definition ID: {preset.definition_id}");
-                if (GUILayout.Button("Copy", GUILayout.Width(50)))
-                    GUIUtility.systemCopyBuffer = preset.definition_id;
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.LabelField($"Type: {preset.preset_type}  |  Max Slots: {preset.max_slots}  |  Is Temp: {preset.is_temp}");
-                EditorGUILayout.LabelField($"Created: {preset.created_at}");
-
-                if (preset.definition != null)
-                {
-                    EditorGUILayout.Space(5);
-                    EditorGUILayout.LabelField("Definition Variables", EditorStyles.boldLabel);
-                    EditorGUILayout.LabelField($"Name: {preset.definition.name}");
-                    EditorGUILayout.LabelField($"Type: {preset.definition.preset_type}");
-                    EditorGUILayout.LabelField($"Max Slots: {preset.definition.max_slots}");
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.LabelField($"Def ID: {preset.definition.id}");
-                    if (GUILayout.Button("Copy", GUILayout.Width(50)))
-                        GUIUtility.systemCopyBuffer = preset.definition.id;
-                    EditorGUILayout.EndHorizontal();
-                }
-                else
-                {
-                    EditorGUILayout.LabelField("Warning: No Definition payload received", EditorStyles.miniLabel);
-                }
-
-                EditorGUILayout.Space(5);
-                EditorGUILayout.LabelField("Preset Slots", EditorStyles.boldLabel);
-                if (preset.slots != null && preset.slots.Length > 0)
-                {
-                    PlayerItem pItemInfo = FindObjectOfType<PlayerItem>();
-                    var sortedSlots = System.Linq.Enumerable.OrderBy(preset.slots, s => s.slot_index).ToArray();
-
-                    foreach (var slot in sortedSlots)
-                    {
-                        string slotKey = $"{preset.id}_{slot.slot_index}";
-                        if (!this.presetSlotFoldouts.ContainsKey(slotKey))
-                            this.presetSlotFoldouts[slotKey] = false;
-
-                        InventoryItemData itemInfo = null;
-                        if (pItemInfo != null && pItemInfo.CurrentInventory != null && pItemInfo.CurrentInventory.items != null)
-                        {
-                            itemInfo = System.Array.Find(pItemInfo.CurrentInventory.items, i => i.id == slot.inventory_item_id);
-                        }
-
-                        string itemName = (itemInfo != null && itemInfo.definition != null && !string.IsNullOrEmpty(itemInfo.definition.name)) 
-                            ? itemInfo.definition.name 
-                            : "Unknown Item";
-                        
-                        string slotDisplayName = $"[Slot {slot.slot_index}] {itemName}";
-
-                        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                        this.presetSlotFoldouts[slotKey] = EditorGUILayout.Foldout(this.presetSlotFoldouts[slotKey], slotDisplayName, true, EditorStyles.foldoutHeader);
-
-                        if (this.presetSlotFoldouts[slotKey])
-                        {
-                            EditorGUI.indentLevel++;
-                            EditorGUILayout.BeginHorizontal();
-                            EditorGUILayout.LabelField($"Inventory ID: {slot.inventory_item_id}");
-                            if (GUILayout.Button("Copy", GUILayout.Width(50)))
-                                GUIUtility.systemCopyBuffer = slot.inventory_item_id;
-                            EditorGUILayout.EndHorizontal();
-                            
-                            if (itemInfo != null)
-                            {
-                                EditorGUILayout.LabelField($"Quantity: {itemInfo.quantity}");
-                                if (itemInfo.definition != null)
-                                {
-                                    EditorGUILayout.BeginHorizontal();
-                                    EditorGUILayout.LabelField($"Def ID: {itemInfo.definition.id}");
-                                    if (GUILayout.Button("Copy", GUILayout.Width(50)))
-                                        GUIUtility.systemCopyBuffer = itemInfo.definition.id;
-                                    EditorGUILayout.EndHorizontal();
-                                    EditorGUILayout.LabelField($"Category: {itemInfo.definition.category}");
-                                    EditorGUILayout.LabelField($"Rarity: {itemInfo.definition.rarity}");
-                                    EditorGUILayout.LabelField($"Item Code: {itemInfo.definition.item_code}");
-                                }
-                            }
-                            else
-                            {
-                                EditorGUILayout.LabelField("Full item data not found in PlayerItem inventory.", EditorStyles.miniLabel);
-                            }
-                            EditorGUI.indentLevel--;
-                        }
-                        EditorGUILayout.EndVertical();
-                    }
-                }
-                else
-                {
-                    EditorGUILayout.HelpBox("No items in this preset.", MessageType.None);
-                }
-
-                EditorGUILayout.Space(5);
-                EditorGUILayout.LabelField("Add Item to Slot", EditorStyles.boldLabel);
-
-                PlayerItem playerItem = FindObjectOfType<PlayerItem>();
-                if (playerItem == null || playerItem.CurrentInventory == null || playerItem.CurrentInventory.items == null || playerItem.CurrentInventory.items.Length == 0)
-                {
-                    EditorGUILayout.HelpBox("No PlayerItem or Inventory data found. Click 'Sync Player Inventory' under Utility Actions first.", MessageType.Warning);
-                }
-                else
-                {
-                    var items = playerItem.CurrentInventory.items;
-                    string[] options = new string[items.Length];
-                    for (int i = 0; i < items.Length; i++)
-                    {
-                        string name = items[i].definition != null && !string.IsNullOrEmpty(items[i].definition.name) 
-                            ? items[i].definition.name 
-                            : "Unknown";
-                        options[i] = $"{name} (x{items[i].quantity}) - {items[i].id}";
-                    }
-
-                    if (!this.presetDropdownIndices.ContainsKey(presetId))
-                        this.presetDropdownIndices[presetId] = 0;
-                        
-                    if (!this.presetSlotIndices.ContainsKey(presetId))
-                        this.presetSlotIndices[presetId] = 0;
-
-                    int selectedIndex = this.presetDropdownIndices[presetId];
-                    if (selectedIndex >= items.Length) selectedIndex = 0;
-
-                    this.presetSlotIndices[presetId] = EditorGUILayout.IntField("Target Slot Index:", this.presetSlotIndices[presetId]);
-
-                    EditorGUILayout.BeginHorizontal();
-                    this.presetDropdownIndices[presetId] = EditorGUILayout.Popup(selectedIndex, options);
-                    
-                    GUI.backgroundColor = Color.green;
-                    if (GUILayout.Button("Add", GUILayout.Width(60)))
-                    {
-                        string selectedInventoryId = items[this.presetDropdownIndices[presetId]].id;
-                        int selectedSlotIndex = this.presetSlotIndices[presetId];
-                        this.itemPreset.AddItemToPreset(preset.id, selectedSlotIndex, selectedInventoryId, 
-                            onSuccess: p => 
-                            {
-                                if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                                    Debug.Log($"[Editor] Item {selectedInventoryId} added to preset {preset.id} at slot {selectedSlotIndex}");
-                                
-                                // Update the specific preset inside the current list
-                                if (this.itemPreset.CurrentPresets != null && this.itemPreset.CurrentPresets.containers != null)
-                                {
-                                    for (int j = 0; j < this.itemPreset.CurrentPresets.containers.Length; j++)
-                                    {
-                                        if (this.itemPreset.CurrentPresets.containers[j].id == p.id)
-                                        {
-                                            this.itemPreset.CurrentPresets.containers[j] = p;
-                                            break;
-                                        }
-                                    }
-                                }
-                                Repaint();
-                            }, 
-                            onError: err => 
-                            {
-                                if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                                    Debug.LogError($"[Editor] Failed to add item: {err}");
-                            }
-                        );
-                    }
-                    GUI.backgroundColor = Color.white;
-                    EditorGUILayout.EndHorizontal();
-                }
-                
-                EditorGUI.indentLevel--;
             }
-            
+
             EditorGUILayout.EndVertical();
+            EditorGUILayout.Space(4);
+        }
+
+        private void DrawPresetTypeBanner(string presetType, bool isTemp)
+        {
+            string dest = string.IsNullOrEmpty(presetType) ? "unknown" : presetType.ToLower();
+
+            string icon;
+            Color bg;
+            Color fg;
+
+            switch (dest)
+            {
+                case "desk":
+                    icon = "🃏";
+                    bg = new Color(0.15f, 0.45f, 0.85f);
+                    fg = Color.white;
+                    break;
+                case "loadout":
+                case "equipment":
+                    icon = "⚔";
+                    bg = new Color(0.6f, 0.25f, 0.75f);
+                    fg = Color.white;
+                    break;
+                case "hotbar":
+                    icon = "🎮";
+                    bg = new Color(0.85f, 0.55f, 0.15f);
+                    fg = Color.white;
+                    break;
+                default:
+                    icon = "📋";
+                    bg = new Color(0.35f, 0.55f, 0.45f);
+                    fg = Color.white;
+                    break;
+            }
+
+            string label = $"{icon} {dest.ToUpper()}" + (isTemp ? " · TEMP" : "");
+
+            GUIContent labelContent = new GUIContent(label);
+            GUIStyle bannerStyle = new GUIStyle(GUI.skin.label);
+            bannerStyle.fontSize = 10;
+            bannerStyle.fontStyle = FontStyle.Bold;
+            bannerStyle.alignment = TextAnchor.MiddleLeft;
+            bannerStyle.normal.textColor = fg;
+            bannerStyle.padding = new RectOffset(8, 8, 0, 0);
+
+            float pillWidth = bannerStyle.CalcSize(labelContent).x + 16;
+            Rect bannerRect = EditorGUILayout.GetControlRect(false, 16, GUILayout.Width(pillWidth));
+
+            EditorGUI.DrawRect(bannerRect, bg);
+            EditorGUI.DrawRect(new Rect(bannerRect.x, bannerRect.y, 3, bannerRect.height), new Color(1f, 1f, 1f, 0.65f));
+
+            GUI.Label(bannerRect, labelContent, bannerStyle);
+
+            EditorGUILayout.Space(3);
+        }
+
+        private Color GetPresetTypeColor(string presetType)
+        {
+            if (string.IsNullOrEmpty(presetType))
+                return Color.white;
+
+            switch (presetType.ToLower())
+            {
+                case "desk":
+                    return new Color(0.3f, 0.7f, 1f);
+                case "loadout":
+                case "equipment":
+                    return new Color(0.85f, 0.45f, 1f);
+                case "hotbar":
+                    return new Color(1f, 0.75f, 0.3f);
+                default:
+                    return new Color(0.5f, 0.9f, 0.7f);
+            }
+        }
+
+        private Color GetRarityColor(string rarity)
+        {
+            if (string.IsNullOrEmpty(rarity))
+                return Color.white;
+
+            switch (rarity.ToLower())
+            {
+                case "common":
+                    return new Color(0.7f, 0.7f, 0.7f);
+                case "uncommon":
+                    return new Color(0.3f, 1f, 0.3f);
+                case "rare":
+                    return new Color(0.3f, 0.6f, 1f);
+                case "epic":
+                    return new Color(0.8f, 0.3f, 1f);
+                case "legendary":
+                    return new Color(1f, 0.6f, 0f);
+                case "mythic":
+                    return new Color(1f, 0.3f, 0.3f);
+                default:
+                    return Color.white;
+            }
         }
     }
 }

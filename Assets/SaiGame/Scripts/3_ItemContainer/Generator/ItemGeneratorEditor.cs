@@ -775,27 +775,25 @@ namespace SaiGame.Services
                     break;
             }
 
-            string label = $"{icon}  COLLECT → {dest.ToUpper()}" + (isDefaulted ? "  (default)" : "");
+            string label = $"{icon} {dest.ToUpper()}" + (isDefaulted ? " · default" : "");
 
-            Rect bannerRect = EditorGUILayout.GetControlRect(false, 28);
-
-            // Shadow for depth
-            EditorGUI.DrawRect(new Rect(bannerRect.x + 1, bannerRect.y + 1, bannerRect.width, bannerRect.height), new Color(0f, 0f, 0f, 0.35f));
-            // Background
-            EditorGUI.DrawRect(bannerRect, bg);
-            // Accent stripe on the left
-            EditorGUI.DrawRect(new Rect(bannerRect.x, bannerRect.y, 4, bannerRect.height), new Color(1f, 1f, 1f, 0.65f));
-
+            GUIContent labelContent = new GUIContent(label);
             GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
-            labelStyle.fontSize = 13;
+            labelStyle.fontSize = 10;
             labelStyle.fontStyle = FontStyle.Bold;
             labelStyle.alignment = TextAnchor.MiddleLeft;
             labelStyle.normal.textColor = fg;
-            labelStyle.padding = new RectOffset(12, 8, 0, 0);
+            labelStyle.padding = new RectOffset(8, 8, 0, 0);
 
-            GUI.Label(bannerRect, label, labelStyle);
+            float pillWidth = labelStyle.CalcSize(labelContent).x + 16;
+            Rect bannerRect = EditorGUILayout.GetControlRect(false, 16, GUILayout.Width(pillWidth));
 
-            EditorGUILayout.Space(6);
+            EditorGUI.DrawRect(bannerRect, bg);
+            EditorGUI.DrawRect(new Rect(bannerRect.x, bannerRect.y, 3, bannerRect.height), new Color(1f, 1f, 1f, 0.65f));
+
+            GUI.Label(bannerRect, labelContent, labelStyle);
+
+            EditorGUILayout.Space(3);
         }
 
         private Color GetRarityColor(string rarity)

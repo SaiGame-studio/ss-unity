@@ -19,8 +19,13 @@ namespace SaiGame.Services
         [Header("Current Preset Data")]
         [SerializeField] protected PresetResponse currentPresets;
 
+        public enum CreatePresetMode { CodeName, DefinitionId }
+
         [Header("Create Preset Input")]
+        [SerializeField] protected CreatePresetMode createMode = CreatePresetMode.CodeName;
+        [SerializeField] protected string codeName = "";
         [SerializeField] protected string definitionId = "";
+        [SerializeField] protected string presetName = "";
 
         public PresetResponse CurrentPresets => this.currentPresets;
         public bool HasPresets => this.currentPresets != null
@@ -93,10 +98,30 @@ namespace SaiGame.Services
         /// Creates a new preset from the given definition.
         /// Endpoint: POST /api/v1/games/{game_id}/presets
         /// </summary>
-        public void CreatePreset(
-            string definitionId,
+        public void CreatePresetByCodeName(
+            string codeName,
+            string name,
             System.Action<PresetData> onSuccess = null,
             System.Action<string> onError = null)
+        {
+            this.CreatePresetInternal(CreatePresetMode.CodeName, codeName, name, onSuccess, onError);
+        }
+
+        public void CreatePresetByDefinitionId(
+            string definitionId,
+            string name,
+            System.Action<PresetData> onSuccess = null,
+            System.Action<string> onError = null)
+        {
+            this.CreatePresetInternal(CreatePresetMode.DefinitionId, definitionId, name, onSuccess, onError);
+        }
+
+        private void CreatePresetInternal(
+            CreatePresetMode mode,
+            string identifier,
+            string name,
+            System.Action<PresetData> onSuccess,
+            System.Action<string> onError)
         {
             if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFCC><b>[ItemPreset] ► Create Preset</b></color>", gameObject);
@@ -113,26 +138,45 @@ namespace SaiGame.Services
                 return;
             }
 
-            if (string.IsNullOrEmpty(definitionId))
+            if (string.IsNullOrEmpty(identifier))
             {
-                onError?.Invoke("definition_id cannot be empty.");
+                string fieldName = mode == CreatePresetMode.CodeName ? "code_name" : "definition_id";
+                onError?.Invoke($"{fieldName} cannot be empty.");
                 return;
             }
 
-            StartCoroutine(this.CreatePresetCoroutine(definitionId, onSuccess, onError));
+            StartCoroutine(this.CreatePresetCoroutine(mode, identifier, name, onSuccess, onError));
+        }
+
+        private static string EscapeJsonString(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+            return value
+                .Replace("\\", "\\\\")
+                .Replace("\"", "\\\"")
+                .Replace("\n", "\\n")
+                .Replace("\r", "\\r")
+                .Replace("\t", "\\t");
         }
 
         private IEnumerator CreatePresetCoroutine(
-            string definitionId,
+            CreatePresetMode mode,
+            string identifier,
+            string name,
             System.Action<PresetData> onSuccess,
             System.Action<string> onError)
         {
             string gameId = SaiService.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/presets";
-            string jsonData = $"{{\"definition_id\":\"{definitionId}\"}}";
+
+            string idKey = mode == CreatePresetMode.CodeName ? "code_name" : "definition_id";
+            string escapedIdentifier = EscapeJsonString(identifier);
+            string jsonData = string.IsNullOrEmpty(name)
+                ? $"{{\"{idKey}\":\"{escapedIdentifier}\"}}"
+                : $"{{\"{idKey}\":\"{escapedIdentifier}\",\"name\":\"{EscapeJsonString(name)}\"}}";
 
             if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
-                Debug.Log($"[ItemPreset] Creating preset with definition_id: {definitionId}");
+                Debug.Log($"[ItemPreset] Creating preset with {idKey}: {identifier} | name: {name}");
 
             yield return SaiService.Instance.PostRequest(endpoint, jsonData,
                 response =>
