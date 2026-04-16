@@ -54,6 +54,9 @@ namespace SaiGame.Services
 
             ItemPreset.CreatePresetMode mode = (ItemPreset.CreatePresetMode)this.createMode.enumValueIndex;
 
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.BeginVertical();
             if (mode == ItemPreset.CreatePresetMode.CodeName)
             {
                 this.codeName.stringValue = EditorGUILayout.TextField(
@@ -67,17 +70,18 @@ namespace SaiGame.Services
                     this.definitionId.stringValue);
             }
 
-            EditorGUILayout.BeginHorizontal();
             this.presetName.stringValue = EditorGUILayout.TextField(
                 new GUIContent("preset name", "Optional display name for the new preset"),
                 this.presetName.stringValue);
+            EditorGUILayout.EndVertical();
 
             GUI.backgroundColor = Color.green;
-            if (GUILayout.Button("Create", GUILayout.Width(60)))
+            if (GUILayout.Button("Create", GUILayout.Width(60), GUILayout.ExpandHeight(true)))
             {
                 this.InvokeCreatePreset(mode);
             }
             GUI.backgroundColor = Color.white;
+
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space();
@@ -124,6 +128,13 @@ namespace SaiGame.Services
 
                 EditorGUILayout.BeginHorizontal();
 
+                GUI.backgroundColor = Color.green;
+                if (GUILayout.Button("Create Preset", GUILayout.Height(30)))
+                {
+                    this.InvokeCreatePreset((ItemPreset.CreatePresetMode)this.createMode.enumValueIndex);
+                }
+                GUI.backgroundColor = Color.white;
+
                 GUI.backgroundColor = Color.cyan;
                 if (GUILayout.Button("Get Presets", GUILayout.Height(30)))
                 {
@@ -143,6 +154,10 @@ namespace SaiGame.Services
                 }
                 GUI.backgroundColor = Color.white;
 
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.BeginHorizontal();
+
                 GUI.backgroundColor = Color.red;
                 if (GUILayout.Button("Clear Presets", GUILayout.Height(30)))
                 {
@@ -151,30 +166,22 @@ namespace SaiGame.Services
                 }
                 GUI.backgroundColor = Color.white;
 
-                EditorGUILayout.EndHorizontal();
-
-                EditorGUILayout.BeginHorizontal();
-
-                GUI.backgroundColor = Color.green;
-                if (GUILayout.Button("Create Preset", GUILayout.Height(30)))
-                {
-                    this.InvokeCreatePreset((ItemPreset.CreatePresetMode)this.createMode.enumValueIndex);
-                }
-                GUI.backgroundColor = Color.white;
 
                 GUI.backgroundColor = Color.yellow;
-                if (GUILayout.Button("Sync Player Inventory", GUILayout.Height(30)))
+                if (GUILayout.Button("Sync with PlayerItem", GUILayout.Height(30)))
                 {
                     PlayerItem pItem = FindObjectOfType<PlayerItem>();
                     if (pItem != null)
                     {
                         pItem.GetItems(null, null, null,
-                            onSuccess: res => {
+                            onSuccess: res =>
+                            {
                                 if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
                                     Debug.Log($"[Editor] Loaded {res.items.Length} inventory items");
                                 Repaint();
                             },
-                            onError: err => {
+                            onError: err =>
+                            {
                                 if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
                                     Debug.LogError($"[Editor] Failed to load inventory items: {err}");
                             });
@@ -197,6 +204,60 @@ namespace SaiGame.Services
                 MessageType.Info);
 
             serializedObject.ApplyModifiedProperties();
+        }
+
+        private void InvokeDeletePreset(PresetData preset)
+        {
+            string displayLabel = !string.IsNullOrEmpty(preset.name) ? preset.name : preset.id;
+            if (!EditorUtility.DisplayDialog(
+                "Delete Preset",
+                $"Are you sure you want to delete preset \"{displayLabel}\"?\n\nThis cannot be undone.",
+                "Delete",
+                "Cancel"))
+                return;
+
+            this.itemPreset.DeletePreset(preset.id,
+                onSuccess: deletedId =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[Editor] Preset {deletedId} deleted from server");
+                    this.presetFoldouts.Remove(deletedId);
+                    Repaint();
+                },
+                onError: err =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[Editor] Failed to delete preset: {err}");
+                }
+            );
+        }
+
+        private void InvokeGetPresetSlots(string presetId)
+        {
+            this.itemPreset.GetPreset(presetId,
+                onSuccess: updatedPreset =>
+                {
+                    if (this.itemPreset.CurrentPresets != null && this.itemPreset.CurrentPresets.containers != null)
+                    {
+                        for (int i = 0; i < this.itemPreset.CurrentPresets.containers.Length; i++)
+                        {
+                            if (this.itemPreset.CurrentPresets.containers[i].id == updatedPreset.id)
+                            {
+                                this.itemPreset.CurrentPresets.containers[i] = updatedPreset;
+                                break;
+                            }
+                        }
+                    }
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.Log($"[Editor] Refreshed preset {presetId} from server");
+                    Repaint();
+                },
+                onError: err =>
+                {
+                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        Debug.LogError($"[Editor] Failed to refresh preset: {err}");
+                }
+            );
         }
 
         private void InvokeCreatePreset(ItemPreset.CreatePresetMode mode)
@@ -278,6 +339,13 @@ namespace SaiGame.Services
                 typeBadgeStyle.alignment = TextAnchor.MiddleRight;
                 EditorGUILayout.LabelField(preset.preset_type.ToUpper(), typeBadgeStyle, GUILayout.MinWidth(70));
             }
+
+            GUI.backgroundColor = new Color(1f, 0.4f, 0.4f);
+            if (GUILayout.Button("🗑 Delete", GUILayout.Width(80)))
+            {
+                this.InvokeDeletePreset(preset);
+            }
+            GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
 
             if (!this.presetFoldouts[presetId])
@@ -318,35 +386,6 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField($"ID: {preset.id}", idStyle);
             if (GUILayout.Button("Copy", GUILayout.Width(50)))
                 GUIUtility.systemCopyBuffer = preset.id;
-            GUI.backgroundColor = new Color(0.3f, 0.8f, 1f);
-            if (GUILayout.Button("🔄 Get", GUILayout.Width(70)))
-            {
-                this.itemPreset.GetPreset(preset.id,
-                    onSuccess: updatedPreset =>
-                    {
-                        if (this.itemPreset.CurrentPresets != null && this.itemPreset.CurrentPresets.containers != null)
-                        {
-                            for (int i = 0; i < this.itemPreset.CurrentPresets.containers.Length; i++)
-                            {
-                                if (this.itemPreset.CurrentPresets.containers[i].id == updatedPreset.id)
-                                {
-                                    this.itemPreset.CurrentPresets.containers[i] = updatedPreset;
-                                    break;
-                                }
-                            }
-                        }
-                        if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                            Debug.Log($"[Editor] Refreshed preset {preset.id} from server");
-                        Repaint();
-                    },
-                    onError: err =>
-                    {
-                        if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
-                            Debug.LogError($"[Editor] Failed to refresh preset: {err}");
-                    }
-                );
-            }
-            GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
 
             // Definition ID
@@ -399,7 +438,17 @@ namespace SaiGame.Services
             GUIStyle slotsHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
             slotsHeaderStyle.fontSize = 11;
             slotsHeaderStyle.normal.textColor = new Color(0.7f, 0.9f, 1f);
+
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"🎰 PRESET SLOTS ({slotCount}/{preset.max_slots})", slotsHeaderStyle);
+            GUI.backgroundColor = new Color(0.3f, 0.8f, 1f);
+            if (GUILayout.Button("🔄 Get Preset Slots", GUILayout.Width(140)))
+            {
+                this.InvokeGetPresetSlots(preset.id);
+            }
+            GUI.backgroundColor = Color.white;
+            EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.Space(3);
 
             if (preset.slots != null && preset.slots.Length > 0)

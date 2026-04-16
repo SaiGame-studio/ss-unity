@@ -470,6 +470,73 @@ namespace SaiGame.Services
         }
 
         /// <summary>
+        /// Deletes a preset from the server.
+        /// Endpoint: DELETE /api/v1/games/{game_id}/presets/{id}
+        /// </summary>
+        public void DeletePreset(
+            string presetId,
+            System.Action<string> onSuccess = null,
+            System.Action<string> onError = null)
+        {
+            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                Debug.Log($"<color=#FF6666><b>[ItemPreset] ► Delete Preset {presetId}</b></color>", gameObject);
+
+            if (SaiService.Instance == null)
+            {
+                onError?.Invoke("SaiService not found!");
+                return;
+            }
+
+            if (!SaiService.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(presetId))
+            {
+                onError?.Invoke("preset_id cannot be empty.");
+                return;
+            }
+
+            StartCoroutine(this.DeletePresetCoroutine(presetId, onSuccess, onError));
+        }
+
+        private IEnumerator DeletePresetCoroutine(
+            string presetId,
+            System.Action<string> onSuccess,
+            System.Action<string> onError)
+        {
+            string gameId = SaiService.Instance.GameId;
+            string endpoint = $"/api/v1/games/{gameId}/presets/{presetId}";
+
+            yield return SaiService.Instance.DeleteRequest(endpoint,
+                response =>
+                {
+                    if (this.currentPresets != null && this.currentPresets.containers != null)
+                    {
+                        var list = new System.Collections.Generic.List<PresetData>(this.currentPresets.containers);
+                        list.RemoveAll(p => p.id == presetId);
+                        this.currentPresets.containers = list.ToArray();
+                    }
+
+                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        Debug.Log($"[ItemPreset] Preset {presetId} deleted successfully");
+
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.Log("<color=#66CCFF>[ItemPreset] DeletePreset</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemPreset.cs › DeletePresetCoroutine");
+                    onSuccess?.Invoke(presetId);
+                },
+                error =>
+                {
+                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[ItemPreset] DeletePreset</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemPreset.cs › DeletePresetCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
+            );
+        }
+
+        /// <summary>
         /// Clears preset data locally.
         /// </summary>
         public void ClearPresets()
