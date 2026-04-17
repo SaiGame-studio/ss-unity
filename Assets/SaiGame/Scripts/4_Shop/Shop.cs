@@ -151,7 +151,7 @@ namespace SaiGame.Services
 
                         this.OnGetShopsSuccess?.Invoke(shopResponse);
                         if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
-                            Debug.Log("<color=#66CCFF>[Shop] GetShops</color> → <b><color=#00FF88>onSuccess</color></b> callback | SaiShop.cs › GetShopsCoroutine");
+                            Debug.Log("<color=#66CCFF>[Shop] GetShops</color> → <b><color=#00FF88>onSuccess</color></b> callback | Shop.cs › GetShopsCoroutine");
                         onSuccess?.Invoke(shopResponse);
                     }
                     catch (System.Exception e)
@@ -159,7 +159,7 @@ namespace SaiGame.Services
                         string errorMsg = $"Parse get shops response error: {e.Message}";
                         this.OnGetShopsFailure?.Invoke(errorMsg);
                         if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
-                            Debug.LogWarning($"<color=#66CCFF>[Shop] GetShops</color> → <b><color=#FF4444>onError</color></b> callback (parse) | SaiShop.cs › GetShopsCoroutine | {errorMsg}");
+                            Debug.LogWarning($"<color=#66CCFF>[Shop] GetShops</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Shop.cs › GetShopsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
@@ -167,7 +167,7 @@ namespace SaiGame.Services
                 {
                     this.OnGetShopsFailure?.Invoke(error);
                     if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
-                        Debug.LogWarning($"<color=#66CCFF>[Shop] GetShops</color> → <b><color=#FF4444>onError</color></b> callback (network) | SaiShop.cs › GetShopsCoroutine | {error}");
+                        Debug.LogWarning($"<color=#66CCFF>[Shop] GetShops</color> → <b><color=#FF4444>onError</color></b> callback (network) | Shop.cs › GetShopsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -328,7 +328,7 @@ namespace SaiGame.Services
 
                         this.OnGetShopItemsSuccess?.Invoke(itemsResponse);
                         if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
-                            Debug.Log("<color=#66CCFF>[Shop] GetShopItems</color> → <b><color=#00FF88>onSuccess</color></b> callback | SaiShop.cs › GetShopItemsCoroutine");
+                            Debug.Log("<color=#66CCFF>[Shop] GetShopItems</color> → <b><color=#00FF88>onSuccess</color></b> callback | Shop.cs › GetShopItemsCoroutine");
                         onSuccess?.Invoke(itemsResponse);
                     }
                     catch (System.Exception e)
@@ -336,7 +336,7 @@ namespace SaiGame.Services
                         string errorMsg = $"Parse get shop items response error: {e.Message}";
                         this.OnGetShopItemsFailure?.Invoke(errorMsg);
                         if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
-                            Debug.LogWarning($"<color=#66CCFF>[Shop] GetShopItems</color> → <b><color=#FF4444>onError</color></b> callback (parse) | SaiShop.cs › GetShopItemsCoroutine | {errorMsg}");
+                            Debug.LogWarning($"<color=#66CCFF>[Shop] GetShopItems</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Shop.cs › GetShopItemsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
@@ -344,7 +344,7 @@ namespace SaiGame.Services
                 {
                     this.OnGetShopItemsFailure?.Invoke(error);
                     if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
-                        Debug.LogWarning($"<color=#66CCFF>[Shop] GetShopItems</color> → <b><color=#FF4444>onError</color></b> callback (network) | SaiShop.cs › GetShopItemsCoroutine | {error}");
+                        Debug.LogWarning($"<color=#66CCFF>[Shop] GetShopItems</color> → <b><color=#FF4444>onError</color></b> callback (network) | Shop.cs › GetShopItemsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
@@ -440,7 +440,7 @@ namespace SaiGame.Services
 
                         this.OnPurchaseSuccess?.Invoke(purchaseResponse);
                         if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
-                            Debug.Log("<color=#66CCFF>[Shop] PurchaseItem</color> → <b><color=#00FF88>onSuccess</color></b> callback | SaiShop.cs › PurchaseItemCoroutine");
+                            Debug.Log("<color=#66CCFF>[Shop] PurchaseItem</color> → <b><color=#00FF88>onSuccess</color></b> callback | Shop.cs › PurchaseItemCoroutine");
                         onSuccess?.Invoke(purchaseResponse);
 
                         // Auto-refresh shop items after purchase
@@ -456,7 +456,7 @@ namespace SaiGame.Services
                         string errorMsg = $"Parse purchase response error: {e.Message}";
                         this.OnPurchaseFailure?.Invoke(errorMsg);
                         if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
-                            Debug.LogWarning($"<color=#66CCFF>[Shop] PurchaseItem</color> → <b><color=#FF4444>onError</color></b> callback (parse) | SaiShop.cs › PurchaseItemCoroutine | {errorMsg}");
+                            Debug.LogWarning($"<color=#66CCFF>[Shop] PurchaseItem</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Shop.cs › PurchaseItemCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
@@ -464,7 +464,7 @@ namespace SaiGame.Services
                 {
                     this.OnPurchaseFailure?.Invoke(error);
                     if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
-                        Debug.LogWarning($"<color=#66CCFF>[Shop] PurchaseItem</color> → <b><color=#FF4444>onError</color></b> callback (network) | SaiShop.cs › PurchaseItemCoroutine | {error}");
+                        Debug.LogWarning($"<color=#66CCFF>[Shop] PurchaseItem</color> → <b><color=#FF4444>onError</color></b> callback (network) | Shop.cs › PurchaseItemCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );

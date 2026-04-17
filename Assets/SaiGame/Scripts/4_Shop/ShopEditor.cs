@@ -8,7 +8,7 @@ namespace SaiGame.Services
     [CanEditMultipleObjects]
     public class ShopEditor : Editor
     {
-        private Shop saiShop;
+        private Shop shop;
         private SerializedProperty autoLoadOnLogin;
         private SerializedProperty autoRefreshAfterPurchase;
         private SerializedProperty shopLimit;
@@ -22,6 +22,8 @@ namespace SaiGame.Services
         private readonly Dictionary<string, ShopItemsResponse> shopItemsCache = new Dictionary<string, ShopItemsResponse>();
         // Per-shop items foldout state
         private readonly Dictionary<string, bool> shopItemsFoldout = new Dictionary<string, bool>();
+        // Per-shop collapse state (keyed by shop id)
+        private readonly Dictionary<string, bool> expandedShops = new Dictionary<string, bool>();
         // Per-shop loading state
         private readonly HashSet<string> loadingShops = new HashSet<string>();
 
@@ -33,7 +35,7 @@ namespace SaiGame.Services
 
         private void OnEnable()
         {
-            this.saiShop = (Shop)target;
+            this.shop = (Shop)target;
             this.autoLoadOnLogin = serializedObject.FindProperty("autoLoadOnLogin");
             this.autoRefreshAfterPurchase = serializedObject.FindProperty("autoRefreshAfterPurchase");
             this.shopLimit = serializedObject.FindProperty("shopLimit");
@@ -64,21 +66,21 @@ namespace SaiGame.Services
             {
                 EditorGUI.indentLevel++;
 
-                if (this.saiShop.CurrentShopResponse != null)
+                if (this.shop.CurrentShopResponse != null)
                 {
                     EditorGUILayout.LabelField("Summary", EditorStyles.boldLabel);
-                    EditorGUILayout.LabelField($"Total Shops: {this.saiShop.CurrentShopResponse.total}");
-                    EditorGUILayout.LabelField($"Loaded Shops: {this.saiShop.CurrentShopResponse.shops?.Length ?? 0}");
-                    EditorGUILayout.LabelField($"Limit: {this.saiShop.CurrentShopResponse.limit}  |  Offset: {this.saiShop.CurrentShopResponse.offset}");
+                    EditorGUILayout.LabelField($"Total Shops: {this.shop.CurrentShopResponse.total}");
+                    EditorGUILayout.LabelField($"Loaded Shops: {this.shop.CurrentShopResponse.shops?.Length ?? 0}");
+                    EditorGUILayout.LabelField($"Limit: {this.shop.CurrentShopResponse.limit}  |  Offset: {this.shop.CurrentShopResponse.offset}");
 
-                    if (this.saiShop.CurrentShopResponse.shops != null
-                        && this.saiShop.CurrentShopResponse.shops.Length > 0)
+                    if (this.shop.CurrentShopResponse.shops != null
+                        && this.shop.CurrentShopResponse.shops.Length > 0)
                     {
-                        this.showShopList = EditorGUILayout.Foldout(this.showShopList, $"Shop List ({this.saiShop.CurrentShopResponse.shops.Length})", true);
+                        this.showShopList = EditorGUILayout.Foldout(this.showShopList, $"Shop List ({this.shop.CurrentShopResponse.shops.Length})", true);
                         if (this.showShopList)
                         {
                             EditorGUI.indentLevel++;
-                            foreach (ShopData shop in this.saiShop.CurrentShopResponse.shops)
+                            foreach (ShopData shop in this.shop.CurrentShopResponse.shops)
                                 this.DrawShopSummary(shop);
                             EditorGUI.indentLevel--;
                         }
@@ -110,9 +112,10 @@ namespace SaiGame.Services
                 GUI.backgroundColor = Color.red;
                 if (GUILayout.Button("Clear Shops", GUILayout.Height(30)))
                 {
-                    this.saiShop.ClearShops();
+                    this.shop.ClearShops();
                     this.shopItemsCache.Clear();
                     this.shopItemsFoldout.Clear();
+                    this.expandedShops.Clear();
                 }
                 GUI.backgroundColor = Color.white;
 
@@ -132,7 +135,36 @@ namespace SaiGame.Services
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            EditorGUILayout.LabelField($"Name: {shop.name}", EditorStyles.boldLabel);
+            // === COLLAPSIBLE HEADER ===
+            string shopId = shop.id;
+            if (!this.expandedShops.ContainsKey(shopId))
+                this.expandedShops[shopId] = false;
+
+            string headerLabel = $"★ {shop.name}  [{shop.item_count} items]";
+
+            GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
+            foldoutStyle.fontSize = 13;
+            foldoutStyle.fontStyle = FontStyle.Bold;
+
+            EditorGUILayout.BeginHorizontal();
+            this.expandedShops[shopId] = EditorGUILayout.Foldout(this.expandedShops[shopId], headerLabel, true, foldoutStyle);
+
+            // Active/Inactive badge (right-aligned)
+            GUIStyle activeStyle = new GUIStyle(EditorStyles.label);
+            activeStyle.fontSize = 11;
+            activeStyle.normal.textColor = shop.is_active ? new Color(0.3f, 1f, 0.5f) : new Color(0.7f, 0.7f, 0.7f);
+            activeStyle.fontStyle = FontStyle.Bold;
+            activeStyle.alignment = TextAnchor.MiddleRight;
+            EditorGUILayout.LabelField(shop.is_active ? "ACTIVE" : "INACTIVE", activeStyle, GUILayout.MinWidth(70));
+            EditorGUILayout.EndHorizontal();
+
+            if (!this.expandedShops[shopId])
+            {
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space(4);
+                return;
+            }
+
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"ID: {shop.id}");
             if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = shop.id;
@@ -161,7 +193,7 @@ namespace SaiGame.Services
             EditorGUILayout.BeginHorizontal();
             GUI.backgroundColor = isLoading ? Color.gray : new Color(0.4f, 1f, 0.6f);
             EditorGUI.BeginDisabledGroup(isLoading);
-            if (GUILayout.Button(isLoading ? "Loading..." : "Items", GUILayout.Height(24)))
+            if (GUILayout.Button(isLoading ? "Loading..." : "Get Items", GUILayout.Height(24)))
                 this.LoadShopItemsForShop(shop.id);
             EditorGUI.EndDisabledGroup();
             GUI.backgroundColor = Color.white;
@@ -227,30 +259,36 @@ namespace SaiGame.Services
             // ── Purchase UI ───────────────────────────────────────────────────────
             EditorGUILayout.Space(4);
 
-            // Quantity
+            // Init state
             if (!this.itemQuantities.ContainsKey(item.id))
                 this.itemQuantities[item.id] = 1;
+            if (!this.itemAutoRandomKey.ContainsKey(item.id))
+                this.itemAutoRandomKey[item.id] = true;
+            if (!this.itemIdempotencyKeys.ContainsKey(item.id))
+                this.itemIdempotencyKeys[item.id] = string.Empty;
+
+            EditorGUILayout.BeginHorizontal();
+
+            // Left column — 3 input rows
+            EditorGUILayout.BeginVertical();
+
             this.itemQuantities[item.id] = EditorGUILayout.IntField("Quantity", this.itemQuantities[item.id]);
             if (this.itemQuantities[item.id] < 1)
                 this.itemQuantities[item.id] = 1;
 
-            // Auto-random toggle
-            if (!this.itemAutoRandomKey.ContainsKey(item.id))
-                this.itemAutoRandomKey[item.id] = true;
-            this.itemAutoRandomKey[item.id] = EditorGUILayout.Toggle("Auto Idempotency Key", this.itemAutoRandomKey[item.id]);
-
-            // Idempotency key field (disabled when auto-random is ON)
-            if (!this.itemIdempotencyKeys.ContainsKey(item.id))
-                this.itemIdempotencyKeys[item.id] = string.Empty;
             EditorGUI.BeginDisabledGroup(this.itemAutoRandomKey[item.id]);
             this.itemIdempotencyKeys[item.id] = EditorGUILayout.TextField("Idempotency Key", this.itemIdempotencyKeys[item.id]);
             EditorGUI.EndDisabledGroup();
 
-            // Purchase button
+            this.itemAutoRandomKey[item.id] = EditorGUILayout.Toggle("Auto Key", this.itemAutoRandomKey[item.id]);
+
+            EditorGUILayout.EndVertical();
+
+            // Right column — Purchase button spanning all 3 rows
             bool isPurchasing = this.purchasingItems.Contains(item.id);
             GUI.backgroundColor = isPurchasing ? Color.gray : new Color(1f, 0.85f, 0f);
             EditorGUI.BeginDisabledGroup(isPurchasing);
-            if (GUILayout.Button(isPurchasing ? "Purchasing..." : "Purchase", GUILayout.Height(26)))
+            if (GUILayout.Button(isPurchasing ? "Purchasing..." : "Purchase", GUILayout.Width(100), GUILayout.ExpandHeight(true)))
             {
                 string key = this.itemAutoRandomKey[item.id]
                     ? System.Guid.NewGuid().ToString()
@@ -259,7 +297,7 @@ namespace SaiGame.Services
                 this.purchasingItems.Add(item.id);
                 Repaint();
 
-                this.saiShop.PurchaseItem(
+                this.shop.PurchaseItem(
                     shopId: shopId,
                     shopItemId: item.id,
                     quantity: this.itemQuantities[item.id],
@@ -279,7 +317,7 @@ namespace SaiGame.Services
                             $"  idempotency_key:   {r?.idempotency_key}\n" +
                             $"  currency_item_def: {r?.currency_item_def_id}\n" +
                             $"  created_at:        {r?.created_at}");
-                        if (this.saiShop.AutoRefreshAfterPurchase)
+                        if (this.shop.AutoRefreshAfterPurchase)
                             this.LoadShopItemsForShop(shopId);
                         Repaint();
                     },
@@ -293,6 +331,8 @@ namespace SaiGame.Services
             }
             EditorGUI.EndDisabledGroup();
             GUI.backgroundColor = Color.white;
+
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndVertical();
         }
@@ -328,7 +368,7 @@ namespace SaiGame.Services
 
                 string progressBar = $"{item.purchased_count} / {item.purchase_limit}";
                 EditorGUILayout.LabelField(
-                    $"<color={scopeColor}>⬛ {scopeLabel} LIMIT</color>  " +
+                    $"<color={scopeColor}>{scopeLabel} LIMIT</color>  " +
                     $"<color={progressColor}><b>{progressBar}</b></color>" +
                     restockPart,
                     style);
@@ -349,7 +389,7 @@ namespace SaiGame.Services
                 return;
             }
 
-            this.saiShop.GetShops(
+            this.shop.GetShops(
                 onSuccess: response =>
                 {
                     if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
@@ -381,7 +421,7 @@ namespace SaiGame.Services
             this.loadingShops.Add(shopId);
             Repaint();
 
-            this.saiShop.GetShopItems(
+            this.shop.GetShopItems(
                 shopId: shopId,
                 onSuccess: response =>
                 {

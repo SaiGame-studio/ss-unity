@@ -86,7 +86,7 @@ namespace SaiGame.Services
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("itemCrafting"),         new GUIContent("Player Crafting"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("itemMove"),              new GUIContent("Item Move"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("itemSwap"),              new GUIContent("Item Swap"));
-                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("saiShop"),              new GUIContent("Sai Shop"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("shop"),                 new GUIContent("Shop"));
 
                 // ── Quest child ──────────────────────────────────────────────
                 EditorGUILayout.Space(2);

@@ -266,7 +266,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ce67d82f3c0b926408f098106fda71db, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiShop
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.Shop
   autoLoadOnLogin: 1
   autoRefreshAfterPurchase: 1
   currentShopResponse:
@@ -614,7 +614,7 @@ MonoBehaviour:
   itemCrafting: {fileID: 3712696907917878105}
   itemGenerator: {fileID: 8359460651495667961}
   equipmentSlotManager: {fileID: 2893519870010327973}
-  saiShop: {fileID: 7399820738238440333}
+  shop: {fileID: 7399820738238440333}
   chainQuest: {fileID: 4308186167237759036}
   questProgressor: {fileID: 1733594213501630859}
   questClaims: {fileID: 2399963655362431771}

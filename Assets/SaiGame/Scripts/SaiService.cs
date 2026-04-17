@@ -23,7 +23,7 @@ namespace SaiGame.Services
         [SerializeField] protected ItemCrafting itemCrafting;
         [SerializeField] protected ItemGenerator itemGenerator;
         [SerializeField] protected EquipmentSlot equipmentSlotManager;
-        [SerializeField] protected Shop saiShop;
+        [SerializeField] protected Shop shop;
         [SerializeField] protected ChainQuest chainQuest;
         [SerializeField] protected QuestProgressor questProgressor;
         [SerializeField] protected QuestStatus questClaims;
@@ -114,7 +114,7 @@ namespace SaiGame.Services
 
         public ItemGenerator ItemGenerator => itemGenerator;
 
-        public Shop SaiShop => saiShop;
+        public Shop Shop => this.shop;
 
         public EquipmentSlot EquipmentSlotManager => this.equipmentSlotManager;
 
@@ -383,7 +383,7 @@ namespace SaiGame.Services
             this.LoadItemCrafting();
             this.LoadItemGenerator();
             this.LoadEquipmentSlotManager();
-            this.LoadSaiShop();
+            this.LoadShop();
             this.LoadChainQuest();
             this.LoadQuestProgressor();
             this.LoadQuestStatus();
@@ -493,12 +493,12 @@ namespace SaiGame.Services
                 Debug.Log(transform.name + ": LoadEquipmentSlotManager", gameObject);
         }
 
-        protected virtual void LoadSaiShop()
+        protected virtual void LoadShop()
         {
-            if (this.saiShop != null) return;
-            this.saiShop = GetComponentInChildren<Shop>();
+            if (this.shop != null) return;
+            this.shop = GetComponentInChildren<Shop>();
             if (this.showDebugLog)
-                Debug.Log(transform.name + ": LoadSaiShop", gameObject);
+                Debug.Log(transform.name + ": LoadShop", gameObject);
         }
 
         protected virtual void LoadChainQuest()
