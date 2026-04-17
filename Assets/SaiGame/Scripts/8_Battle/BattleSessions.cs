@@ -34,22 +34,22 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            if (SaiServer.Instance?.SaiAuth == null) return;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            if (SaiServer.Instance?.SaiAuth == null) return;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
@@ -57,18 +57,18 @@ namespace SaiGame.Services
         {
             if (!this.autoLoadOnLogin) return;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[BattleSessions] Auto-loading battle sessions after successful login...");
 
             this.GetSessions(
                 onSuccess: sessions =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[BattleSessions] Sessions auto-loaded: {sessions.sessions.Length} sessions, total: {sessions.total}");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.LogWarning($"[BattleSessions] Auto-load sessions failed: {error}");
                 }
             );
@@ -76,7 +76,7 @@ namespace SaiGame.Services
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[BattleSessions] Logout successful, clearing sessions data...");
 
             this.ClearLocalSessions();
@@ -92,16 +92,16 @@ namespace SaiGame.Services
             Action<BattleSessionsResponse> onSuccess = null,
             Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[BattleSessions] ► Get Sessions</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -119,10 +119,10 @@ namespace SaiGame.Services
             Action<BattleSessionsResponse> onSuccess,
             Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/me/battle-sessions?limit={limit}&offset={offset}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -130,11 +130,11 @@ namespace SaiGame.Services
                         BattleSessionsResponse sessionsResponse = JsonUtility.FromJson<BattleSessionsResponse>(response);
                         this.currentSessions = sessionsResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[BattleSessions] Sessions loaded: {sessionsResponse.sessions.Length} sessions, total: {sessionsResponse.total}");
 
                         this.OnGetSessionsSuccess?.Invoke(sessionsResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[BattleSessions] GetSessions</color> → <b><color=#00FF88>onSuccess</color></b> callback | BattleSessions.cs › GetSessionsCoroutine");
                         onSuccess?.Invoke(sessionsResponse);
                     }
@@ -142,7 +142,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get sessions response error: {e.Message}";
                         this.OnGetSessionsFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[BattleSessions] GetSessions</color> → <b><color=#FF4444>onError</color></b> callback (parse) | BattleSessions.cs › GetSessionsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -150,7 +150,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnGetSessionsFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[BattleSessions] GetSessions</color> → <b><color=#FF4444>onError</color></b> callback (network) | BattleSessions.cs › GetSessionsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -160,11 +160,11 @@ namespace SaiGame.Services
         /// <summary>Clears local session data.</summary>
         public void ClearSessions()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[BattleSessions] ► Clear Sessions</b></color>", gameObject);
             this.ClearLocalSessions();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[BattleSessions] Session data cleared locally");
         }
 

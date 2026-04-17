@@ -3,8 +3,8 @@ using UnityEditor;
 
 namespace SaiGame.Services
 {
-    [CustomEditor(typeof(SaiService))]
-    public class SaiServiceEditor : Editor
+    [CustomEditor(typeof(SaiServer))]
+    public class SaiServerEditor : Editor
     {
         private bool showServiceReferences = false;
         private bool showDebugSettings = false;
@@ -33,8 +33,8 @@ namespace SaiGame.Services
                 fontStyle = FontStyle.Italic
             };
 
-            EditorGUILayout.LabelField(SaiService.PACKAGE_NAME, packageStyle);
-            EditorGUILayout.LabelField($"v{SaiService.PACKAGE_VERSION}", versionStyle);
+            EditorGUILayout.LabelField(SaiServer.PACKAGE_NAME, packageStyle);
+            EditorGUILayout.LabelField($"v{SaiServer.PACKAGE_VERSION}", versionStyle);
 
             EditorGUILayout.Space(5);
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
@@ -54,7 +54,7 @@ namespace SaiGame.Services
             {
                 serverEndpointProperty.enumValueIndex = newIndex;
                 this.serializedObject.ApplyModifiedProperties();
-                SaiService svc = (SaiService)this.target;
+                SaiServer svc = (SaiServer)this.target;
                 if (svc != null) svc.ManualSaveServerEndpoint();
             }
 
@@ -65,7 +65,7 @@ namespace SaiGame.Services
             {
                 EditorGUI.indentLevel++;
 
-                // ── Root (SaiService) ────────────────────────────────────────
+                // ── Root (SaiServer) ────────────────────────────────────────
                 EditorGUILayout.LabelField("Root Object", EditorStyles.miniBoldLabel);
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("saiAuth"),              new GUIContent("Sai Auth"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("gamerProgress"),        new GUIContent("Gamer Progress"));
@@ -130,7 +130,7 @@ namespace SaiGame.Services
 
             this.serializedObject.ApplyModifiedProperties();
 
-            SaiService saiService = (SaiService)target;
+            SaiServer saiServer = (SaiServer)target;
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Service Actions", EditorStyles.boldLabel);
@@ -139,20 +139,20 @@ namespace SaiGame.Services
             GUI.backgroundColor = new Color(0.3f, 0.9f, 0.5f);
             if (GUILayout.Button("Save Game ID to PlayerPrefs", GUILayout.Height(30)))
             {
-                if (saiService != null)
+                if (saiServer != null)
                 {
-                    saiService.ManualSaveGameId();
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    saiServer.ManualSaveGameId();
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log("✓ Game ID saved to PlayerPrefs!");
                 }
             }
             GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
             if (GUILayout.Button("Clear PlayerPrefs", GUILayout.Height(30)))
             {
-                if (saiService != null)
+                if (saiServer != null)
                 {
-                    saiService.ManualClearGameId();
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    saiServer.ManualClearGameId();
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log("✓ Game ID cleared from PlayerPrefs!");
                 }
             }
@@ -164,18 +164,18 @@ namespace SaiGame.Services
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Test Connection", GUILayout.Height(25)))
             {
-                if (saiService != null)
+                if (saiServer != null)
                 {
-                    saiService.TestConnection(success =>
+                    saiServer.TestConnection(success =>
                     {
                         if (success)
                         {
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                                 Debug.Log("✓ Connection test passed!");
                         }
                         else
                         {
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                                 Debug.LogError("✗ Connection test failed!");
                         }
                     });
@@ -184,14 +184,14 @@ namespace SaiGame.Services
 
             if (GUILayout.Button("Show Service Info", GUILayout.Height(25)))
             {
-                if (saiService != null)
+                if (saiServer != null)
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                     {
-                        Debug.Log("<color=#FFCC00><b>[SaiService] ► Show Service Info</b></color>");
-                        bool hasUser = saiService.CurrentUser != null && !string.IsNullOrEmpty(saiService.CurrentUser.username);
-                        string userInfo = hasUser ? $"User: {saiService.CurrentUser.username}" : "No user";
-                        Debug.Log($"Base URL: {saiService.BaseUrl}, Authenticated: {saiService.IsAuthenticated}, {userInfo}");
+                        Debug.Log("<color=#FFCC00><b>[SaiServer] ► Show Service Info</b></color>");
+                        bool hasUser = saiServer.CurrentUser != null && !string.IsNullOrEmpty(saiServer.CurrentUser.username);
+                        string userInfo = hasUser ? $"User: {saiServer.CurrentUser.username}" : "No user";
+                        Debug.Log($"Base URL: {saiServer.BaseUrl}, Authenticated: {saiServer.IsAuthenticated}, {userInfo}");
                     }
                 }
             }

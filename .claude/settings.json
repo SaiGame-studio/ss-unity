@@ -42,7 +42,9 @@
       "Bash(mv DailyAssignmentData.cs DailyQuestEntryData.cs DailyDayData.cs DailyQuestPoolData.cs DailyStreakData.cs Models/)",
       "Bash(mv StartQuestResponse.cs CheckQuestResponse.cs ClaimQuestResponse.cs Responses/)",
       "Bash(mv QuestPickerEntry.cs QuestProgressRecord.cs CheckQuestProgressRecord.cs ClaimQuestGrantedReward.cs QuestSourceType.cs Models/)",
-      "Bash(awk 'BEGIN{bv=0; ev=0; bh=0; eh=0} /EditorGUILayout\\\\.BeginVertical/{bv++} /EditorGUILayout\\\\.EndVertical/{ev++} /EditorGUILayout\\\\.BeginHorizontal/{bh++} /EditorGUILayout\\\\.EndHorizontal/{eh++} END{print \"BeginVertical=\"bv, \"EndVertical=\"ev, \"BeginHorizontal=\"bh, \"EndHorizontal=\"eh}' Assets/SaiGame/Scripts/3_ItemContainer/Preset/ItemPresetEditor.cs)"
+      "Bash(awk 'BEGIN{bv=0; ev=0; bh=0; eh=0} /EditorGUILayout\\\\.BeginVertical/{bv++} /EditorGUILayout\\\\.EndVertical/{ev++} /EditorGUILayout\\\\.BeginHorizontal/{bh++} /EditorGUILayout\\\\.EndHorizontal/{eh++} END{print \"BeginVertical=\"bv, \"EndVertical=\"ev, \"BeginHorizontal=\"bh, \"EndHorizontal=\"eh}' Assets/SaiGame/Scripts/3_ItemContainer/Preset/ItemPresetEditor.cs)",
+      "Bash(find Assets -type f \\\\\\( -name \"*.cs\" -o -name \"*.md\" \\\\\\) -exec grep -l \"SaiService\\\\|saiService\" {} \\\\;)",
+      "Bash(tee /tmp/rename_files.txt)"
     ]
   }
 }

@@ -41,24 +41,24 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
@@ -66,18 +66,18 @@ namespace SaiGame.Services
         {
             if (!this.autoLoadOnLogin) return;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[DailyQuest] Auto-loading pools after successful login...");
 
             this.GetPools(
                 onSuccess: pools =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[DailyQuest] Pools auto-loaded: {pools.pools?.Length ?? 0} pools");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.LogWarning($"[DailyQuest] Auto-load pools failed: {error}");
                 }
             );
@@ -85,12 +85,12 @@ namespace SaiGame.Services
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[DailyQuest] Logout successful, clearing daily quest data...");
 
             this.ClearLocalData();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[DailyQuest] Daily quest data cleared successfully");
         }
 
@@ -104,16 +104,16 @@ namespace SaiGame.Services
             System.Action<AssignAheadResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[DailyQuest] ► Assign Ahead</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -138,7 +138,7 @@ namespace SaiGame.Services
             System.Action<AssignAheadResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/daily-quests/{poolId}/assign-ahead";
 
             AssignAheadRequest requestBody = new AssignAheadRequest
@@ -147,7 +147,7 @@ namespace SaiGame.Services
             };
             string json = JsonUtility.ToJson(requestBody);
 
-            yield return SaiService.Instance.PostRequest(endpoint, json,
+            yield return SaiServer.Instance.PostRequest(endpoint, json,
                 response =>
                 {
                     try
@@ -155,11 +155,11 @@ namespace SaiGame.Services
                         AssignAheadResponse assignResponse = JsonUtility.FromJson<AssignAheadResponse>(response);
                         this.currentAssignAheadResponse = assignResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[DailyQuest] Assign ahead success: {assignResponse.days?.Length ?? 0} days from {assignResponse.start_date} to {assignResponse.end_date}");
 
                         this.OnAssignAheadSuccess?.Invoke(assignResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[DailyQuest] AssignAhead</color> → <b><color=#00FF88>onSuccess</color></b> callback | DailyQuest.cs › AssignAheadCoroutine");
                         onSuccess?.Invoke(assignResponse);
                     }
@@ -167,7 +167,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse assign-ahead response error: {e.Message}";
                         this.OnAssignAheadFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[DailyQuest] AssignAhead</color> → <b><color=#FF4444>onError</color></b> callback (parse) | DailyQuest.cs › AssignAheadCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -175,7 +175,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnAssignAheadFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[DailyQuest] AssignAhead</color> → <b><color=#FF4444>onError</color></b> callback (network) | DailyQuest.cs › AssignAheadCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -187,12 +187,12 @@ namespace SaiGame.Services
         /// </summary>
         public void ClearData()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[DailyQuest] ► Clear Data</b></color>", gameObject);
 
             this.ClearLocalData();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[DailyQuest] Daily quest data cleared locally");
         }
 
@@ -212,16 +212,16 @@ namespace SaiGame.Services
             System.Action<DailyQuestPoolsResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[DailyQuest] ► Get Pools</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -234,21 +234,21 @@ namespace SaiGame.Services
             System.Action<DailyQuestPoolsResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/daily-quest-pools";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
                     {
                         DailyQuestPoolsResponse poolsResponse = JsonUtility.FromJson<DailyQuestPoolsResponse>(response);
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[DailyQuest] Pools loaded: {poolsResponse.pools?.Length ?? 0} pools");
 
                         this.OnGetPoolsSuccess?.Invoke(poolsResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[DailyQuest] GetPools</color> → <b><color=#00FF88>onSuccess</color></b> callback | DailyQuest.cs › GetPoolsCoroutine");
                         onSuccess?.Invoke(poolsResponse);
                     }
@@ -256,7 +256,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get pools response error: {e.Message}";
                         this.OnGetPoolsFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[DailyQuest] GetPools</color> → <b><color=#FF4444>onError</color></b> callback (parse) | DailyQuest.cs › GetPoolsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -264,7 +264,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnGetPoolsFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[DailyQuest] GetPools</color> → <b><color=#FF4444>onError</color></b> callback (network) | DailyQuest.cs › GetPoolsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -282,16 +282,16 @@ namespace SaiGame.Services
             System.Action<TodayQuestResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[DailyQuest] ► Today Quest</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -313,10 +313,10 @@ namespace SaiGame.Services
             System.Action<TodayQuestResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/daily-quests/{poolId}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -336,11 +336,11 @@ namespace SaiGame.Services
 
                         this.currentTodayQuestResponse = todayResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[DailyQuest] Today quests loaded: {todayResponse.entries?.Length ?? 0} entries for {todayResponse.assigned_date}");
 
                         this.OnGetTodayQuestsSuccess?.Invoke(todayResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[DailyQuest] GetTodayQuests</color> → <b><color=#00FF88>onSuccess</color></b> callback | DailyQuest.cs › GetTodayQuestsCoroutine");
                         onSuccess?.Invoke(todayResponse);
                     }
@@ -348,7 +348,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse today quest response error: {e.Message}";
                         this.OnGetTodayQuestsFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[DailyQuest] GetTodayQuests</color> → <b><color=#FF4444>onError</color></b> callback (parse) | DailyQuest.cs › GetTodayQuestsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -356,7 +356,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnGetTodayQuestsFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[DailyQuest] GetTodayQuests</color> → <b><color=#FF4444>onError</color></b> callback (network) | DailyQuest.cs › GetTodayQuestsCoroutine | {error}");
                     onError?.Invoke(error);
                 }

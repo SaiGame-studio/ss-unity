@@ -41,24 +41,24 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
@@ -77,7 +77,7 @@ namespace SaiGame.Services
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[EquipmentSlot] Logout successful, clearing slot data...");
 
             this.ClearSlots();
@@ -85,16 +85,16 @@ namespace SaiGame.Services
 
         public void GetSlots(Action<EquipmentSlotsResponse> onSuccess = null, Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FF88><b>[EquipmentSlot] ► Get Equipment Slots</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -105,10 +105,10 @@ namespace SaiGame.Services
 
         private IEnumerator GetSlotsCoroutine(Action<EquipmentSlotsResponse> onSuccess, Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/inventory/equipment-slots";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -116,11 +116,11 @@ namespace SaiGame.Services
                         EquipmentSlotsResponse slotsResponse = JsonUtility.FromJson<EquipmentSlotsResponse>(response);
                         this.currentSlots = slotsResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[EquipmentSlot] Slots loaded: {slotsResponse.slots?.Length ?? 0} slots (total: {slotsResponse.total})");
 
                         OnGetSlotsSuccess?.Invoke(slotsResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[EquipmentSlot] GetSlots</color> → <b><color=#00FF88>onSuccess</color></b> callback | EquipmentSlotManager.cs › GetSlotsCoroutine");
                         onSuccess?.Invoke(slotsResponse);
                     }
@@ -128,7 +128,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse equipment slots response error: {e.Message}";
                         OnGetSlotsFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[EquipmentSlot] GetSlots</color> → <b><color=#FF4444>onError</color></b> callback (parse) | EquipmentSlotManager.cs › GetSlotsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -136,7 +136,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     OnGetSlotsFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[EquipmentSlot] GetSlots</color> → <b><color=#FF4444>onError</color></b> callback (network) | EquipmentSlotManager.cs › GetSlotsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -146,16 +146,16 @@ namespace SaiGame.Services
         public void EquipItem(string itemId, string slotKey, string slotDataJson = "{}",
             Action<string> onSuccess = null, Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#FFD700><b>[EquipmentSlot] ► Equip Item '{itemId}' → slot '{slotKey}'</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -167,28 +167,28 @@ namespace SaiGame.Services
         private IEnumerator EquipItemCoroutine(string itemId, string slotKey, string slotDataJson,
             Action<string> onSuccess, Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/inventory/equip";
 
             // slot_data is an arbitrary JSON object — build manually to avoid double-escape
             string safeSlotData = string.IsNullOrEmpty(slotDataJson) ? "{}" : slotDataJson;
             string jsonBody = $"{{\"item_id\":\"{itemId}\",\"slot_key\":\"{slotKey}\",\"slot_data\":{safeSlotData}}}";
 
-            yield return SaiService.Instance.PostRequest(endpoint, jsonBody,
+            yield return SaiServer.Instance.PostRequest(endpoint, jsonBody,
                 response =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[EquipmentSlot] Item '{itemId}' equipped to slot '{slotKey}'");
 
                     OnEquipSuccess?.Invoke(response);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.Log("<color=#66CCFF>[EquipmentSlot] EquipItem</color> → <b><color=#00FF88>onSuccess</color></b> callback | EquipmentSlotManager.cs › EquipItemCoroutine");
                     onSuccess?.Invoke(response);
                 },
                 error =>
                 {
                     OnEquipFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[EquipmentSlot] EquipItem</color> → <b><color=#FF4444>onError</color></b> callback | EquipmentSlotManager.cs › EquipItemCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -197,16 +197,16 @@ namespace SaiGame.Services
 
         public void UnequipItem(string itemId, Action onSuccess = null, Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#FF9944><b>[EquipmentSlot] ► Unequip Item '{itemId}'</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -217,25 +217,25 @@ namespace SaiGame.Services
 
         private IEnumerator UnequipItemCoroutine(string itemId, Action onSuccess, Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/inventory/unequip";
             string jsonBody = $"{{\"item_id\":\"{itemId}\"}}";
 
-            yield return SaiService.Instance.PostRequest(endpoint, jsonBody,
+            yield return SaiServer.Instance.PostRequest(endpoint, jsonBody,
                 response =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[EquipmentSlot] Item '{itemId}' unequipped");
 
                     OnUnequipSuccess?.Invoke();
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.Log("<color=#66CCFF>[EquipmentSlot] UnequipItem</color> → <b><color=#00FF88>onSuccess</color></b> callback | EquipmentSlotManager.cs › UnequipItemCoroutine");
                     onSuccess?.Invoke();
                 },
                 error =>
                 {
                     OnUnequipFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[EquipmentSlot] UnequipItem</color> → <b><color=#FF4444>onError</color></b> callback | EquipmentSlotManager.cs › UnequipItemCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -244,16 +244,16 @@ namespace SaiGame.Services
 
         public void GetEquippedItems(Action<EquippedItemsResponse> onSuccess = null, Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FFB347><b>[EquipmentSlot] ► Get Equipped Items</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -264,10 +264,10 @@ namespace SaiGame.Services
 
         private IEnumerator GetEquippedItemsCoroutine(Action<EquippedItemsResponse> onSuccess, Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/inventory/equipped";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -276,11 +276,11 @@ namespace SaiGame.Services
                         PopulateSlotDataRaw(response, equippedResponse);
                         this.currentEquipped = equippedResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[EquipmentSlot] Equipped items loaded: {equippedResponse.equipped?.Length ?? 0} item(s)");
 
                         OnGetEquippedSuccess?.Invoke(equippedResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[EquipmentSlot] GetEquippedItems</color> → <b><color=#00FF88>onSuccess</color></b> callback | EquipmentSlotManager.cs › GetEquippedItemsCoroutine");
                         onSuccess?.Invoke(equippedResponse);
                     }
@@ -288,7 +288,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse equipped items response error: {e.Message}";
                         OnGetEquippedFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[EquipmentSlot] GetEquippedItems</color> → <b><color=#FF4444>onError</color></b> callback (parse) | EquipmentSlotManager.cs › GetEquippedItemsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -296,7 +296,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     OnGetEquippedFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[EquipmentSlot] GetEquippedItems</color> → <b><color=#FF4444>onError</color></b> callback (network) | EquipmentSlotManager.cs › GetEquippedItemsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -305,7 +305,7 @@ namespace SaiGame.Services
 
         public void ClearSlots()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[EquipmentSlot] ► Clear Slots</b></color>", gameObject);
 
             this.currentSlots = null;

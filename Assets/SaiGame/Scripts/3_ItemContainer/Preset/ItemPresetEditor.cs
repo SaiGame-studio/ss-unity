@@ -141,13 +141,13 @@ namespace SaiGame.Services
                     this.itemPreset.GetPresets(
                         onSuccess: presets =>
                         {
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                                 Debug.Log($"[Editor] Presets loaded: {presets.containers?.Length ?? 0} presets");
                             Repaint();
                         },
                         onError: error =>
                         {
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                                 Debug.LogError($"[Editor] Get presets failed: {error}");
                         }
                     );
@@ -176,13 +176,13 @@ namespace SaiGame.Services
                         pItem.GetItems(null, null, null,
                             onSuccess: res =>
                             {
-                                if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                                if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                                     Debug.Log($"[Editor] Loaded {res.items.Length} inventory items");
                                 Repaint();
                             },
                             onError: err =>
                             {
-                                if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                                if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                                     Debug.LogError($"[Editor] Failed to load inventory items: {err}");
                             });
                     }
@@ -219,14 +219,14 @@ namespace SaiGame.Services
             this.itemPreset.DeletePreset(preset.id,
                 onSuccess: deletedId =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[Editor] Preset {deletedId} deleted from server");
                     this.presetFoldouts.Remove(deletedId);
                     Repaint();
                 },
                 onError: err =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[Editor] Failed to delete preset: {err}");
                 }
             );
@@ -248,13 +248,13 @@ namespace SaiGame.Services
                             }
                         }
                     }
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[Editor] Refreshed preset {presetId} from server");
                     Repaint();
                 },
                 onError: err =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[Editor] Failed to refresh preset: {err}");
                 }
             );
@@ -264,14 +264,14 @@ namespace SaiGame.Services
         {
             System.Action<PresetData> onSuccess = preset =>
             {
-                if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                     Debug.Log($"[Editor] Preset created! ID: {preset.id} | Type: {preset.preset_type} | Max Slots: {preset.max_slots}");
                 Repaint();
             };
 
             System.Action<string> onError = error =>
             {
-                if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                     Debug.LogError($"[Editor] Create preset failed: {error}");
             };
 
@@ -593,7 +593,7 @@ namespace SaiGame.Services
                     this.itemPreset.AddItemToPreset(preset.id, selectedSlotIndex, selectedInventoryId,
                         onSuccess: p =>
                         {
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                                 Debug.Log($"[Editor] Item {selectedInventoryId} added to preset {preset.id} at slot {selectedSlotIndex}");
 
                             if (this.itemPreset.CurrentPresets != null && this.itemPreset.CurrentPresets.containers != null)
@@ -611,7 +611,7 @@ namespace SaiGame.Services
                         },
                         onError: err =>
                         {
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                                 Debug.LogError($"[Editor] Failed to add item: {err}");
                         }
                     );

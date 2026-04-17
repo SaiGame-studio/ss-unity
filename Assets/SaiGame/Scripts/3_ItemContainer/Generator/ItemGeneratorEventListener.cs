@@ -8,7 +8,7 @@ namespace SaiGame.Services
     /// </summary>
     public class ItemGeneratorEventListener : SaiBehaviour
     {
-        private ItemGenerator itemGenerator => SaiService.Instance?.ItemGenerator;
+        private ItemGenerator itemGenerator => SaiServer.Instance?.ItemGenerator;
 
         protected override void LoadComponents()
         {

@@ -321,12 +321,12 @@ namespace SaiGame.Services
 
         private void SyncItems()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ItemMoveEditor] SaiService not found!");
+                Debug.LogError("[ItemMoveEditor] SaiServer not found!");
                 return;
             }
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ItemMoveEditor] Not authenticated! Please login first.");
                 return;
@@ -354,12 +354,12 @@ namespace SaiGame.Services
 
         private void SyncContainers()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ItemMoveEditor] SaiService not found!");
+                Debug.LogError("[ItemMoveEditor] SaiServer not found!");
                 return;
             }
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ItemMoveEditor] Not authenticated! Please login first.");
                 return;

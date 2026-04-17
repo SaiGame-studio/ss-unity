@@ -85,7 +85,7 @@ namespace SaiGame.UI
                 panel.Initialize(this.container);
                 this.panels[panel.PanelId] = panel;
 
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                     Debug.Log($"[UIRouter] Registered panel: {panel.PanelId}");
             }
         }

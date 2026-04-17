@@ -272,13 +272,13 @@ namespace SaiGame.Services
 
         private void LoadSessions()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[BattleSessionsEditor] SaiService not found!");
+                Debug.LogError("[BattleSessionsEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[BattleSessionsEditor] Not authenticated! Please login first.");
                 return;
@@ -287,13 +287,13 @@ namespace SaiGame.Services
             this.battleSessions.GetSessions(
                 onSuccess: response =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[BattleSessionsEditor] Loaded {response.sessions.Length} sessions (total: {response.total})");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[BattleSessionsEditor] Failed to load sessions: {error}");
                 }
             );

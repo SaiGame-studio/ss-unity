@@ -44,24 +44,24 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= HandleLogoutSuccess;
             }
         }
 
@@ -69,18 +69,18 @@ namespace SaiGame.Services
         {
             if (!this.autoLoadOnLogin) return;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[Leaderboard] Auto-loading boards after successful login...");
 
             this.ListBoards(
                 onSuccess: boards =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[Leaderboard] Auto-loaded {boards.boards?.Length ?? 0} boards");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.LogWarning($"[Leaderboard] Auto-load boards failed: {error}");
                 }
             );
@@ -88,12 +88,12 @@ namespace SaiGame.Services
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[Leaderboard] Logout successful, clearing leaderboard data...");
 
             this.ClearLocalBoards();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[Leaderboard] Leaderboard data cleared successfully");
         }
 
@@ -101,16 +101,16 @@ namespace SaiGame.Services
 
         public void ListBoards(Action<LeaderboardBoardsResponse> onSuccess = null, Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[Leaderboard] ► List Boards</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -121,10 +121,10 @@ namespace SaiGame.Services
 
         private IEnumerator ListBoardsCoroutine(Action<LeaderboardBoardsResponse> onSuccess, Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/leaderboards";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -132,11 +132,11 @@ namespace SaiGame.Services
                         LeaderboardBoardsResponse parsed = JsonUtility.FromJson<LeaderboardBoardsResponse>(response);
                         this.currentBoards = parsed;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[Leaderboard] Loaded {parsed.boards?.Length ?? 0} boards");
 
                         OnListBoardsSuccess?.Invoke(parsed);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[Leaderboard] ListBoards</color> → <b><color=#00FF88>onSuccess</color></b> callback | Leaderboard.cs › ListBoardsCoroutine");
                         onSuccess?.Invoke(parsed);
                     }
@@ -144,7 +144,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse list boards response error: {e.Message}";
                         OnListBoardsFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[Leaderboard] ListBoards</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Leaderboard.cs › ListBoardsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -152,7 +152,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     OnListBoardsFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[Leaderboard] ListBoards</color> → <b><color=#FF4444>onError</color></b> callback (network) | Leaderboard.cs › ListBoardsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -163,16 +163,16 @@ namespace SaiGame.Services
 
         public void GetBoard(string boardId, Action<LeaderboardBoard> onSuccess = null, Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#00FF88><b>[Leaderboard] ► Get Board: {boardId}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -189,10 +189,10 @@ namespace SaiGame.Services
 
         private IEnumerator GetBoardCoroutine(string boardId, Action<LeaderboardBoard> onSuccess, Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/leaderboards/{boardId}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -203,11 +203,11 @@ namespace SaiGame.Services
                             ? wrapped.board
                             : JsonUtility.FromJson<LeaderboardBoard>(response);
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[Leaderboard] Got board: {board?.name} (key: {board?.board_key})");
 
                         OnGetBoardSuccess?.Invoke(board);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[Leaderboard] GetBoard</color> → <b><color=#00FF88>onSuccess</color></b> callback | Leaderboard.cs › GetBoardCoroutine");
                         onSuccess?.Invoke(board);
                     }
@@ -215,7 +215,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get board response error: {e.Message}";
                         OnGetBoardFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[Leaderboard] GetBoard</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Leaderboard.cs › GetBoardCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -223,7 +223,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     OnGetBoardFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[Leaderboard] GetBoard</color> → <b><color=#FF4444>onError</color></b> callback (network) | Leaderboard.cs › GetBoardCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -234,16 +234,16 @@ namespace SaiGame.Services
 
         public void GetTopRankings(string boardId, int? limit = null, Action<LeaderboardRankingsResponse> onSuccess = null, Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#FFD700><b>[Leaderboard] ► Get Top N Rankings: {boardId}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -261,10 +261,10 @@ namespace SaiGame.Services
 
         private IEnumerator GetTopRankingsCoroutine(string boardId, int limit, Action<LeaderboardRankingsResponse> onSuccess, Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/leaderboards/{boardId}/top?limit={limit}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -272,11 +272,11 @@ namespace SaiGame.Services
                         LeaderboardRankingsResponse parsed = JsonUtility.FromJson<LeaderboardRankingsResponse>(response);
                         this.currentTopRankings = parsed;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[Leaderboard] Got {parsed.entries?.Length ?? 0} entries (total: {parsed.total}) for board: {boardId}");
 
                         OnGetTopRankingsSuccess?.Invoke(parsed);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[Leaderboard] GetTopRankings</color> → <b><color=#00FF88>onSuccess</color></b> callback | Leaderboard.cs › GetTopRankingsCoroutine");
                         onSuccess?.Invoke(parsed);
                     }
@@ -284,7 +284,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get top rankings response error: {e.Message}";
                         OnGetTopRankingsFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[Leaderboard] GetTopRankings</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Leaderboard.cs › GetTopRankingsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -292,7 +292,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     OnGetTopRankingsFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[Leaderboard] GetTopRankings</color> → <b><color=#FF4444>onError</color></b> callback (network) | Leaderboard.cs › GetTopRankingsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -303,16 +303,16 @@ namespace SaiGame.Services
 
         public void GetLocalRanking(string boardId, Action<LeaderboardLocalRankingResponse> onSuccess = null, Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#CC88FF><b>[Leaderboard] ► Get My Rank: {boardId}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -329,10 +329,10 @@ namespace SaiGame.Services
 
         private IEnumerator GetLocalRankingCoroutine(string boardId, Action<LeaderboardLocalRankingResponse> onSuccess, Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/leaderboards/{boardId}/me";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -340,11 +340,11 @@ namespace SaiGame.Services
                         LeaderboardLocalRankingResponse parsed = JsonUtility.FromJson<LeaderboardLocalRankingResponse>(response);
                         this.currentMyRank = parsed;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[Leaderboard] My rank for board {boardId}: rank #{parsed.rank}, score: {parsed.score}");
 
                         OnGetLocalRankingSuccess?.Invoke(parsed);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[Leaderboard] GetLocalRanking</color> → <b><color=#00FF88>onSuccess</color></b> callback | Leaderboard.cs › GetLocalRankingCoroutine");
                         onSuccess?.Invoke(parsed);
                     }
@@ -352,7 +352,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get my rank response error: {e.Message}";
                         OnGetLocalRankingFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[Leaderboard] GetLocalRanking</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Leaderboard.cs › GetLocalRankingCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -360,7 +360,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     OnGetLocalRankingFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[Leaderboard] GetLocalRanking</color> → <b><color=#FF4444>onError</color></b> callback (network) | Leaderboard.cs › GetLocalRankingCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -371,12 +371,12 @@ namespace SaiGame.Services
 
         public void ClearBoards()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[Leaderboard] ► Clear Boards</b></color>", gameObject);
 
             this.ClearLocalBoards();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[Leaderboard] Board data cleared locally");
         }
 

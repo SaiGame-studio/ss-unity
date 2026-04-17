@@ -35,24 +35,24 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
@@ -60,18 +60,18 @@ namespace SaiGame.Services
         {
             if (!this.autoLoadOnLogin) return;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemGenerator] Auto-loading generators after successful login...");
 
             this.GetGenerators(
                 onSuccess: generators =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemGenerator] Generators auto-loaded: {generators.generators.Length} generators");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.LogWarning($"[ItemGenerator] Auto-load generators failed: {error}");
                 }
             );
@@ -79,12 +79,12 @@ namespace SaiGame.Services
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemGenerator] Logout successful, clearing generator data...");
 
             this.ClearLocalGenerators();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemGenerator] Generator data cleared successfully");
         }
 
@@ -96,16 +96,16 @@ namespace SaiGame.Services
             System.Action<GeneratorsResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[ItemGenerator] ► Get Generators</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -118,10 +118,10 @@ namespace SaiGame.Services
             System.Action<GeneratorsResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/generators";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -159,7 +159,7 @@ namespace SaiGame.Services
                         
                         this.currentGenerators = generatorsResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         {
                             Debug.Log($"[ItemGenerator] Generators loaded: {generatorsResponse.generators.Length} generators");
                             foreach (GeneratorData gen in generatorsResponse.generators)
@@ -170,7 +170,7 @@ namespace SaiGame.Services
                         }
 
                         this.OnGetGeneratorsSuccess?.Invoke(generatorsResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[ItemGenerator] GetGenerators</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemGenerator.cs › GetGeneratorsCoroutine");
                         onSuccess?.Invoke(generatorsResponse);
                     }
@@ -178,7 +178,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get generators response error: {e.Message}";
                         this.OnGetGeneratorsFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[ItemGenerator] GetGenerators</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemGenerator.cs › GetGeneratorsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -186,7 +186,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnGetGeneratorsFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemGenerator] GetGenerators</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemGenerator.cs › GetGeneratorsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -198,11 +198,11 @@ namespace SaiGame.Services
         /// </summary>
         public void ClearGenerators()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[ItemGenerator] ► Clear Generators</b></color>", gameObject);
             this.ClearLocalGenerators();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemGenerator] Generator data cleared locally");
         }
 
@@ -323,16 +323,16 @@ namespace SaiGame.Services
             System.Action<GeneratorData> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#00DDFF><b>[ItemGenerator] ► Check Generator: {inventoryItemId}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -346,10 +346,10 @@ namespace SaiGame.Services
             System.Action<GeneratorData> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/generators/{inventoryItemId}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -388,14 +388,14 @@ namespace SaiGame.Services
                             }
                         }
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         {
                             string genName = generatorData.definition != null ? generatorData.definition.name : "Unknown";
                             Debug.Log($"[ItemGenerator] Generator checked: <b><color=#FFD700>{generatorData.inventory_item_id}</color></b> | Name: {genName} | Tickets: {generatorData.ticket_count}/{generatorData.tick_capacity} | Checkpoint: {generatorData.checkpoint_at}");
                         }
 
                         this.OnCheckGeneratorSuccess?.Invoke(generatorData);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[ItemGenerator] CheckGenerator</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemGenerator.cs › CheckGeneratorCoroutine");
                         onSuccess?.Invoke(generatorData);
                     }
@@ -403,7 +403,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse check generator response error: {e.Message}";
                         this.OnCheckGeneratorFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[ItemGenerator] CheckGenerator</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemGenerator.cs › CheckGeneratorCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -411,7 +411,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnCheckGeneratorFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemGenerator] CheckGenerator</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemGenerator.cs › CheckGeneratorCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -427,16 +427,16 @@ namespace SaiGame.Services
             System.Action<GeneratorCollectResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#00FF66><b>[ItemGenerator] ► Collect Generator: {inventoryItemId}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -450,24 +450,24 @@ namespace SaiGame.Services
             System.Action<GeneratorCollectResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/generators/{inventoryItemId}/collect";
 
-            yield return SaiService.Instance.PostRequest(endpoint, "{}",
+            yield return SaiServer.Instance.PostRequest(endpoint, "{}",
                 response =>
                 {
                     try
                     {
                         GeneratorCollectResponse collectResponse = JsonUtility.FromJson<GeneratorCollectResponse>(response);
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[ItemGenerator] Collected {collectResponse.units_collected} units of {collectResponse.output_item_code} | Output Item ID: <b><color=#FFD700>{collectResponse.output_inventory_item_id}</color></b>");
 
                         // Refresh generator state after collecting
                         this.CheckGenerator(inventoryItemId);
 
                         this.OnCollectGeneratorSuccess?.Invoke(collectResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[ItemGenerator] CollectGenerator</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemGenerator.cs › CollectGeneratorCoroutine");
                         onSuccess?.Invoke(collectResponse);
                     }
@@ -475,7 +475,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse collect generator response error: {e.Message}";
                         this.OnCollectGeneratorFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[ItemGenerator] CollectGenerator</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemGenerator.cs › CollectGeneratorCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -483,7 +483,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnCollectGeneratorFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemGenerator] CollectGenerator</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemGenerator.cs › CollectGeneratorCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -502,14 +502,14 @@ namespace SaiGame.Services
             GeneratorData generator = this.GetGeneratorByInventoryItemId(inventoryItemId);
             if (generator == null)
             {
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                     Debug.LogWarning($"[ItemGenerator] Generator not found: {inventoryItemId}");
                 return;
             }
 
             generator.enableLocalCalculation = enabled;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
             {
                 string status = enabled ? "<color=#00FF88>ENABLED</color>" : "<color=#FF4444>DISABLED</color>";
                 Debug.Log($"<color=#FFA500><b>[ItemGenerator] ► Local Calculation {status}</b></color> | Generator: <b><color=#FFD700>{inventoryItemId}</color></b> | <i>ItemGenerator.cs › SetGeneratorLocalCalculation</i>", gameObject);
@@ -525,14 +525,14 @@ namespace SaiGame.Services
             GeneratorData generator = this.GetGeneratorByInventoryItemId(inventoryItemId);
             if (generator == null)
             {
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                     Debug.LogWarning($"[ItemGenerator] Generator not found: {inventoryItemId}");
                 return null;
             }
 
             if (generator.output_pool == null || generator.output_pool.Length == 0)
             {
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                     Debug.LogWarning($"[ItemGenerator] Generator has no output pool: {inventoryItemId}");
                 return null;
             }
@@ -566,7 +566,7 @@ namespace SaiGame.Services
                 });
             }
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
             {
                 string calcType = generator.enableLocalCalculation ? "<color=#00FF88>Calculated</color>" : "<color=#AAAAAA>Server</color>";
                 
@@ -602,21 +602,21 @@ namespace SaiGame.Services
             GeneratorData generator = this.GetGeneratorByInventoryItemId(inventoryItemId);
             if (generator == null)
             {
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                     Debug.LogWarning($"[ItemGenerator] Generator not found: {inventoryItemId}");
                 return "Unknown";
             }
 
             if (!generator.enableLocalCalculation)
             {
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                     Debug.LogWarning($"[ItemGenerator] Local calculation is disabled for generator: {inventoryItemId}");
                 return "Disabled";
             }
 
             string timeUntilFull = generator.GetTimeUntilFullFormatted();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
             {
                 string coloredTime = generator.IsAtCapacity() 
                     ? $"<color=#FFFF00>{timeUntilFull}</color>" 

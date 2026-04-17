@@ -39,8 +39,8 @@ namespace SaiGame.Services
             GUIStyle rich = new GUIStyle(EditorStyles.label) { richText = true };
 
             bool canAct = Application.isPlaying
-                          && SaiService.Instance != null
-                          && SaiService.Instance.IsAuthenticated;
+                          && SaiServer.Instance != null
+                          && SaiServer.Instance.IsAuthenticated;
 
             // ════════════════════════════════════════════════════════════════
             //  SECTION 1 — QUEST DETAIL
@@ -697,13 +697,13 @@ namespace SaiGame.Services
 
         private void LoadClaims()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[QuestClaimsEditor] SaiService not found!");
+                Debug.LogError("[QuestClaimsEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[QuestClaimsEditor] Not authenticated! Please login first.");
                 return;

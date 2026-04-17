@@ -396,7 +396,7 @@ namespace SaiGame.Services
 
         private InventoryItemData[] GetAvailableItems(EquipmentSlotData slot)
         {
-            InventoryItemData[] all = SaiService.Instance?.PlayerItem?.CurrentInventory?.items;
+            InventoryItemData[] all = SaiServer.Instance?.PlayerItem?.CurrentInventory?.items;
             if (all == null) return null;
 
             bool hasDefinitions = slot.allowed_item_definition_ids != null && slot.allowed_item_definition_ids.Length > 0;
@@ -444,7 +444,7 @@ namespace SaiGame.Services
 
         private void RequestEquip(EquipmentSlotData slot, InventoryItemData item)
         {
-            if (SaiService.Instance == null || !SaiService.Instance.IsAuthenticated)
+            if (SaiServer.Instance == null || !SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[EquipmentSlotEditor] Not authenticated!");
                 return;
@@ -476,7 +476,7 @@ namespace SaiGame.Services
 
         private void RequestUpdateSlotData(EquipmentSlotData slot, InventoryItemData item)
         {
-            if (SaiService.Instance == null || !SaiService.Instance.IsAuthenticated)
+            if (SaiServer.Instance == null || !SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[EquipmentSlotEditor] Not authenticated!");
                 return;
@@ -508,7 +508,7 @@ namespace SaiGame.Services
 
         private void RequestUnequip(EquipmentSlotData slot, InventoryItemData item)
         {
-            if (SaiService.Instance == null || !SaiService.Instance.IsAuthenticated)
+            if (SaiServer.Instance == null || !SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[EquipmentSlotEditor] Not authenticated!");
                 return;
@@ -536,22 +536,22 @@ namespace SaiGame.Services
 
         private void LoadItems()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[EquipmentSlotEditor] SaiService not found!");
+                Debug.LogError("[EquipmentSlotEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[EquipmentSlotEditor] Not authenticated! Please login first.");
                 return;
             }
 
-            PlayerItem playerItem = SaiService.Instance.PlayerItem;
+            PlayerItem playerItem = SaiServer.Instance.PlayerItem;
             if (playerItem == null)
             {
-                Debug.LogError("[EquipmentSlotEditor] PlayerItem not found on SaiService!");
+                Debug.LogError("[EquipmentSlotEditor] PlayerItem not found on SaiServer!");
                 return;
             }
 
@@ -562,7 +562,7 @@ namespace SaiGame.Services
                 onSuccess: response =>
                 {
                     this.isLoadingItems = false;
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[EquipmentSlotEditor] Loaded {response.items?.Length ?? 0} items (total: {response.total})");
                     Repaint();
                 },
@@ -577,13 +577,13 @@ namespace SaiGame.Services
 
         private void LoadSlots()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[EquipmentSlotEditor] SaiService not found!");
+                Debug.LogError("[EquipmentSlotEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[EquipmentSlotEditor] Not authenticated! Please login first.");
                 return;
@@ -592,13 +592,13 @@ namespace SaiGame.Services
             this.equipmentSlotManager.GetSlots(
                 onSuccess: response =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[EquipmentSlotEditor] Loaded {response.slots?.Length ?? 0} slots (total: {response.total})");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[EquipmentSlotEditor] Failed to load slots: {error}");
                 }
             );
@@ -606,13 +606,13 @@ namespace SaiGame.Services
 
         private void LoadEquipped()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[EquipmentSlotEditor] SaiService not found!");
+                Debug.LogError("[EquipmentSlotEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[EquipmentSlotEditor] Not authenticated! Please login first.");
                 return;
@@ -646,7 +646,7 @@ namespace SaiGame.Services
             EquipmentSlotsResponse slotsResponse = this.equipmentSlotManager.CurrentSlots;
             if (slotsResponse?.slots == null) return;
 
-            InventoryItemData[] inventory = SaiService.Instance?.PlayerItem?.CurrentInventory?.items;
+            InventoryItemData[] inventory = SaiServer.Instance?.PlayerItem?.CurrentInventory?.items;
 
             this.slotAssignments.Clear();
 

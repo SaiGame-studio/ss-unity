@@ -580,7 +580,7 @@ GameObject:
   - component: {fileID: 27159321914394544}
   - component: {fileID: 1993458322055049526}
   m_Layer: 0
-  m_Name: SaiService
+  m_Name: SaiServer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -615,7 +615,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd02fa001eb26e4fb50f22c4989cde1, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiService
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiServer
   saiAuth: {fileID: 813458455079530658}
   gamerProgress: {fileID: 3797376410084372741}
   mailbox: {fileID: 390271473075436921}

@@ -103,12 +103,12 @@ namespace SaiGame.Services
                     playerEvent.TrackEvent(
                         onSuccess: r =>
                         {
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                                 Debug.Log($"[Editor] Event tracked! Type: {playerEvent.EventType}, Session: {playerEvent.SessionId}, ID: {r.event_id}");
                         },
                         onError: error =>
                         {
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                                 Debug.LogError($"[Editor] Track event failed: {error}");
                         }
                     );

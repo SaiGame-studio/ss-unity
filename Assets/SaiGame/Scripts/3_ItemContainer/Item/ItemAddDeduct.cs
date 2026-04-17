@@ -80,16 +80,16 @@ namespace SaiGame.Services
             System.Action<string> onSuccess = null,
             System.Action<string> onError   = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#00FF88><b>[ItemAddDeduct] ► {(quantity >= 0 ? "Add" : "Deduct")} Item Qty</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -130,24 +130,24 @@ namespace SaiGame.Services
             System.Action<string> onSuccess,
             System.Action<string> onError)
         {
-            string gameId   = SaiService.Instance.GameId;
+            string gameId   = SaiServer.Instance.GameId;
             string endpoint = $"/api/v2/games/{gameId}/item-inventories/{itemDefinitionId}/qty";
 
             string body = string.IsNullOrEmpty(containerId)
                 ? $"{{\"quantity\":{quantity}}}"
                 : $"{{\"quantity\":{quantity},\"container_id\":\"{containerId}\"}}";
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log($"[ItemAddDeduct] PUT {endpoint} | body: {body}");
 
-            yield return SaiService.Instance.PutRequest(endpoint, body,
+            yield return SaiServer.Instance.PutRequest(endpoint, body,
                 response =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemAddDeduct] Qty updated successfully. Server: {response}");
 
                     this.OnAddDeductSuccess?.Invoke(response);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.Log("<color=#66CCFF>[ItemAddDeduct] AddDeduct</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemAddDeduct.cs › AddDeductCoroutine");
 
                     onSuccess?.Invoke(response);
@@ -155,7 +155,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnAddDeductFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemAddDeduct] AddDeduct</color> → <b><color=#FF4444>onError</color></b> callback | ItemAddDeduct.cs › AddDeductCoroutine | {error}");
 
                     onError?.Invoke(error);

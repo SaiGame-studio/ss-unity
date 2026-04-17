@@ -714,13 +714,13 @@ namespace SaiGame.Services
 
         private void RunGetTodayQuests()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[DailyQuestEditor] SaiService not found!");
+                Debug.LogError("[DailyQuestEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[DailyQuestEditor] Not authenticated! Please login first.");
                 return;
@@ -747,7 +747,7 @@ namespace SaiGame.Services
 
         private void RunStartQuest(string questDefinitionId)
         {
-            if (SaiService.Instance == null || SaiService.Instance.QuestProgressor == null)
+            if (SaiServer.Instance == null || SaiServer.Instance.QuestProgressor == null)
             {
                 Debug.LogError("[DailyQuestEditor] QuestProgressor not found!");
                 return;
@@ -756,7 +756,7 @@ namespace SaiGame.Services
             this.startingQuestId = questDefinitionId;
             Repaint();
 
-            SaiService.Instance.QuestProgressor.StartQuest(
+            SaiServer.Instance.QuestProgressor.StartQuest(
                 questDefinitionId: questDefinitionId,
                 onSuccess: response =>
                 {
@@ -775,7 +775,7 @@ namespace SaiGame.Services
 
         private void RunCheckQuest(string questDefinitionId)
         {
-            if (SaiService.Instance == null || SaiService.Instance.QuestProgressor == null)
+            if (SaiServer.Instance == null || SaiServer.Instance.QuestProgressor == null)
             {
                 Debug.LogError("[DailyQuestEditor] QuestProgressor not found!");
                 return;
@@ -784,7 +784,7 @@ namespace SaiGame.Services
             this.checkingQuestId = questDefinitionId;
             Repaint();
 
-            SaiService.Instance.QuestProgressor.CheckQuest(
+            SaiServer.Instance.QuestProgressor.CheckQuest(
                 questDefinitionId: questDefinitionId,
                 onSuccess: response =>
                 {
@@ -804,7 +804,7 @@ namespace SaiGame.Services
 
         private void RunClaimQuest(string questDefinitionId)
         {
-            if (SaiService.Instance == null || SaiService.Instance.QuestProgressor == null)
+            if (SaiServer.Instance == null || SaiServer.Instance.QuestProgressor == null)
             {
                 Debug.LogError("[DailyQuestEditor] QuestProgressor not found!");
                 return;
@@ -813,7 +813,7 @@ namespace SaiGame.Services
             this.claimingQuestId = questDefinitionId;
             Repaint();
 
-            SaiService.Instance.QuestProgressor.ClaimQuest(
+            SaiServer.Instance.QuestProgressor.ClaimQuest(
                 questDefinitionId: questDefinitionId,
                 onSuccess: response =>
                 {
@@ -832,13 +832,13 @@ namespace SaiGame.Services
 
         private void RunAssignAhead()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[DailyQuestEditor] SaiService not found!");
+                Debug.LogError("[DailyQuestEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[DailyQuestEditor] Not authenticated! Please login first.");
                 return;
@@ -865,13 +865,13 @@ namespace SaiGame.Services
 
         private void LoadPools()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[DailyQuestEditor] SaiService not found!");
+                Debug.LogError("[DailyQuestEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[DailyQuestEditor] Not authenticated! Please login first.");
                 return;

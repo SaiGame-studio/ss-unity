@@ -7,7 +7,7 @@ namespace SaiGame.Services
     /// </summary>
     public class PlayerItemEventListener : SaiBehaviour
     {
-        private PlayerItem itemContainer => SaiService.Instance?.PlayerItem;
+        private PlayerItem itemContainer => SaiServer.Instance?.PlayerItem;
 
         protected override void LoadComponents()
         {

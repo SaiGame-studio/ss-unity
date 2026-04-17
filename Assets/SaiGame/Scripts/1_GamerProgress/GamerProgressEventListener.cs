@@ -7,7 +7,7 @@ namespace SaiGame.Services
     /// </summary>
     public class GamerProgressEventListener : SaiBehaviour
     {
-        private GamerProgress gamerProgress => SaiService.Instance?.GamerProgress;
+        private GamerProgress gamerProgress => SaiServer.Instance?.GamerProgress;
 
         protected override void LoadComponents()
         {

@@ -4,7 +4,7 @@ namespace SaiGame.Services
 {
     public class ItemTagEventListener : SaiBehaviour
     {
-        private ItemTag itemTag => SaiService.Instance?.ItemTag;
+        private ItemTag itemTag => SaiServer.Instance?.ItemTag;
 
         protected override void LoadComponents()
         {

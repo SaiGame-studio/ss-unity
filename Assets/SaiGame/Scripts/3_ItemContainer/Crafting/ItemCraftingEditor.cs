@@ -358,13 +358,13 @@ namespace SaiGame.Services
 
         private void LoadHistory()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ItemCraftingEditor] SaiService not found!");
+                Debug.LogError("[ItemCraftingEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ItemCraftingEditor] Not authenticated!");
                 return;
@@ -391,13 +391,13 @@ namespace SaiGame.Services
                 return;
             }
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ItemCraftingEditor] SaiService not found!");
+                Debug.LogError("[ItemCraftingEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ItemCraftingEditor] Not authenticated!");
                 return;
@@ -544,13 +544,13 @@ namespace SaiGame.Services
                 return;
             }
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ItemCraftingEditor] SaiService not found!");
+                Debug.LogError("[ItemCraftingEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ItemCraftingEditor] Not authenticated!");
                 return;
@@ -583,13 +583,13 @@ namespace SaiGame.Services
                 return;
             }
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ItemCraftingEditor] SaiService not found!");
+                Debug.LogError("[ItemCraftingEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ItemCraftingEditor] Not authenticated!");
                 return;

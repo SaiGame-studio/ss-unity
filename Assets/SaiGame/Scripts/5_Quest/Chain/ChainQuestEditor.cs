@@ -607,7 +607,7 @@ namespace SaiGame.Services
 
         private void RunStartQuest(string questDefinitionId)
         {
-            if (SaiService.Instance?.QuestProgressor == null)
+            if (SaiServer.Instance?.QuestProgressor == null)
             {
                 Debug.LogError("[ChainQuestEditor] QuestProgressor not found!");
                 return;
@@ -616,7 +616,7 @@ namespace SaiGame.Services
             this.startingQuestId = questDefinitionId;
             Repaint();
 
-            SaiService.Instance.QuestProgressor.StartQuest(
+            SaiServer.Instance.QuestProgressor.StartQuest(
                 questDefinitionId: questDefinitionId,
                 onSuccess: response =>
                 {
@@ -636,7 +636,7 @@ namespace SaiGame.Services
 
         private void RunCheckQuest(string questDefinitionId)
         {
-            if (SaiService.Instance?.QuestProgressor == null)
+            if (SaiServer.Instance?.QuestProgressor == null)
             {
                 Debug.LogError("[ChainQuestEditor] QuestProgressor not found!");
                 return;
@@ -645,7 +645,7 @@ namespace SaiGame.Services
             this.checkingQuestId = questDefinitionId;
             Repaint();
 
-            SaiService.Instance.QuestProgressor.CheckQuest(
+            SaiServer.Instance.QuestProgressor.CheckQuest(
                 questDefinitionId: questDefinitionId,
                 onSuccess: response =>
                 {
@@ -665,7 +665,7 @@ namespace SaiGame.Services
 
         private void RunClaimQuest(string questDefinitionId)
         {
-            if (SaiService.Instance?.QuestProgressor == null)
+            if (SaiServer.Instance?.QuestProgressor == null)
             {
                 Debug.LogError("[ChainQuestEditor] QuestProgressor not found!");
                 return;
@@ -674,7 +674,7 @@ namespace SaiGame.Services
             this.claimingQuestId = questDefinitionId;
             Repaint();
 
-            SaiService.Instance.QuestProgressor.ClaimQuest(
+            SaiServer.Instance.QuestProgressor.ClaimQuest(
                 questDefinitionId: questDefinitionId,
                 onSuccess: response =>
                 {
@@ -950,13 +950,13 @@ namespace SaiGame.Services
 
         private void LoadChains()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ChainQuestEditor] SaiService not found!");
+                Debug.LogError("[ChainQuestEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ChainQuestEditor] Not authenticated! Please login first.");
                 return;
@@ -977,13 +977,13 @@ namespace SaiGame.Services
 
         private void LoadChainMembers(string chainId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ChainQuestEditor] SaiService not found!");
+                Debug.LogError("[ChainQuestEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ChainQuestEditor] Not authenticated! Please login first.");
                 return;
@@ -1013,13 +1013,13 @@ namespace SaiGame.Services
 
         private void LoadChainTree(string chainId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ChainQuestEditor] SaiService not found!");
+                Debug.LogError("[ChainQuestEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ChainQuestEditor] Not authenticated! Please login first.");
                 return;

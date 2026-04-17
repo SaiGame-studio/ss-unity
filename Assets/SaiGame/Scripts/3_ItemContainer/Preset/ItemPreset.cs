@@ -41,24 +41,24 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
@@ -66,18 +66,18 @@ namespace SaiGame.Services
         {
             if (!this.autoLoadOnLogin) return;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemPreset] Auto-loading presets after successful login...");
 
             this.GetPresets(
                 onSuccess: presets =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemPreset] Presets auto-loaded: {presets.containers.Length} presets");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.LogWarning($"[ItemPreset] Auto-load presets failed: {error}");
                 }
             );
@@ -85,12 +85,12 @@ namespace SaiGame.Services
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemPreset] Logout successful, clearing preset data...");
 
             this.ClearLocalPresets();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemPreset] Preset data cleared successfully");
         }
 
@@ -123,16 +123,16 @@ namespace SaiGame.Services
             System.Action<PresetData> onSuccess,
             System.Action<string> onError)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFCC><b>[ItemPreset] ► Create Preset</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -166,7 +166,7 @@ namespace SaiGame.Services
             System.Action<PresetData> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/presets";
 
             string idKey = mode == CreatePresetMode.CodeName ? "code_name" : "definition_id";
@@ -175,21 +175,21 @@ namespace SaiGame.Services
                 ? $"{{\"{idKey}\":\"{escapedIdentifier}\"}}"
                 : $"{{\"{idKey}\":\"{escapedIdentifier}\",\"name\":\"{EscapeJsonString(name)}\"}}";
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log($"[ItemPreset] Creating preset with {idKey}: {identifier} | name: {name}");
 
-            yield return SaiService.Instance.PostRequest(endpoint, jsonData,
+            yield return SaiServer.Instance.PostRequest(endpoint, jsonData,
                 response =>
                 {
                     try
                     {
                         PresetData preset = JsonUtility.FromJson<PresetData>(response);
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[ItemPreset] Preset created: {preset.id} | type: {preset.preset_type} | max_slots: {preset.max_slots}");
 
                         this.OnCreatePresetSuccess?.Invoke(preset);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[ItemPreset] CreatePreset</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemPreset.cs › CreatePresetCoroutine");
                         onSuccess?.Invoke(preset);
                     }
@@ -197,7 +197,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse create preset response error: {e.Message}";
                         this.OnCreatePresetFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[ItemPreset] CreatePreset</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemPreset.cs › CreatePresetCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -205,7 +205,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnCreatePresetFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemPreset] CreatePreset</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemPreset.cs › CreatePresetCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -223,16 +223,16 @@ namespace SaiGame.Services
             System.Action<PresetData> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFCC><b>[ItemPreset] ► Add Item To Preset</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -254,21 +254,21 @@ namespace SaiGame.Services
             System.Action<PresetData> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string putEndpoint = $"/api/v1/games/{gameId}/presets/{presetId}/slots/{slotIndex}";
             string jsonData = $"{{\"inventory_item_id\":\"{inventoryItemId}\"}}";
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log($"[ItemPreset] Adding item {inventoryItemId} to preset {presetId} at slot {slotIndex}");
 
-            yield return SaiService.Instance.PutRequest(putEndpoint, jsonData,
+            yield return SaiServer.Instance.PutRequest(putEndpoint, jsonData,
                 putResponse =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemPreset] PUT successful. Fetching updated preset...");
 
                     string getEndpoint = $"/api/v1/games/{gameId}/presets/{presetId}";
-                    StartCoroutine(SaiService.Instance.GetRequest(getEndpoint,
+                    StartCoroutine(SaiServer.Instance.GetRequest(getEndpoint,
                         getResponse =>
                         {
                             try
@@ -278,17 +278,17 @@ namespace SaiGame.Services
                                 {
                                     detail.container.slots = detail.slots;
 
-                                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                                         Debug.Log($"[ItemPreset] Preset data updated: {detail.container.id}");
 
-                                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                                         Debug.Log("<color=#66CCFF>[ItemPreset] AddItemToPreset</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemPreset.cs › AddItemToPresetCoroutine");
                                     
                                     onSuccess?.Invoke(detail.container);
                                 }
                                 else
                                 {
-                                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                                         Debug.LogWarning("[ItemPreset] AddItemToPreset → Error: Received empty or invalid PresetDetailResponse");
                                     onError?.Invoke("Received empty or invalid PresetDetailResponse");
                                 }
@@ -296,14 +296,14 @@ namespace SaiGame.Services
                             catch (System.Exception e)
                             {
                                 string errorMsg = $"Parse get preset detail response error: {e.Message}";
-                                if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                                if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                                     Debug.LogWarning($"<color=#66CCFF>[ItemPreset] AddItemToPreset</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemPreset.cs › AddItemToPresetCoroutine | {errorMsg}");
                                 onError?.Invoke(errorMsg);
                             }
                         },
                         getError =>
                         {
-                            if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                                 Debug.LogWarning($"<color=#66CCFF>[ItemPreset] AddItemToPreset</color> → <b><color=#FF4444>onError</color></b> callback (GET network) | ItemPreset.cs › AddItemToPresetCoroutine | {getError}");
                             onError?.Invoke(getError);
                         }
@@ -311,7 +311,7 @@ namespace SaiGame.Services
                 },
                 error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemPreset] AddItemToPreset</color> → <b><color=#FF4444>onError</color></b> callback (PUT network) | ItemPreset.cs › AddItemToPresetCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -326,16 +326,16 @@ namespace SaiGame.Services
             System.Action<PresetResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFCC><b>[ItemPreset] ► Get Presets</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -348,10 +348,10 @@ namespace SaiGame.Services
             System.Action<PresetResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/presets";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -359,11 +359,11 @@ namespace SaiGame.Services
                         PresetResponse presetResponse = JsonUtility.FromJson<PresetResponse>(response);
                         this.currentPresets = presetResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[ItemPreset] Presets loaded: {presetResponse.containers.Length} presets");
 
                         this.OnGetPresetsSuccess?.Invoke(presetResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[ItemPreset] GetPresets</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemPreset.cs › GetPresetsCoroutine");
                         onSuccess?.Invoke(presetResponse);
                     }
@@ -371,7 +371,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get presets response error: {e.Message}";
                         this.OnGetPresetsFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[ItemPreset] GetPresets</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemPreset.cs › GetPresetsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -379,7 +379,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnGetPresetsFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemPreset] GetPresets</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemPreset.cs › GetPresetsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -395,16 +395,16 @@ namespace SaiGame.Services
             System.Action<PresetData> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#00FFCC><b>[ItemPreset] ► Get Preset {presetId}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -424,10 +424,10 @@ namespace SaiGame.Services
             System.Action<PresetData> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/presets/{presetId}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -437,17 +437,17 @@ namespace SaiGame.Services
                         {
                             detail.container.slots = detail.slots;
 
-                            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                                 Debug.Log($"[ItemPreset] Preset detail loaded: {detail.container.id}");
 
-                            if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                                 Debug.Log("<color=#66CCFF>[ItemPreset] GetPreset</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemPreset.cs › GetPresetCoroutine");
                             
                             onSuccess?.Invoke(detail.container);
                         }
                         else
                         {
-                            if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                            if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                                 Debug.LogWarning("[ItemPreset] GetPreset → Error: Received empty or invalid PresetDetailResponse");
                             onError?.Invoke("Received empty or invalid PresetDetailResponse");
                         }
@@ -455,14 +455,14 @@ namespace SaiGame.Services
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse get preset detail response error: {e.Message}";
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[ItemPreset] GetPreset</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemPreset.cs › GetPresetCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemPreset] GetPreset</color> → <b><color=#FF4444>onError</color></b> callback (GET network) | ItemPreset.cs › GetPresetCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -478,16 +478,16 @@ namespace SaiGame.Services
             System.Action<string> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#FF6666><b>[ItemPreset] ► Delete Preset {presetId}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -507,10 +507,10 @@ namespace SaiGame.Services
             System.Action<string> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/presets/{presetId}";
 
-            yield return SaiService.Instance.DeleteRequest(endpoint,
+            yield return SaiServer.Instance.DeleteRequest(endpoint,
                 response =>
                 {
                     if (this.currentPresets != null && this.currentPresets.containers != null)
@@ -520,16 +520,16 @@ namespace SaiGame.Services
                         this.currentPresets.containers = list.ToArray();
                     }
 
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemPreset] Preset {presetId} deleted successfully");
 
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.Log("<color=#66CCFF>[ItemPreset] DeletePreset</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemPreset.cs › DeletePresetCoroutine");
                     onSuccess?.Invoke(presetId);
                 },
                 error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemPreset] DeletePreset</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemPreset.cs › DeletePresetCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -541,12 +541,12 @@ namespace SaiGame.Services
         /// </summary>
         public void ClearPresets()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[ItemPreset] ► Clear Presets</b></color>", gameObject);
 
             this.ClearLocalPresets();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemPreset] Preset data cleared locally");
         }
 

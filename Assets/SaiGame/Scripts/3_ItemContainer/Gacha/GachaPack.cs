@@ -37,16 +37,16 @@ namespace SaiGame.Services
             string packId = gachaPackDefId ?? this.gachaPackId;
             string contId = targetContainerId ?? this.containerId;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#FFD700><b>[GachaPack] ► Open Gacha Pack: {packId}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -73,12 +73,12 @@ namespace SaiGame.Services
             Action<GachaResponse> onSuccess,
             Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/gacha/{gachaPackDefId}";
             string idempotencyKey = $"{UnityEngine.Random.Range(1000000, 9999999)}-{UnityEngine.Random.Range(1000000, 9999999)}-{UnityEngine.Random.Range(1000000, 9999999)}";
             string body = $"{{\"idempotency_key\":\"{idempotencyKey}\",\"container_id\":\"{targetContainerId}\"}}";
 
-            yield return SaiService.Instance.PostRequest(endpoint, body,
+            yield return SaiServer.Instance.PostRequest(endpoint, body,
                 response =>
                 {
                     try
@@ -86,11 +86,11 @@ namespace SaiGame.Services
                         GachaResponse gachaResponse = JsonUtility.FromJson<GachaResponse>(response);
                         this.lastResponse = gachaResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[GachaPack] Gacha pack opened: {gachaResponse.items_granted?.Length ?? 0} items granted (duplicate={gachaResponse.is_duplicate})");
 
                         this.OnOpenGachaSuccess?.Invoke(gachaResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#FFD700>[GachaPack] OpenGachaPack</color> → <b><color=#00FF88>onSuccess</color></b> callback | GachaPack.cs › OpenGachaPackCoroutine");
 
                         onSuccess?.Invoke(gachaResponse);
@@ -99,7 +99,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse gacha response error: {e.Message}";
                         this.OnOpenGachaFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#FFD700>[GachaPack] OpenGachaPack</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GachaPack.cs › OpenGachaPackCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -107,7 +107,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnOpenGachaFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#FFD700>[GachaPack] OpenGachaPack</color> → <b><color=#FF4444>onError</color></b> callback (network) | GachaPack.cs › OpenGachaPackCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -127,16 +127,16 @@ namespace SaiGame.Services
             string packCode = code ?? this.gachaPackCode;
             string contId = targetContainerId ?? this.containerId;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#FFD700><b>[GachaPack] ► Open Gacha By Code: {packCode}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -163,12 +163,12 @@ namespace SaiGame.Services
             Action<GachaResponse> onSuccess,
             Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/gacha/by-code/{code}";
             string idempotencyKey = $"{UnityEngine.Random.Range(1000000, 9999999)}-{UnityEngine.Random.Range(1000000, 9999999)}-{UnityEngine.Random.Range(1000000, 9999999)}";
             string body = $"{{\"idempotency_key\":\"{idempotencyKey}\",\"container_id\":\"{targetContainerId}\"}}";
 
-            yield return SaiService.Instance.PostRequest(endpoint, body,
+            yield return SaiServer.Instance.PostRequest(endpoint, body,
                 response =>
                 {
                     try
@@ -176,11 +176,11 @@ namespace SaiGame.Services
                         GachaResponse gachaResponse = JsonUtility.FromJson<GachaResponse>(response);
                         this.lastResponse = gachaResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[GachaPack] Gacha by code '{code}' opened: {gachaResponse.items_granted?.Length ?? 0} items granted (duplicate={gachaResponse.is_duplicate})");
 
                         this.OnOpenGachaSuccess?.Invoke(gachaResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#FFD700>[GachaPack] OpenGachaPackByCode</color> → <b><color=#00FF88>onSuccess</color></b> callback | GachaPack.cs › OpenGachaPackByCodeCoroutine");
 
                         onSuccess?.Invoke(gachaResponse);
@@ -189,7 +189,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse gacha response error: {e.Message}";
                         this.OnOpenGachaFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#FFD700>[GachaPack] OpenGachaPackByCode</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GachaPack.cs › OpenGachaPackByCodeCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -197,7 +197,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnOpenGachaFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#FFD700>[GachaPack] OpenGachaPackByCode</color> → <b><color=#FF4444>onError</color></b> callback (network) | GachaPack.cs › OpenGachaPackByCodeCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -209,7 +209,7 @@ namespace SaiGame.Services
         /// </summary>
         public void ClearLastResponse()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[GachaPack] ► Clear Last Response</b></color>", gameObject);
 
             this.lastResponse = null;

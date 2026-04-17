@@ -74,7 +74,7 @@ namespace SaiGame.Services
                 this.dailyPoolOptions = new string[0];
                 this.dailySelectedPoolIndex = 0;
             }
-            bool canLoadAll = Application.isPlaying && SaiService.Instance != null && SaiService.Instance.IsAuthenticated;
+            bool canLoadAll = Application.isPlaying && SaiServer.Instance != null && SaiServer.Instance.IsAuthenticated;
             bool loadAllBusy = this.isLoadingChains || this.isLoadingDailyPools;
             string loadAllLabel;
             switch ((QuestSourceType)this.questSourceType.enumValueIndex)
@@ -161,8 +161,8 @@ namespace SaiGame.Services
                 EditorGUI.indentLevel++;
 
                 bool canLoad = Application.isPlaying
-                               && SaiService.Instance != null
-                               && SaiService.Instance.IsAuthenticated;
+                               && SaiServer.Instance != null
+                               && SaiServer.Instance.IsAuthenticated;
 
                 // Refresh button
                 GUI.backgroundColor = (canLoad && !this.isRefreshing) ? new Color(0.4f, 0.9f, 1f) : Color.gray;
@@ -201,7 +201,7 @@ namespace SaiGame.Services
                     DailyQuestEntryData fullEntry = null;
                     if ((QuestSourceType)this.questSourceType.enumValueIndex == QuestSourceType.DailyQuest)
                     {
-                        TodayQuestResponse today = SaiService.Instance?.DailyQuest?.CurrentTodayQuestResponse;
+                        TodayQuestResponse today = SaiServer.Instance?.DailyQuest?.CurrentTodayQuestResponse;
                         if (today?.entries != null)
                         {
                             foreach (DailyQuestEntryData e in today.entries)
@@ -472,7 +472,7 @@ namespace SaiGame.Services
 
         private void RefreshQuestPicker()
         {
-            if (SaiService.Instance == null || !SaiService.Instance.IsAuthenticated) return;
+            if (SaiServer.Instance == null || !SaiServer.Instance.IsAuthenticated) return;
 
             QuestSourceType sourceType = (QuestSourceType)this.questSourceType.enumValueIndex;
             switch (sourceType)
@@ -496,7 +496,7 @@ namespace SaiGame.Services
 
         private void RefreshChainQuestPicker()
         {
-            ChainQuest chainQuest = SaiService.Instance?.ChainQuest;
+            ChainQuest chainQuest = SaiServer.Instance?.ChainQuest;
             if (chainQuest == null) return;
 
             if (this.chainLoadedChains == null || this.chainLoadedChains.Length == 0)
@@ -529,7 +529,7 @@ namespace SaiGame.Services
 
         private void RefreshDailyQuestPicker()
         {
-            DailyQuest dailyQuest = SaiService.Instance?.DailyQuest;
+            DailyQuest dailyQuest = SaiServer.Instance?.DailyQuest;
             if (dailyQuest == null) return;
 
             if (this.dailyLoadedPools == null || this.dailyLoadedPools.Length == 0)
@@ -578,7 +578,7 @@ namespace SaiGame.Services
 
         private void LoadAllQuests()
         {
-            if (SaiService.Instance == null || !SaiService.Instance.IsAuthenticated) return;
+            if (SaiServer.Instance == null || !SaiServer.Instance.IsAuthenticated) return;
 
             QuestSourceType sourceType = (QuestSourceType)this.questSourceType.enumValueIndex;
             switch (sourceType)
@@ -594,7 +594,7 @@ namespace SaiGame.Services
 
         private void DrawLoadQuestsButton()
         {
-            bool canLoadQuests = Application.isPlaying && SaiService.Instance != null && SaiService.Instance.IsAuthenticated;
+            bool canLoadQuests = Application.isPlaying && SaiServer.Instance != null && SaiServer.Instance.IsAuthenticated;
             GUI.backgroundColor = (canLoadQuests && !this.isRefreshing) ? new Color(0.4f, 0.9f, 1f) : Color.gray;
             EditorGUI.BeginDisabledGroup(!canLoadQuests || this.isRefreshing);
             if (GUILayout.Button(this.isRefreshing ? "Loading..." : "Load Quests", GUILayout.Width(90), GUILayout.Height(18)))
@@ -605,7 +605,7 @@ namespace SaiGame.Services
 
         private void LoadDailyPools()
         {
-            DailyQuest dailyQuest = SaiService.Instance?.DailyQuest;
+            DailyQuest dailyQuest = SaiServer.Instance?.DailyQuest;
             if (dailyQuest == null)
             {
                 Debug.LogError("[QuestProgressorEditor] DailyQuest service not found!");
@@ -650,7 +650,7 @@ namespace SaiGame.Services
 
         private void LoadAllChains()
         {
-            ChainQuest chainQuest = SaiService.Instance?.ChainQuest;
+            ChainQuest chainQuest = SaiServer.Instance?.ChainQuest;
             if (chainQuest == null)
             {
                 Debug.LogError("[QuestProgressorEditor] ChainQuest service not found!");
@@ -698,13 +698,13 @@ namespace SaiGame.Services
 
         private void ClaimSelectedQuest(string questDefinitionId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[QuestProgressorEditor] SaiService not found!");
+                Debug.LogError("[QuestProgressorEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[QuestProgressorEditor] Not authenticated! Please login first.");
                 return;
@@ -732,13 +732,13 @@ namespace SaiGame.Services
 
         private void CheckSelectedQuest(string questDefinitionId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[QuestProgressorEditor] SaiService not found!");
+                Debug.LogError("[QuestProgressorEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[QuestProgressorEditor] Not authenticated! Please login first.");
                 return;
@@ -893,13 +893,13 @@ namespace SaiGame.Services
 
         private void StartSelectedQuest(string questDefinitionId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[QuestProgressorEditor] SaiService not found!");
+                Debug.LogError("[QuestProgressorEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[QuestProgressorEditor] Not authenticated! Please login first.");
                 return;

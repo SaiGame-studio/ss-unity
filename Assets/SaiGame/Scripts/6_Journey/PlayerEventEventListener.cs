@@ -4,7 +4,7 @@ namespace SaiGame.Services
 {
     public class PlayerEventEventListener : SaiBehaviour
     {
-        private PlayerEvent playerEvent => SaiService.Instance?.PlayerEvent;
+        private PlayerEvent playerEvent => SaiServer.Instance?.PlayerEvent;
 
         private void OnEnable()
         {

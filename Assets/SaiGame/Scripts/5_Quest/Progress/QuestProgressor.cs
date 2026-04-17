@@ -42,36 +42,36 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
         protected virtual void HandleLoginSuccess(LoginResponse response)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[QuestProgressor] Login detected, ready to start quests.");
         }
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[QuestProgressor] Logout detected, clearing last quest data...");
 
             this.ClearLastStartedQuest();
@@ -85,7 +85,7 @@ namespace SaiGame.Services
         /// </summary>
         public List<QuestPickerEntry> BuildQuestPickerEntries(string chainIdFilter = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#4DD0E1><b>[QuestProgressor] ► Refresh Quest List (source: {this.questSourceType})</b></color>", gameObject);
 
             var entries = new List<QuestPickerEntry>();
@@ -105,7 +105,7 @@ namespace SaiGame.Services
 
         private void AppendChainQuestEntries(List<QuestPickerEntry> entries, string chainIdFilter)
         {
-            ChainQuest chainQuest = SaiService.Instance?.ChainQuest;
+            ChainQuest chainQuest = SaiServer.Instance?.ChainQuest;
             if (chainQuest == null || !chainQuest.HasChains) return;
 
             foreach (ChainQuestData chain in chainQuest.CurrentChainResponse.chains)
@@ -132,7 +132,7 @@ namespace SaiGame.Services
 
         private void AppendDailyQuestEntries(List<QuestPickerEntry> entries)
         {
-            DailyQuest dailyQuest = SaiService.Instance?.DailyQuest;
+            DailyQuest dailyQuest = SaiServer.Instance?.DailyQuest;
             if (dailyQuest == null) return;
 
             TodayQuestResponse today = dailyQuest.CurrentTodayQuestResponse;
@@ -164,16 +164,16 @@ namespace SaiGame.Services
             System.Action<StartQuestResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#FFD700><b>[QuestProgressor] ► Start Quest ({questDefinitionId})</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -193,10 +193,10 @@ namespace SaiGame.Services
             System.Action<StartQuestResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/quests/{questDefinitionId}/start";
 
-            yield return SaiService.Instance.PostRequest(endpoint, "{}",
+            yield return SaiServer.Instance.PostRequest(endpoint, "{}",
                 response =>
                 {
                     try
@@ -204,11 +204,11 @@ namespace SaiGame.Services
                         StartQuestResponse questResponse = JsonUtility.FromJson<StartQuestResponse>(response);
                         this.lastStartedQuest = questResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[QuestProgressor] Quest started: id={questResponse.id}, status={questResponse.status}");
 
                         this.OnStartQuestSuccess?.Invoke(questResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[QuestProgressor] StartQuest</color> → <b><color=#00FF88>onSuccess</color></b> callback | QuestProgressor.cs › StartQuestCoroutine");
                         onSuccess?.Invoke(questResponse);
                     }
@@ -216,7 +216,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse start quest response error: {e.Message}";
                         this.OnStartQuestFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[QuestProgressor] StartQuest</color> → <b><color=#FF4444>onError</color></b> callback (parse) | QuestProgressor.cs › StartQuestCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -224,7 +224,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnStartQuestFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[QuestProgressor] StartQuest</color> → <b><color=#FF4444>onError</color></b> callback (network) | QuestProgressor.cs › StartQuestCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -242,16 +242,16 @@ namespace SaiGame.Services
             System.Action<CheckQuestResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#4DD0E1><b>[QuestProgressor] ► Check Quest ({questDefinitionId})</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -271,10 +271,10 @@ namespace SaiGame.Services
             System.Action<CheckQuestResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/quests/{questDefinitionId}/check";
 
-            yield return SaiService.Instance.PostRequest(endpoint, "{}",
+            yield return SaiServer.Instance.PostRequest(endpoint, "{}",
                 response =>
                 {
                     try
@@ -291,11 +291,11 @@ namespace SaiGame.Services
 
                         this.lastCheckedQuest = checkResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[QuestProgressor] Quest checked: status={checkResponse.progress?.status}, quest={checkResponse.quest_definition?.name}");
 
                         this.OnCheckQuestSuccess?.Invoke(checkResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[QuestProgressor] CheckQuest</color> → <b><color=#00FF88>onSuccess</color></b> callback | QuestProgressor.cs › CheckQuestCoroutine");
                         onSuccess?.Invoke(checkResponse);
                     }
@@ -303,7 +303,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse check quest response error: {e.Message}";
                         this.OnCheckQuestFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[QuestProgressor] CheckQuest</color> → <b><color=#FF4444>onError</color></b> callback (parse) | QuestProgressor.cs › CheckQuestCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -311,7 +311,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnCheckQuestFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[QuestProgressor] CheckQuest</color> → <b><color=#FF4444>onError</color></b> callback (network) | QuestProgressor.cs › CheckQuestCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -329,16 +329,16 @@ namespace SaiGame.Services
             System.Action<ClaimQuestResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#AAFFAA><b>[QuestProgressor] ► Claim Quest ({questDefinitionId})</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -358,10 +358,10 @@ namespace SaiGame.Services
             System.Action<ClaimQuestResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/quests/{questDefinitionId}/claim";
 
-            yield return SaiService.Instance.PostRequest(endpoint, "{}",
+            yield return SaiServer.Instance.PostRequest(endpoint, "{}",
                 response =>
                 {
                     try
@@ -369,11 +369,11 @@ namespace SaiGame.Services
                         ClaimQuestResponse claimResponse = JsonUtility.FromJson<ClaimQuestResponse>(response);
                         this.lastClaimedQuest = claimResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[QuestProgressor] Quest claimed: id={claimResponse.id}  claimed_at={claimResponse.claimed_at}");
 
                         this.OnClaimQuestSuccess?.Invoke(claimResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[QuestProgressor] ClaimQuest</color> → <b><color=#00FF88>onSuccess</color></b> callback | QuestProgressor.cs › ClaimQuestCoroutine");
                         onSuccess?.Invoke(claimResponse);
                     }
@@ -381,7 +381,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse claim quest response error: {e.Message}";
                         this.OnClaimQuestFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[QuestProgressor] ClaimQuest</color> → <b><color=#FF4444>onError</color></b> callback (parse) | QuestProgressor.cs › ClaimQuestCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -389,7 +389,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnClaimQuestFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[QuestProgressor] ClaimQuest</color> → <b><color=#FF4444>onError</color></b> callback (network) | QuestProgressor.cs › ClaimQuestCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -434,12 +434,12 @@ namespace SaiGame.Services
 
         public void ClearLastStartedQuest()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[QuestProgressor] ► Clear Last Quest</b></color>", gameObject);
 
             this.lastStartedQuest = null;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[QuestProgressor] Last started quest cleared");
         }
 
