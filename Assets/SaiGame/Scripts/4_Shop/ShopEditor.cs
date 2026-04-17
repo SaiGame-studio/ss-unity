@@ -280,7 +280,14 @@ namespace SaiGame.Services
             this.itemIdempotencyKeys[item.id] = EditorGUILayout.TextField("Idempotency Key", this.itemIdempotencyKeys[item.id]);
             EditorGUI.EndDisabledGroup();
 
+            EditorGUILayout.BeginHorizontal();
             this.itemAutoRandomKey[item.id] = EditorGUILayout.Toggle("Auto Key", this.itemAutoRandomKey[item.id]);
+
+            EditorGUI.BeginDisabledGroup(this.itemAutoRandomKey[item.id]);
+            if (GUILayout.Button("Random Key", GUILayout.Width(100)))
+                this.itemIdempotencyKeys[item.id] = System.Guid.NewGuid().ToString();
+            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndVertical();
 
