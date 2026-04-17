@@ -22,9 +22,15 @@ namespace SaiGame.Services
         private bool isStarting = false;
         private bool isChecking = false;
         private bool isClaiming = false;
-        private bool isLoadingAll = false;
+        private bool isLoadingChains = false;
+        private bool isRefreshing = false;
         private bool showLastChecked = true;
         private bool showLastClaimed = true;
+
+        // Chain quest picker state
+        private ChainQuestData[] chainLoadedChains = new ChainQuestData[0];
+        private string[] chainOptions = new string[0];
+        private int chainSelectedIndex = 0;
 
         // Daily quest pool picker state
         private DailyQuestPoolData[] dailyLoadedPools = new DailyQuestPoolData[0];
@@ -50,7 +56,42 @@ namespace SaiGame.Services
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Quest Source", EditorStyles.boldLabel);
 
-            // ── DailyQuest pool row (shown first when DailyQuest is selected) ──
+            // ── Source Type + Load All ────────────────────────────────────────
+            EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.LabelField(new GUIContent("Source Type", "Where to load the available quests from"), GUILayout.Width(EditorGUIUtility.labelWidth - 4));
+            QuestSourceType newSourceType = (QuestSourceType)EditorGUILayout.EnumPopup((QuestSourceType)this.questSourceType.enumValueIndex, GUILayout.ExpandWidth(true));
+            if (EditorGUI.EndChangeCheck())
+            {
+                this.questSourceType.enumValueIndex = (int)newSourceType;
+                this.pickerEntries.Clear();
+                this.pickerLabels = new string[0];
+                this.selectedQuestIndex = 0;
+                this.chainLoadedChains = new ChainQuestData[0];
+                this.chainOptions = new string[0];
+                this.chainSelectedIndex = 0;
+                this.dailyLoadedPools = new DailyQuestPoolData[0];
+                this.dailyPoolOptions = new string[0];
+                this.dailySelectedPoolIndex = 0;
+            }
+            bool canLoadAll = Application.isPlaying && SaiService.Instance != null && SaiService.Instance.IsAuthenticated;
+            bool loadAllBusy = this.isLoadingChains || this.isLoadingDailyPools;
+            string loadAllLabel;
+            switch ((QuestSourceType)this.questSourceType.enumValueIndex)
+            {
+                case QuestSourceType.ChainQuest: loadAllLabel = "Load Chains"; break;
+                case QuestSourceType.DailyQuest: loadAllLabel = "Load Pools"; break;
+                default:                         loadAllLabel = "Load All";    break;
+            }
+            GUI.backgroundColor = (canLoadAll && !loadAllBusy) ? new Color(0.3f, 0.9f, 0.5f) : Color.gray;
+            EditorGUI.BeginDisabledGroup(!canLoadAll || loadAllBusy);
+            if (GUILayout.Button(loadAllBusy ? "Loading..." : loadAllLabel, GUILayout.Width(90), GUILayout.Height(18)))
+                this.LoadAllQuests();
+            EditorGUI.EndDisabledGroup();
+            GUI.backgroundColor = Color.white;
+            EditorGUILayout.EndHorizontal();
+
+            // ── DailyQuest pool row (shown below Source Type when DailyQuest is selected) ──
             if ((QuestSourceType)this.questSourceType.enumValueIndex == QuestSourceType.DailyQuest)
             {
                 EditorGUILayout.BeginHorizontal();
@@ -65,13 +106,7 @@ namespace SaiGame.Services
                     EditorGUILayout.Popup("Pool", 0, new string[] { "— no pools loaded —" });
                     EditorGUI.EndDisabledGroup();
                 }
-                bool canLoadPools = Application.isPlaying && SaiService.Instance != null && SaiService.Instance.IsAuthenticated;
-                GUI.backgroundColor = (canLoadPools && !this.isLoadingDailyPools) ? new Color(0.4f, 0.8f, 1f) : Color.gray;
-                EditorGUI.BeginDisabledGroup(!canLoadPools || this.isLoadingDailyPools);
-                if (GUILayout.Button(this.isLoadingDailyPools ? "Loading..." : "Load Pools", GUILayout.Width(90), GUILayout.Height(18)))
-                    this.LoadDailyPools();
-                EditorGUI.EndDisabledGroup();
-                GUI.backgroundColor = Color.white;
+                this.DrawLoadQuestsButton();
                 EditorGUILayout.EndHorizontal();
 
                 // Show selected pool info
@@ -85,29 +120,37 @@ namespace SaiGame.Services
                 }
             }
 
-            // ── Source Type + Load All ────────────────────────────────────────
-            EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.LabelField(new GUIContent("Source Type", "Where to load the available quests from"), GUILayout.Width(EditorGUIUtility.labelWidth - 4));
-            QuestSourceType newSourceType = (QuestSourceType)EditorGUILayout.EnumPopup((QuestSourceType)this.questSourceType.enumValueIndex, GUILayout.ExpandWidth(true));
-            if (EditorGUI.EndChangeCheck())
+            // ── ChainQuest chain row (shown below Source Type when ChainQuest is selected) ──
+            if ((QuestSourceType)this.questSourceType.enumValueIndex == QuestSourceType.ChainQuest)
             {
-                this.questSourceType.enumValueIndex = (int)newSourceType;
-                this.pickerEntries.Clear();
-                this.pickerLabels = new string[0];
-                this.selectedQuestIndex = 0;
-                this.dailyLoadedPools = new DailyQuestPoolData[0];
-                this.dailyPoolOptions = new string[0];
-                this.dailySelectedPoolIndex = 0;
+                EditorGUILayout.BeginHorizontal();
+                if (this.chainOptions.Length > 0)
+                {
+                    this.chainSelectedIndex = Mathf.Clamp(this.chainSelectedIndex, 0, this.chainOptions.Length - 1);
+                    this.chainSelectedIndex = EditorGUILayout.Popup("Chain", this.chainSelectedIndex, this.chainOptions);
+                }
+                else
+                {
+                    EditorGUI.BeginDisabledGroup(true);
+                    EditorGUILayout.Popup("Chain", 0, new string[] { "— no chains loaded —" });
+                    EditorGUI.EndDisabledGroup();
+                }
+                this.DrawLoadQuestsButton();
+                EditorGUILayout.EndHorizontal();
+
+                // Show selected chain info
+                if (this.chainLoadedChains != null && this.chainLoadedChains.Length > 0)
+                {
+                    ChainQuestData chain = this.chainLoadedChains[Mathf.Clamp(this.chainSelectedIndex, 0, this.chainLoadedChains.Length - 1)];
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    GUIStyle richMini = new GUIStyle(EditorStyles.miniLabel) { richText = true };
+                    string activeColor = chain.is_active ? "#00FF88" : "#AAAAAA";
+                    EditorGUILayout.LabelField($"<b>{chain.display_name}</b>  |  Type: <b>{chain.chain_type}</b>  |  Active: <color={activeColor}><b>{(chain.is_active ? "Yes" : "No")}</b></color>", richMini);
+                    if (!string.IsNullOrEmpty(chain.description))
+                        EditorGUILayout.LabelField(chain.description, richMini);
+                    EditorGUILayout.EndVertical();
+                }
             }
-            bool canLoadAll = Application.isPlaying && SaiService.Instance != null && SaiService.Instance.IsAuthenticated;
-            GUI.backgroundColor = (canLoadAll && !this.isLoadingAll) ? new Color(0.3f, 0.9f, 0.5f) : Color.gray;
-            EditorGUI.BeginDisabledGroup(!canLoadAll || this.isLoadingAll);
-            if (GUILayout.Button(this.isLoadingAll ? "Loading..." : "Load All", GUILayout.Width(90), GUILayout.Height(18)))
-                this.LoadAllQuests();
-            EditorGUI.EndDisabledGroup();
-            GUI.backgroundColor = Color.white;
-            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space();
 
@@ -122,9 +165,9 @@ namespace SaiGame.Services
                                && SaiService.Instance.IsAuthenticated;
 
                 // Refresh button
-                GUI.backgroundColor = canLoad ? new Color(0.4f, 0.9f, 1f) : Color.gray;
-                EditorGUI.BeginDisabledGroup(!canLoad);
-                if (GUILayout.Button("Refresh Quest List", GUILayout.Height(26)))
+                GUI.backgroundColor = (canLoad && !this.isRefreshing) ? new Color(0.4f, 0.9f, 1f) : Color.gray;
+                EditorGUI.BeginDisabledGroup(!canLoad || this.isRefreshing);
+                if (GUILayout.Button(this.isRefreshing ? "Refreshing..." : "Load Quests", GUILayout.Height(26)))
                     this.RefreshQuestPicker();
                 EditorGUI.EndDisabledGroup();
                 GUI.backgroundColor = Color.white;
@@ -136,7 +179,7 @@ namespace SaiGame.Services
 
                 if (this.pickerEntries.Count == 0)
                 {
-                    EditorGUILayout.HelpBox("No quests loaded. Click Refresh Quest List or load chain members first.", MessageType.None);
+                    EditorGUILayout.HelpBox("No quests loaded. Click Load All to fetch the chain/pool list, then Refresh Quest List to load quests.", MessageType.None);
                 }
                 else
                 {
@@ -421,10 +464,92 @@ namespace SaiGame.Services
 
         private void RefreshQuestPicker()
         {
-            this.pickerEntries = this.questProgressor.BuildQuestPickerEntries();
+            if (SaiService.Instance == null || !SaiService.Instance.IsAuthenticated) return;
+
+            QuestSourceType sourceType = (QuestSourceType)this.questSourceType.enumValueIndex;
+            switch (sourceType)
+            {
+                case QuestSourceType.ChainQuest:
+                    this.RefreshChainQuestPicker();
+                    break;
+                case QuestSourceType.DailyQuest:
+                    this.RefreshDailyQuestPicker();
+                    break;
+            }
+        }
+
+        private void RebuildPickerFromCache(string chainIdFilter = null)
+        {
+            this.pickerEntries = this.questProgressor.BuildQuestPickerEntries(chainIdFilter);
             this.BuildPickerLabels();
             this.selectedQuestIndex = 0;
             Repaint();
+        }
+
+        private void RefreshChainQuestPicker()
+        {
+            ChainQuest chainQuest = SaiService.Instance?.ChainQuest;
+            if (chainQuest == null) return;
+
+            if (this.chainLoadedChains == null || this.chainLoadedChains.Length == 0)
+            {
+                Debug.LogWarning("[QuestProgressorEditor] No chains loaded. Click \"Load All\" first to select a chain.");
+                return;
+            }
+
+            this.chainSelectedIndex = Mathf.Clamp(this.chainSelectedIndex, 0, this.chainLoadedChains.Length - 1);
+            string chainId = this.chainLoadedChains[this.chainSelectedIndex].id;
+
+            this.isRefreshing = true;
+            Repaint();
+
+            chainQuest.GetChainMembers(
+                chainId: chainId,
+                onSuccess: _ =>
+                {
+                    this.isRefreshing = false;
+                    this.RebuildPickerFromCache(chainId);
+                },
+                onError: error =>
+                {
+                    this.isRefreshing = false;
+                    Debug.LogError($"[QuestProgressorEditor] Failed to load members for chain {chainId}: {error}");
+                    Repaint();
+                }
+            );
+        }
+
+        private void RefreshDailyQuestPicker()
+        {
+            DailyQuest dailyQuest = SaiService.Instance?.DailyQuest;
+            if (dailyQuest == null) return;
+
+            if (this.dailyLoadedPools == null || this.dailyLoadedPools.Length == 0)
+            {
+                Debug.LogWarning("[QuestProgressorEditor] No pools loaded. Click \"Load All\" first to select a pool.");
+                return;
+            }
+
+            this.dailySelectedPoolIndex = Mathf.Clamp(this.dailySelectedPoolIndex, 0, this.dailyLoadedPools.Length - 1);
+            string poolId = this.dailyLoadedPools[this.dailySelectedPoolIndex].id;
+
+            this.isRefreshing = true;
+            Repaint();
+
+            dailyQuest.GetTodayQuests(
+                dqPoolId: poolId,
+                onSuccess: _ =>
+                {
+                    this.isRefreshing = false;
+                    this.RebuildPickerFromCache();
+                },
+                onError: error =>
+                {
+                    this.isRefreshing = false;
+                    Debug.LogError($"[QuestProgressorEditor] Failed to load today quests: {error}");
+                    Repaint();
+                }
+            );
         }
 
         private void BuildPickerLabels()
@@ -451,50 +576,23 @@ namespace SaiGame.Services
             switch (sourceType)
             {
                 case QuestSourceType.ChainQuest:
-                    this.LoadAllChainQuests();
+                    this.LoadAllChains();
                     break;
                 case QuestSourceType.DailyQuest:
-                    this.LoadAllDailyQuests();
+                    this.LoadDailyPools();
                     break;
             }
         }
 
-        private void LoadAllDailyQuests()
+        private void DrawLoadQuestsButton()
         {
-            DailyQuest dailyQuest = SaiService.Instance?.DailyQuest;
-            if (dailyQuest == null)
-            {
-                Debug.LogError("[QuestProgressorEditor] DailyQuest service not found!");
-                return;
-            }
-
-            if (this.dailyLoadedPools == null || this.dailyLoadedPools.Length == 0)
-            {
-                Debug.LogWarning("[QuestProgressorEditor] No pools loaded. Click \"Load Pools\" first to select a pool.");
-                return;
-            }
-
-            this.dailySelectedPoolIndex = Mathf.Clamp(this.dailySelectedPoolIndex, 0, this.dailyLoadedPools.Length - 1);
-            string poolId = this.dailyLoadedPools[this.dailySelectedPoolIndex].id;
-
-            this.isLoadingAll = true;
-            Repaint();
-
-            dailyQuest.GetTodayQuests(
-                dqPoolId: poolId,
-                onSuccess: response =>
-                {
-                    this.isLoadingAll = false;
-                    this.RefreshQuestPicker();
-                    Repaint();
-                },
-                onError: error =>
-                {
-                    this.isLoadingAll = false;
-                    Debug.LogError($"[QuestProgressorEditor] Failed to load today quests: {error}");
-                    Repaint();
-                }
-            );
+            bool canLoadQuests = Application.isPlaying && SaiService.Instance != null && SaiService.Instance.IsAuthenticated;
+            GUI.backgroundColor = (canLoadQuests && !this.isRefreshing) ? new Color(0.4f, 0.9f, 1f) : Color.gray;
+            EditorGUI.BeginDisabledGroup(!canLoadQuests || this.isRefreshing);
+            if (GUILayout.Button(this.isRefreshing ? "Loading..." : "Load Quests", GUILayout.Width(90), GUILayout.Height(18)))
+                this.RefreshQuestPicker();
+            EditorGUI.EndDisabledGroup();
+            GUI.backgroundColor = Color.white;
         }
 
         private void LoadDailyPools()
@@ -542,56 +640,48 @@ namespace SaiGame.Services
             );
         }
 
-        private void LoadAllChainQuests()
+        private void LoadAllChains()
         {
             ChainQuest chainQuest = SaiService.Instance?.ChainQuest;
-            if (chainQuest == null) return;
+            if (chainQuest == null)
+            {
+                Debug.LogError("[QuestProgressorEditor] ChainQuest service not found!");
+                return;
+            }
 
-            this.isLoadingAll = true;
+            this.isLoadingChains = true;
             Repaint();
 
             chainQuest.GetChains(
                 onSuccess: response =>
                 {
-                    if (response.chains == null || response.chains.Length == 0)
+                    this.isLoadingChains = false;
+                    this.pickerEntries.Clear();
+                    this.pickerLabels = new string[0];
+                    this.selectedQuestIndex = 0;
+
+                    if (response?.chains == null || response.chains.Length == 0)
                     {
-                        this.isLoadingAll = false;
-                        this.RefreshQuestPicker();
+                        this.chainLoadedChains = new ChainQuestData[0];
+                        this.chainOptions = new string[0];
+                        Debug.LogWarning("[QuestProgressorEditor] No chains found.");
+                        Repaint();
                         return;
                     }
 
-                    int pending = response.chains.Length;
-                    foreach (ChainQuestData chain in response.chains)
+                    this.chainLoadedChains = response.chains;
+                    this.chainOptions = new string[response.chains.Length];
+                    for (int i = 0; i < response.chains.Length; i++)
                     {
-                        chainQuest.GetChainMembers(
-                            chainId: chain.id,
-                            onSuccess: _ =>
-                            {
-                                pending--;
-                                if (pending <= 0)
-                                {
-                                    this.isLoadingAll = false;
-                                    this.RefreshQuestPicker();
-                                }
-                                Repaint();
-                            },
-                            onError: err =>
-                            {
-                                pending--;
-                                if (pending <= 0)
-                                {
-                                    this.isLoadingAll = false;
-                                    this.RefreshQuestPicker();
-                                }
-                                Debug.LogWarning($"[QuestProgressorEditor] Failed to load members for chain {chain.id}: {err}");
-                                Repaint();
-                            }
-                        );
+                        ChainQuestData chain = response.chains[i];
+                        this.chainOptions[i] = $"{chain.display_name}  [{chain.chain_type}]";
                     }
+                    this.chainSelectedIndex = 0;
+                    Repaint();
                 },
                 onError: error =>
                 {
-                    this.isLoadingAll = false;
+                    this.isLoadingChains = false;
                     Debug.LogError($"[QuestProgressorEditor] Failed to load chains: {error}");
                     Repaint();
                 }

@@ -83,7 +83,7 @@ namespace SaiGame.Services
         /// Builds a flat list of selectable quest entries from the active source.
         /// Extend this method when new source types are added.
         /// </summary>
-        public List<QuestPickerEntry> BuildQuestPickerEntries()
+        public List<QuestPickerEntry> BuildQuestPickerEntries(string chainIdFilter = null)
         {
             if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#4DD0E1><b>[QuestProgressor] ► Refresh Quest List (source: {this.questSourceType})</b></color>", gameObject);
@@ -93,7 +93,7 @@ namespace SaiGame.Services
             switch (this.questSourceType)
             {
                 case QuestSourceType.ChainQuest:
-                    this.AppendChainQuestEntries(entries);
+                    this.AppendChainQuestEntries(entries, chainIdFilter);
                     break;
                 case QuestSourceType.DailyQuest:
                     this.AppendDailyQuestEntries(entries);
@@ -103,7 +103,7 @@ namespace SaiGame.Services
             return entries;
         }
 
-        private void AppendChainQuestEntries(List<QuestPickerEntry> entries)
+        private void AppendChainQuestEntries(List<QuestPickerEntry> entries, string chainIdFilter)
         {
             ChainQuest chainQuest = SaiService.Instance?.ChainQuest;
             if (chainQuest == null || !chainQuest.HasChains) return;
@@ -111,6 +111,7 @@ namespace SaiGame.Services
             foreach (ChainQuestData chain in chainQuest.CurrentChainResponse.chains)
             {
                 if (chain == null) continue;
+                if (!string.IsNullOrEmpty(chainIdFilter) && chain.id != chainIdFilter) continue;
 
                 ChainMembersResponse members = chainQuest.GetCachedMembers(chain.id);
                 if (members?.members == null) continue;
