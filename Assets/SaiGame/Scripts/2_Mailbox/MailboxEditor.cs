@@ -127,7 +127,7 @@ namespace SaiGame.Services
                 if (GUILayout.Button("Unread Count", GUILayout.Height(25)))
                 {
                     var unread = mailBox.GetUnreadMessages();
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[MailBoxEditor] You have {unread.Length} unread messages");
                 }
                 GUI.backgroundColor = Color.white;
@@ -136,7 +136,7 @@ namespace SaiGame.Services
                 if (GUILayout.Button("Unclaimed Count", GUILayout.Height(25)))
                 {
                     var unclaimed = mailBox.GetUnclaimedMessages();
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[MailBoxEditor] You have {unclaimed.Length} unclaimed messages");
                 }
                 GUI.backgroundColor = Color.white;
@@ -267,13 +267,13 @@ namespace SaiGame.Services
 
         private void LoadMessages()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                Debug.LogError("[MailBoxEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
                 return;
@@ -282,12 +282,12 @@ namespace SaiGame.Services
             mailBox.GetMessages(
                 onSuccess: response =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[MailBoxEditor] Loaded {response.messages.Length} messages");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[MailBoxEditor] Failed to load messages: {error}");
                 }
             );
@@ -295,13 +295,13 @@ namespace SaiGame.Services
 
         private void ClaimAllMessages()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                Debug.LogError("[MailBoxEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
                 return;
@@ -310,12 +310,12 @@ namespace SaiGame.Services
             mailBox.ClaimAllMessages(
                 onSuccess: results =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[MailBoxEditor] Claimed {results.Length} messages successfully");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[MailBoxEditor] Claim all failed: {error}");
                 }
             );
@@ -323,13 +323,13 @@ namespace SaiGame.Services
 
         private void ClaimSpecificMessage(string messageId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                Debug.LogError("[MailBoxEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
                 return;
@@ -339,13 +339,13 @@ namespace SaiGame.Services
                 messageId,
                 onSuccess: result =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[MailBoxEditor] Message {result.id} claimed successfully");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[MailBoxEditor] Claim failed: {error}");
                 }
             );
@@ -353,13 +353,13 @@ namespace SaiGame.Services
 
         private void UnclaimSpecificMessage(string messageId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                Debug.LogError("[MailBoxEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
                 return;
@@ -369,13 +369,13 @@ namespace SaiGame.Services
                 messageId,
                 onSuccess: result =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[MailBoxEditor] Message {result?.id} unclaimed successfully");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[MailBoxEditor] Unclaim failed: {error}");
                 }
             );
@@ -383,13 +383,13 @@ namespace SaiGame.Services
 
         private void ReadSpecificMessage(string messageId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                Debug.LogError("[MailBoxEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
                 return;
@@ -399,13 +399,13 @@ namespace SaiGame.Services
                 messageId,
                 onSuccess: result =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[MailBoxEditor] Message {result.id} marked as read");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[MailBoxEditor] Read failed: {error}");
                 }
             );
@@ -413,13 +413,13 @@ namespace SaiGame.Services
 
         private void DeleteSpecificMessage(string messageId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                Debug.LogError("[MailBoxEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
                 return;
@@ -429,13 +429,13 @@ namespace SaiGame.Services
                 messageId,
                 onSuccess: deletedId =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[MailBoxEditor] Message {deletedId} deleted successfully");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[MailBoxEditor] Delete failed: {error}");
                 }
             );
@@ -443,13 +443,13 @@ namespace SaiGame.Services
 
         private void UnreadSpecificMessage(string messageId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[MailBoxEditor] SaiService not found!");
+                Debug.LogError("[MailBoxEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[MailBoxEditor] Not authenticated! Please login first.");
                 return;
@@ -459,13 +459,13 @@ namespace SaiGame.Services
                 messageId,
                 onSuccess: result =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[MailBoxEditor] Message {result.id} marked as unread");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[MailBoxEditor] Unread failed: {error}");
                 }
             );

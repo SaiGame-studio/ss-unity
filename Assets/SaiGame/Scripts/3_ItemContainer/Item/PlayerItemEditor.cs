@@ -549,13 +549,13 @@ namespace SaiGame.Services
                 return;
             }
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[PlayerItemEditor] SaiService not found!");
+                Debug.LogError("[PlayerItemEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[PlayerItemEditor] Not authenticated!");
                 return;
@@ -593,13 +593,13 @@ namespace SaiGame.Services
                 return;
             }
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[PlayerItemEditor] SaiService not found!");
+                Debug.LogError("[PlayerItemEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[PlayerItemEditor] Not authenticated!");
                 return;
@@ -706,9 +706,9 @@ namespace SaiGame.Services
 
         private void FetchCategories()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ItemContainerEditor] SaiService not found!");
+                Debug.LogError("[ItemContainerEditor] SaiServer not found!");
                 return;
             }
 
@@ -723,14 +723,14 @@ namespace SaiGame.Services
                     isFetchingCategories = false;
                     this.RebuildDropdownOptions();
                     Repaint();
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemContainerEditor] Reloaded {categories.Length} categories from server");
                 },
                 onError: error =>
                 {
                     isFetchingCategories = false;
                     Repaint();
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[ItemContainerEditor] Failed to load categories: {error}");
                 }
             );
@@ -738,13 +738,13 @@ namespace SaiGame.Services
 
         private void LoadItems(string category)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ItemContainerEditor] SaiService not found!");
+                Debug.LogError("[ItemContainerEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ItemContainerEditor] Not authenticated! Please login first.");
                 return;
@@ -754,12 +754,12 @@ namespace SaiGame.Services
                 category: category,
                 onSuccess: response =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemContainerEditor] Loaded {response.items.Length} items (total: {response.total})");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[ItemContainerEditor] Failed to load items: {error}");
                 }
             );

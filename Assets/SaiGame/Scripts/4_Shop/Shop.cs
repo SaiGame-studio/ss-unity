@@ -44,24 +44,24 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
@@ -69,18 +69,18 @@ namespace SaiGame.Services
         {
             if (!this.autoLoadOnLogin) return;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[Shop] Auto-loading shops after successful login...");
 
             this.GetShops(
                 onSuccess: shops =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[Shop] Shops auto-loaded: {shops.shops.Length} shops, total: {shops.total}");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.LogWarning($"[Shop] Auto-load shops failed: {error}");
                 }
             );
@@ -88,12 +88,12 @@ namespace SaiGame.Services
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[Shop] Logout successful, clearing shop data...");
 
             this.ClearLocalShops();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[Shop] Shop data cleared successfully");
         }
 
@@ -108,16 +108,16 @@ namespace SaiGame.Services
             System.Action<ShopResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[Shop] ► Get Shops</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -135,10 +135,10 @@ namespace SaiGame.Services
             System.Action<ShopResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/shops?limit={limit}&offset={offset}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -146,11 +146,11 @@ namespace SaiGame.Services
                         ShopResponse shopResponse = JsonUtility.FromJson<ShopResponse>(response);
                         this.currentShopResponse = shopResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[Shop] Shops loaded: {shopResponse.shops.Length} shops, total: {shopResponse.total}");
 
                         this.OnGetShopsSuccess?.Invoke(shopResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[Shop] GetShops</color> → <b><color=#00FF88>onSuccess</color></b> callback | Shop.cs › GetShopsCoroutine");
                         onSuccess?.Invoke(shopResponse);
                     }
@@ -158,7 +158,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get shops response error: {e.Message}";
                         this.OnGetShopsFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[Shop] GetShops</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Shop.cs › GetShopsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -166,7 +166,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnGetShopsFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[Shop] GetShops</color> → <b><color=#FF4444>onError</color></b> callback (network) | Shop.cs › GetShopsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -178,11 +178,11 @@ namespace SaiGame.Services
         /// </summary>
         public void ClearShops()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[Shop] ► Clear Shops</b></color>", gameObject);
             this.ClearLocalShops();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[Shop] Shop data cleared locally");
         }
 
@@ -282,16 +282,16 @@ namespace SaiGame.Services
             System.Action<ShopItemsResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#00FFFF><b>[Shop] ► Get Shop Items ({shopId})</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -311,10 +311,10 @@ namespace SaiGame.Services
             System.Action<ShopItemsResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/shops/{shopId}/items";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -323,11 +323,11 @@ namespace SaiGame.Services
                         this.currentShopItemsResponse = itemsResponse;
                         this.lastLoadedShopId = shopId;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[Shop] Shop items loaded: {itemsResponse.items?.Length ?? 0} items");
 
                         this.OnGetShopItemsSuccess?.Invoke(itemsResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[Shop] GetShopItems</color> → <b><color=#00FF88>onSuccess</color></b> callback | Shop.cs › GetShopItemsCoroutine");
                         onSuccess?.Invoke(itemsResponse);
                     }
@@ -335,7 +335,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get shop items response error: {e.Message}";
                         this.OnGetShopItemsFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[Shop] GetShopItems</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Shop.cs › GetShopItemsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -343,7 +343,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnGetShopItemsFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[Shop] GetShopItems</color> → <b><color=#FF4444>onError</color></b> callback (network) | Shop.cs › GetShopItemsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -364,16 +364,16 @@ namespace SaiGame.Services
             System.Action<PurchaseResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#FFD700><b>[Shop] ▶ Purchase Item ({shopItemId})</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -402,7 +402,7 @@ namespace SaiGame.Services
             System.Action<PurchaseResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/shops/{shopId}/purchase";
 
             PurchaseRequest requestBody = new PurchaseRequest
@@ -413,14 +413,14 @@ namespace SaiGame.Services
             };
             string json = JsonUtility.ToJson(requestBody);
 
-            yield return SaiService.Instance.PostRequest(endpoint, json,
+            yield return SaiServer.Instance.PostRequest(endpoint, json,
                 response =>
                 {
                     try
                     {
                         PurchaseResponse purchaseResponse = JsonUtility.FromJson<PurchaseResponse>(response);
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         {
                             PurchaseRecord r = purchaseResponse.purchase_record;
                             Debug.Log(
@@ -439,14 +439,14 @@ namespace SaiGame.Services
                         }
 
                         this.OnPurchaseSuccess?.Invoke(purchaseResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[Shop] PurchaseItem</color> → <b><color=#00FF88>onSuccess</color></b> callback | Shop.cs › PurchaseItemCoroutine");
                         onSuccess?.Invoke(purchaseResponse);
 
                         // Auto-refresh shop items after purchase
                         if (this.autoRefreshAfterPurchase)
                         {
-                            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                                 Debug.Log($"[Shop] Auto-refreshing items for shop {shopId}...");
                             this.GetShopItems(shopId);
                         }
@@ -455,7 +455,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse purchase response error: {e.Message}";
                         this.OnPurchaseFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[Shop] PurchaseItem</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Shop.cs › PurchaseItemCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -463,7 +463,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnPurchaseFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[Shop] PurchaseItem</color> → <b><color=#FF4444>onError</color></b> callback (network) | Shop.cs › PurchaseItemCoroutine | {error}");
                     onError?.Invoke(error);
                 }

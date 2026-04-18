@@ -10,7 +10,7 @@ namespace SaiGame.Services
     /// Fetches and caches the list of quest claims for the authenticated user.
     /// </summary>
     [DefaultExecutionOrder(-99)]
-    public class QuestStatus : SaiBehaviour
+    public class QuestHistory : SaiBehaviour
     {
         // Events
         public event Action<QuestClaimsResponse> OnGetClaimsSuccess;
@@ -45,36 +45,36 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
         protected virtual void HandleLoginSuccess(LoginResponse response)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[QuestClaims] Login detected, ready to fetch quest claims.");
         }
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[QuestClaims] Logout detected, clearing cached claims...");
 
             this.ClearLocalClaims();
@@ -92,16 +92,16 @@ namespace SaiGame.Services
             Action<QuestClaimsResponse> onSuccess = null,
             Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[QuestClaims] ► Get Claims</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -119,10 +119,10 @@ namespace SaiGame.Services
             Action<QuestClaimsResponse> onSuccess,
             Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/quest-claims?limit={limit}&offset={offset}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -130,11 +130,11 @@ namespace SaiGame.Services
                         QuestClaimsResponse claimsResponse = JsonUtility.FromJson<QuestClaimsResponse>(response);
                         this.currentClaimsResponse = claimsResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[QuestClaims] Claims loaded: {claimsResponse.claims.Length} claims, total: {claimsResponse.total}");
 
                         this.OnGetClaimsSuccess?.Invoke(claimsResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[QuestClaims] GetClaims</color> → <b><color=#00FF88>onSuccess</color></b> callback | QuestClaims.cs › GetClaimsCoroutine");
                         onSuccess?.Invoke(claimsResponse);
                     }
@@ -142,7 +142,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get claims response error: {e.Message}";
                         this.OnGetClaimsFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[QuestClaims] GetClaims</color> → <b><color=#FF4444>onError</color></b> callback (parse) | QuestClaims.cs › GetClaimsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -150,7 +150,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnGetClaimsFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[QuestClaims] GetClaims</color> → <b><color=#FF4444>onError</color></b> callback (network) | QuestClaims.cs › GetClaimsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -166,16 +166,16 @@ namespace SaiGame.Services
             Action<QuestDefinitionStatusResponse> onSuccess = null,
             Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#00FFFF><b>[QuestStatus] ► Get Quest Status: {questDefinitionId}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -195,23 +195,32 @@ namespace SaiGame.Services
             Action<QuestDefinitionStatusResponse> onSuccess,
             Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/quests/{questDefinitionId}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
                     {
                         QuestDefinitionStatusResponse statusResponse =
                             JsonUtility.FromJson<QuestDefinitionStatusResponse>(response);
+
+                        // JsonUtility can't map "operator" (C# keyword) → operator_type; extract manually.
+                        if (statusResponse?.quest_definition?.conditions != null)
+                        {
+                            string op = ExtractJsonStringField(response, "operator");
+                            if (!string.IsNullOrEmpty(op))
+                                statusResponse.quest_definition.conditions.operator_type = op;
+                        }
+
                         this.currentQuestStatusResponse = statusResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[QuestStatus] Status for {questDefinitionId}: {statusResponse.status}");
 
                         this.OnGetQuestStatusSuccess?.Invoke(statusResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[QuestStatus] GetQuestStatus</color> → <b><color=#00FF88>onSuccess</color></b> callback | QuestStatus.cs › GetQuestStatusCoroutine");
                         onSuccess?.Invoke(statusResponse);
                     }
@@ -219,7 +228,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse quest status response error: {e.Message}";
                         this.OnGetQuestStatusFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[QuestStatus] GetQuestStatus</color> → <b><color=#FF4444>onError</color></b> callback (parse) | QuestStatus.cs › GetQuestStatusCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -227,7 +236,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnGetQuestStatusFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[QuestStatus] GetQuestStatus</color> → <b><color=#FF4444>onError</color></b> callback (network) | QuestStatus.cs › GetQuestStatusCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -239,12 +248,12 @@ namespace SaiGame.Services
         /// <summary>Clears locally cached claims and resets pagination state.</summary>
         public void ClearClaims()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[QuestClaims] ► Clear Claims</b></color>", gameObject);
 
             this.ClearLocalClaims();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[QuestClaims] Claims data cleared locally");
         }
 
@@ -298,5 +307,34 @@ namespace SaiGame.Services
 
         public int GetClaimsLimit() => this.claimsLimit;
         public int GetClaimsOffset() => this.claimsOffset;
+
+        /// <summary>
+        /// Extracts the first string value for a top-level or nested JSON key.
+        /// Used to read fields JsonUtility can't map (e.g. "operator" — a C# keyword).
+        /// </summary>
+        private static string ExtractJsonStringField(string json, string key)
+        {
+            if (string.IsNullOrEmpty(json) || string.IsNullOrEmpty(key)) return null;
+
+            string needle = "\"" + key + "\"";
+            int keyIdx = json.IndexOf(needle);
+            if (keyIdx < 0) return null;
+
+            int colon = json.IndexOf(':', keyIdx + needle.Length);
+            if (colon < 0) return null;
+
+            int i = colon + 1;
+            while (i < json.Length && char.IsWhiteSpace(json[i])) i++;
+            if (i >= json.Length || json[i] != '"') return null;
+
+            int start = ++i;
+            while (i < json.Length && json[i] != '"')
+            {
+                if (json[i] == '\\') i++;
+                i++;
+            }
+            if (i > json.Length) return null;
+            return json.Substring(start, i - start);
+        }
     }
 }

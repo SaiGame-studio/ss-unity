@@ -494,7 +494,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_Name
-      value: SaiService
+      value: SaiServer
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalPosition.x

@@ -271,12 +271,12 @@ namespace SaiGame.Services
 
         private void SyncItems()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ItemSwapEditor] SaiService not found!");
+                Debug.LogError("[ItemSwapEditor] SaiServer not found!");
                 return;
             }
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ItemSwapEditor] Not authenticated! Please login first.");
                 return;

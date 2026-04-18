@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,9 +13,9 @@ namespace SaiGame.Services
         private SerializedProperty dqPoolId;
         private SerializedProperty daysAhead;
 
-        private bool showCurrentData = true;
+        private bool showCurrentData = false;
         private bool showDaysList = true;
-        private bool showTodayData = true;
+        private bool showTodayData = false;
         private bool showUtilityButtons = true;
 
         // Pool dropdown state
@@ -23,14 +24,17 @@ namespace SaiGame.Services
         private int selectedPoolIndex = -1;
         private bool isLoadingPools = false;
 
-        // Track loading state for the assign-ahead button
-        private bool isLoading = false;
-        // Track loading state for the today quest button
-        private bool isTodayLoading = false;
-        // Track per-quest action loading state (questDefinitionId)
+        // Loading states
+        private bool isLoading = false;          // Assign-ahead
+        private bool isTodayLoading = false;     // Today Quest
         private string startingQuestId = null;
         private string checkingQuestId = null;
         private string claimingQuestId = null;
+
+        // Per-day collapse state (keyed by date string)
+        private readonly Dictionary<string, bool> expandedDays = new Dictionary<string, bool>();
+        // Per-quest-entry collapse state (keyed by date|questDefId for assign-ahead, today|questDefId for today)
+        private readonly Dictionary<string, bool> expandedQuests = new Dictionary<string, bool>();
 
         private void OnEnable()
         {
@@ -39,9 +43,40 @@ namespace SaiGame.Services
             this.dqPoolId = serializedObject.FindProperty("dqPoolId");
             this.daysAhead = serializedObject.FindProperty("daysAhead");
             this.SyncDropdownSelectionFromProperty();
+
+            if (this.dailyQuest != null)
+                this.dailyQuest.OnGetPoolsSuccess += this.HandlePoolsLoaded;
         }
 
-        // Finds the dropdown index that matches the current dqPoolId string value.
+        private void OnDisable()
+        {
+            if (this.dailyQuest != null)
+                this.dailyQuest.OnGetPoolsSuccess -= this.HandlePoolsLoaded;
+        }
+
+        private void HandlePoolsLoaded(DailyQuestPoolsResponse response)
+        {
+            this.loadedPools = response.pools ?? new DailyQuestPoolData[0];
+
+            this.poolDisplayOptions = new string[this.loadedPools.Length];
+            for (int i = 0; i < this.loadedPools.Length; i++)
+            {
+                DailyQuestPoolData p = this.loadedPools[i];
+                this.poolDisplayOptions[i] = $"{p.display_name}  ({p.pool_key})";
+            }
+
+            this.SyncDropdownSelectionFromProperty();
+
+            if (this.selectedPoolIndex < 0 && this.loadedPools.Length > 0)
+            {
+                this.selectedPoolIndex = 0;
+                this.dqPoolId.stringValue = this.loadedPools[0].id;
+                serializedObject.ApplyModifiedProperties();
+            }
+
+            Repaint();
+        }
+
         private void SyncDropdownSelectionFromProperty()
         {
             if (this.loadedPools == null || this.loadedPools.Length == 0)
@@ -66,56 +101,11 @@ namespace SaiGame.Services
         {
             serializedObject.Update();
 
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Daily Quest Configuration", EditorStyles.boldLabel);
-            EditorGUILayout.Space();
-
-            EditorGUILayout.PropertyField(this.autoLoadOnLogin,
-                new GUIContent("Auto Load on Login", "Automatically assign-ahead when user logs in (requires Pool ID to be set)"));
+            EditorGUILayout.PropertyField(this.autoLoadOnLogin, new GUIContent("Auto Load on Login", "Automatically load pools when user logs in"));
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Request Settings", EditorStyles.boldLabel);
 
-            // Pool ID dropdown row
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PrefixLabel(new GUIContent("Pool ID", "The daily quest pool used for assign-ahead"));
-
-            if (this.loadedPools != null && this.loadedPools.Length > 0)
-            {
-                int newIndex = EditorGUILayout.Popup(this.selectedPoolIndex < 0 ? 0 : this.selectedPoolIndex, this.poolDisplayOptions);
-                if (newIndex != this.selectedPoolIndex || this.dqPoolId.stringValue != this.loadedPools[newIndex].id)
-                {
-                    this.selectedPoolIndex = newIndex;
-                    this.dqPoolId.stringValue = this.loadedPools[newIndex].id;
-                }
-            }
-            else
-            {
-                string currentId = this.dqPoolId.stringValue;
-                string preview = string.IsNullOrEmpty(currentId) ? "— load pools first —" : currentId;
-                EditorGUILayout.LabelField(preview, EditorStyles.helpBox);
-            }
-
-            GUI.backgroundColor = this.isLoadingPools ? Color.gray : new Color(0.4f, 0.8f, 1f);
-            EditorGUI.BeginDisabledGroup(this.isLoadingPools);
-            if (GUILayout.Button(this.isLoadingPools ? "..." : "Load Pools", GUILayout.Width(80), GUILayout.Height(18)))
-                this.LoadPools();
-            EditorGUI.EndDisabledGroup();
-            GUI.backgroundColor = Color.white;
-
-            EditorGUILayout.EndHorizontal();
-
-            // Show raw ID for reference when dropdown is active
-            if (this.loadedPools != null && this.selectedPoolIndex >= 0)
-            {
-                EditorGUI.indentLevel++;
-                EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.LabelField("ID", this.dqPoolId.stringValue, EditorStyles.miniLabel);
-                EditorGUI.EndDisabledGroup();
-                EditorGUI.indentLevel--;
-            }
-
-            EditorGUILayout.PropertyField(this.daysAhead, new GUIContent("Days Ahead", "Number of days to assign ahead"));
+            this.DrawPoolDropdownRow();
 
             // Selected pool details
             if (this.loadedPools != null && this.selectedPoolIndex >= 0 && this.selectedPoolIndex < this.loadedPools.Length)
@@ -125,10 +115,26 @@ namespace SaiGame.Services
 
             // Current Today Quest Data
             TodayQuestResponse todayData = this.dailyQuest.CurrentTodayQuestResponse;
-            this.showTodayData = EditorGUILayout.Foldout(this.showTodayData, "Today Quest Data", true);
+            this.showTodayData = EditorGUILayout.Foldout(this.showTodayData, "Today Quests", true);
             if (this.showTodayData)
             {
                 EditorGUI.indentLevel++;
+
+                // Today Quest action button (lives inside this section)
+                bool hasPoolId = !string.IsNullOrEmpty(this.dqPoolId.stringValue);
+                bool todayDisabled = this.isTodayLoading || !hasPoolId;
+                string todayLabel = this.isTodayLoading ? "Loading..."
+                    : hasPoolId ? "Today Quest"
+                    : "Today Quest (no pool)";
+                GUI.backgroundColor = todayDisabled ? Color.gray : new Color(1f, 0.85f, 0.2f);
+                EditorGUI.BeginDisabledGroup(todayDisabled);
+                if (GUILayout.Button(todayLabel, GUILayout.Height(28)))
+                    this.RunGetTodayQuests();
+                EditorGUI.EndDisabledGroup();
+                GUI.backgroundColor = Color.white;
+
+                EditorGUILayout.Space(2);
+
                 if (todayData != null)
                     this.DrawTodayQuestData(todayData);
                 else
@@ -139,10 +145,31 @@ namespace SaiGame.Services
             EditorGUILayout.Space();
 
             // Current Assign-Ahead Data
-            this.showCurrentData = EditorGUILayout.Foldout(this.showCurrentData, "Current Daily Quest Data", true);
+            this.showCurrentData = EditorGUILayout.Foldout(this.showCurrentData, "Quests Assign Ahead", true);
             if (this.showCurrentData)
             {
                 EditorGUI.indentLevel++;
+
+                // Days Ahead input + Assign Ahead button on the same row
+                bool hasPoolIdForAssign = !string.IsNullOrEmpty(this.dqPoolId.stringValue);
+                bool canAssign = this.SelectedPoolSupportsAssignAhead();
+                bool assignDisabled = this.isLoading || !canAssign || !hasPoolIdForAssign;
+                string assignLabel = this.isLoading ? "Loading..."
+                    : !hasPoolIdForAssign ? "Assign Ahead (no pool)"
+                    : canAssign ? "Assign Ahead"
+                    : "Assign Ahead (N/A)";
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PropertyField(this.daysAhead, new GUIContent("Days Ahead", "Number of days to assign ahead"));
+                GUI.backgroundColor = assignDisabled ? Color.gray : Color.cyan;
+                EditorGUI.BeginDisabledGroup(assignDisabled);
+                if (GUILayout.Button(assignLabel, GUILayout.Width(160), GUILayout.Height(20)))
+                    this.RunAssignAhead();
+                EditorGUI.EndDisabledGroup();
+                GUI.backgroundColor = Color.white;
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.Space(2);
 
                 AssignAheadResponse data = this.dailyQuest.CurrentAssignAheadResponse;
                 if (data != null)
@@ -175,83 +202,120 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space();
 
-            // Utility Buttons
-            this.showUtilityButtons = EditorGUILayout.Foldout(this.showUtilityButtons, "Utility Actions", true);
-            if (this.showUtilityButtons)
-            {
-                EditorGUI.indentLevel++;
+            EditorGUI.indentLevel++;
 
-                EditorGUILayout.BeginHorizontal();
+            GUI.backgroundColor = Color.red;
+            if (GUILayout.Button("Clear Data", GUILayout.Height(30)))
+                this.dailyQuest.ClearData();
+            GUI.backgroundColor = Color.white;
 
-                GUI.backgroundColor = this.isTodayLoading ? Color.gray : new Color(1f, 0.85f, 0.2f);
-                EditorGUI.BeginDisabledGroup(this.isTodayLoading);
-                if (GUILayout.Button(this.isTodayLoading ? "Loading..." : "Today Quest", GUILayout.Height(30)))
-                    this.RunGetTodayQuests();
-                EditorGUI.EndDisabledGroup();
-                GUI.backgroundColor = Color.white;
-
-                bool canAssign = this.SelectedPoolSupportsAssignAhead();
-                bool assignDisabled = this.isLoading || !canAssign;
-                string assignLabel = this.isLoading ? "Loading..."
-                    : canAssign ? "Assign Ahead"
-                    : "Assign Ahead (N/A)";
-                GUI.backgroundColor = assignDisabled ? Color.gray : Color.cyan;
-                EditorGUI.BeginDisabledGroup(assignDisabled);
-                if (GUILayout.Button(assignLabel, GUILayout.Height(30)))
-                    this.RunAssignAhead();
-                EditorGUI.EndDisabledGroup();
-                GUI.backgroundColor = Color.white;
-
-                GUI.backgroundColor = Color.red;
-                if (GUILayout.Button("Clear Data", GUILayout.Height(30)))
-                    this.dailyQuest.ClearData();
-                GUI.backgroundColor = Color.white;
-
-                EditorGUILayout.EndHorizontal();
-
-                EditorGUI.indentLevel--;
-            }
+            EditorGUI.indentLevel--;
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Event Listeners", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Events are automatically registered/unregistered with SaiAuth login/logout events.", MessageType.Info);
+            EditorGUILayout.HelpBox("Local data is automatically cleared on SaiAuth logout.", MessageType.Info);
 
             serializedObject.ApplyModifiedProperties();
         }
 
-        // Returns true only when the selected pool uses weighted_random strategy.
+        // ── Pool Dropdown Row ─────────────────────────────────────────────────
+
+        private void DrawPoolDropdownRow()
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(new GUIContent("Pool ID", "The daily quest pool used for assign-ahead"));
+
+            if (this.loadedPools != null && this.loadedPools.Length > 0)
+            {
+                int newIndex = EditorGUILayout.Popup(this.selectedPoolIndex < 0 ? 0 : this.selectedPoolIndex, this.poolDisplayOptions);
+                if (newIndex != this.selectedPoolIndex || this.dqPoolId.stringValue != this.loadedPools[newIndex].id)
+                {
+                    this.selectedPoolIndex = newIndex;
+                    this.dqPoolId.stringValue = this.loadedPools[newIndex].id;
+                }
+            }
+            else
+            {
+                string currentId = this.dqPoolId.stringValue;
+                string preview = string.IsNullOrEmpty(currentId) ? "— load pools first —" : currentId;
+                EditorGUILayout.LabelField(preview, EditorStyles.helpBox);
+            }
+
+            GUI.backgroundColor = this.isLoadingPools ? Color.gray : new Color(0.4f, 0.8f, 1f);
+            EditorGUI.BeginDisabledGroup(this.isLoadingPools);
+            if (GUILayout.Button(this.isLoadingPools ? "..." : "Load Pools", GUILayout.Width(80), GUILayout.Height(18)))
+                this.LoadPools();
+            EditorGUI.EndDisabledGroup();
+            GUI.backgroundColor = Color.white;
+
+            EditorGUILayout.EndHorizontal();
+        }
+
         private bool SelectedPoolSupportsAssignAhead()
         {
             if (this.loadedPools == null || this.selectedPoolIndex < 0 || this.selectedPoolIndex >= this.loadedPools.Length)
-                return true; // no pools loaded yet — allow by default
+                return true;
             return this.loadedPools[this.selectedPoolIndex].assignment_strategy == "weighted_random";
         }
+
+        // ── Selected Pool Info Card ───────────────────────────────────────────
 
         private void DrawSelectedPoolInfo(DailyQuestPoolData pool)
         {
             EditorGUILayout.Space(2);
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            GUIStyle richBold = new GUIStyle(EditorStyles.boldLabel) { richText = true };
+            // Header: name + active badge
+            GUIStyle headerStyle = new GUIStyle(EditorStyles.boldLabel);
+            headerStyle.fontSize = 12;
+            headerStyle.normal.textColor = new Color(0.9f, 0.9f, 1f);
 
-            string activeTag = pool.is_active
-                ? " <color=#00FF88>[active]</color>"
-                : " <color=#FF4444>[inactive]</color>";
-            EditorGUILayout.LabelField($"{pool.display_name}{activeTag}", richBold);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"★ {pool.display_name}", headerStyle, GUILayout.ExpandWidth(true));
+
+            GUIStyle badgeStyle = new GUIStyle(EditorStyles.label);
+            badgeStyle.fontSize = 11;
+            badgeStyle.fontStyle = FontStyle.Bold;
+            badgeStyle.alignment = TextAnchor.MiddleRight;
+            badgeStyle.normal.textColor = pool.is_active ? new Color(0.3f, 1f, 0.5f) : new Color(1f, 0.4f, 0.4f);
+            EditorGUILayout.LabelField(pool.is_active ? "ACTIVE" : "INACTIVE", badgeStyle, GUILayout.MinWidth(70));
+            EditorGUILayout.EndHorizontal();
+
+            this.DrawSeparator();
 
             if (!string.IsNullOrEmpty(pool.description))
-                EditorGUILayout.LabelField(pool.description, EditorStyles.wordWrappedMiniLabel);
+            {
+                GUIStyle descStyle = new GUIStyle(EditorStyles.label);
+                descStyle.fontSize = 10;
+                descStyle.normal.textColor = new Color(0.55f, 0.55f, 0.55f);
+                descStyle.wordWrap = true;
+                descStyle.fontStyle = FontStyle.Italic;
+                EditorGUILayout.LabelField(pool.description, descStyle);
+            }
 
-            EditorGUILayout.Space(2);
-            EditorGUILayout.LabelField($"Key: {pool.pool_key}", EditorStyles.miniLabel);
-            EditorGUILayout.LabelField($"ID: {pool.id}", EditorStyles.miniLabel);
+            // Compact info
+            GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
+            labelStyle.fontSize = 10;
+            labelStyle.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
+            EditorGUILayout.LabelField($"KEY: {pool.pool_key}", labelStyle);
 
-            EditorGUILayout.Space(2);
+            GUIStyle idStyle = new GUIStyle(EditorStyles.label);
+            idStyle.fontSize = 10;
+            idStyle.normal.textColor = new Color(1f, 0.84f, 0f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"ID: {pool.id}", idStyle);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = pool.id;
+            EditorGUILayout.EndHorizontal();
 
+            EditorGUILayout.Space(4);
+
+            // Strategy + slots + reset (rich)
+            GUIStyle richBold = new GUIStyle(EditorStyles.boldLabel) { richText = true };
+            richBold.fontSize = 11;
             string strategyColor = pool.assignment_strategy == "weighted_random" ? "#00FF88" : "#FFD700";
             EditorGUILayout.LabelField(
-                $"Strategy: <color={strategyColor}><b>{pool.assignment_strategy}</b></color>  |  " +
-                $"Slots/day: {pool.slots_per_day}  |  Reset UTC: {pool.reset_hour_utc}:00",
+                $"⚙ Strategy: <color={strategyColor}><b>{pool.assignment_strategy}</b></color>  |  " +
+                $"Slots/day: <b>{pool.slots_per_day}</b>  |  Reset UTC: <b>{pool.reset_hour_utc}:00</b>",
                 richBold);
 
             if (pool.assignment_strategy != "weighted_random")
@@ -265,85 +329,398 @@ namespace SaiGame.Services
             EditorGUILayout.EndVertical();
         }
 
+        // ── Day Card ──────────────────────────────────────────────────────────
+
         private void DrawDaySummary(DailyDayData day)
         {
-            GUIStyle headerStyle = new GUIStyle(EditorStyles.boldLabel) { richText = true };
-            string todayTag = day.is_today ? " <color=#FFD700>[TODAY]</color>" : "";
-            string assignedTag = day.already_assigned ? " <color=#00FF88>(assigned)</color>" : " <color=#888888>(new)</color>";
-
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField($"{day.date}{todayTag}{assignedTag}", headerStyle);
+
+            string dayKey = day.date ?? "unknown";
+            if (!this.expandedDays.ContainsKey(dayKey))
+                this.expandedDays[dayKey] = false;
+
+            // Header: date + TODAY badge + assigned badge (right-aligned)
+            int questCount = day.quests?.Length ?? 0;
+            string headerLabel = $"📅 {day.date}  [{questCount}]";
+
+            GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
+            foldoutStyle.fontSize = 13;
+            foldoutStyle.fontStyle = FontStyle.Bold;
+            Color titleColor = day.is_today ? new Color(1f, 0.84f, 0.2f) : new Color(0.85f, 0.85f, 0.85f);
+            foldoutStyle.normal.textColor = titleColor;
+            foldoutStyle.onNormal.textColor = titleColor;
+            foldoutStyle.focused.textColor = titleColor;
+            foldoutStyle.onFocused.textColor = titleColor;
+            foldoutStyle.active.textColor = titleColor;
+            foldoutStyle.onActive.textColor = titleColor;
+
+            EditorGUILayout.BeginHorizontal();
+            this.expandedDays[dayKey] = EditorGUILayout.Foldout(this.expandedDays[dayKey], headerLabel, true, foldoutStyle);
+
+            // Right-aligned tags
+            GUIStyle badgeStyle = new GUIStyle(EditorStyles.label);
+            badgeStyle.fontSize = 10;
+            badgeStyle.fontStyle = FontStyle.Bold;
+            badgeStyle.alignment = TextAnchor.MiddleRight;
+
+            if (day.is_today)
+            {
+                badgeStyle.normal.textColor = new Color(1f, 0.84f, 0.2f);
+                EditorGUILayout.LabelField("TODAY", badgeStyle, GUILayout.Width(70));
+            }
+            badgeStyle.normal.textColor = day.already_assigned ? new Color(0.3f, 1f, 0.5f) : new Color(0.55f, 0.55f, 0.55f);
+            EditorGUILayout.LabelField(day.already_assigned ? "ASSIGNED" : "NEW", badgeStyle, GUILayout.Width(90));
+            EditorGUILayout.EndHorizontal();
+
+            if (!this.expandedDays[dayKey])
+            {
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space(4);
+                return;
+            }
+
+            this.DrawSeparator();
 
             if (day.quests != null && day.quests.Length > 0)
             {
-                EditorGUILayout.LabelField($"Quests: {day.quests.Length}");
-                EditorGUI.indentLevel++;
                 foreach (DailyQuestEntryData entry in day.quests)
-                    this.DrawQuestEntry(entry);
-                EditorGUI.indentLevel--;
+                {
+                    string entryKey = $"{dayKey}|{entry.quest?.id ?? entry.assignment?.quest_definition_id ?? string.Empty}";
+                    this.DrawQuestEntry(entry, entryKey, withActions: false);
+                }
             }
             else
             {
-                EditorGUILayout.LabelField("No quests assigned.");
+                GUIStyle emptyStyle = new GUIStyle(EditorStyles.label);
+                emptyStyle.fontSize = 10;
+                emptyStyle.normal.textColor = new Color(0.55f, 0.55f, 0.55f);
+                emptyStyle.fontStyle = FontStyle.Italic;
+                EditorGUILayout.LabelField("No quests assigned.", emptyStyle);
             }
 
             EditorGUILayout.EndVertical();
+            EditorGUILayout.Space(4);
         }
 
-        private void DrawQuestEntry(DailyQuestEntryData entry)
+        // ── Today Quest Data ──────────────────────────────────────────────────
+
+        private void DrawTodayQuestData(TodayQuestResponse data)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            GUIStyle headerStyle = new GUIStyle(EditorStyles.boldLabel);
+            headerStyle.fontSize = 12;
+            headerStyle.normal.textColor = new Color(1f, 0.84f, 0.2f);
+            EditorGUILayout.LabelField($"📅 {data.assigned_date}  [{data.entries?.Length ?? 0}]", headerStyle);
+
+            this.DrawSeparator();
+
+            // Pool snapshot (from response)
+            if (data.pool != null)
+            {
+                GUIStyle poolHeader = new GUIStyle(EditorStyles.boldLabel);
+                poolHeader.fontSize = 10;
+                poolHeader.normal.textColor = new Color(0.7f, 0.9f, 1f);
+                EditorGUILayout.LabelField("🗂 POOL", poolHeader);
+
+                GUIStyle richBold = new GUIStyle(EditorStyles.boldLabel) { richText = true };
+                richBold.fontSize = 10;
+                string strategyColor = data.pool.assignment_strategy == "weighted_random" ? "#00FF88" : "#FFD700";
+                string activeTag = data.pool.is_active ? " <color=#00FF88>[active]</color>" : " <color=#FF4444>[inactive]</color>";
+                EditorGUILayout.LabelField($"<b>{data.pool.display_name}</b>{activeTag}", richBold);
+
+                GUIStyle dimStyle = new GUIStyle(EditorStyles.label);
+                dimStyle.fontSize = 9;
+                dimStyle.normal.textColor = new Color(0.55f, 0.55f, 0.55f);
+                if (!string.IsNullOrEmpty(data.pool.description)) EditorGUILayout.LabelField(data.pool.description, dimStyle);
+                if (!string.IsNullOrEmpty(data.pool.pool_key)) EditorGUILayout.LabelField($"Key: {data.pool.pool_key}", dimStyle);
+                if (!string.IsNullOrEmpty(data.pool.id)) EditorGUILayout.LabelField($"ID: {data.pool.id}", dimStyle);
+
+                EditorGUILayout.LabelField(
+                    $"Strategy: <color={strategyColor}><b>{data.pool.assignment_strategy}</b></color>  |  " +
+                    $"Slots/day: <b>{data.pool.slots_per_day}</b>  |  Reset UTC: <b>{data.pool.reset_hour_utc}:00</b>",
+                    new GUIStyle(EditorStyles.label) { richText = true, fontSize = 10 });
+
+                EditorGUILayout.Space(3);
+            }
+
+            // Streak info
+            if (data.streak != null)
+            {
+                DailyStreakData s = data.streak;
+
+                GUIStyle streakHeader = new GUIStyle(EditorStyles.boldLabel);
+                streakHeader.fontSize = 10;
+                streakHeader.normal.textColor = new Color(1f, 0.7f, 0.4f);
+                EditorGUILayout.LabelField("🔥 STREAK", streakHeader);
+
+                GUIStyle richStyle = new GUIStyle(EditorStyles.label) { richText = true };
+                richStyle.fontSize = 11;
+                EditorGUILayout.LabelField(
+                    $"Current: <color=#FFD700><b>{s.current_streak}</b></color>  |  " +
+                    $"Longest: <b>{s.longest_streak}</b>  |  " +
+                    $"Completions: <b>{s.total_completions}</b>  |  " +
+                    $"Version: <b>{s.version}</b>",
+                    richStyle);
+
+                GUIStyle dimStyle = new GUIStyle(EditorStyles.label);
+                dimStyle.fontSize = 9;
+                dimStyle.normal.textColor = new Color(0.55f, 0.55f, 0.55f);
+                if (!string.IsNullOrEmpty(s.id)) EditorGUILayout.LabelField($"ID: {s.id}", dimStyle);
+                if (!string.IsNullOrEmpty(s.created_at)) EditorGUILayout.LabelField($"Created: {s.created_at}  |  Updated: {s.updated_at}", dimStyle);
+            }
+
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.Space(4);
+
+            // Entries
+            if (data.entries != null && data.entries.Length > 0)
+            {
+                foreach (DailyQuestEntryData entry in data.entries)
+                {
+                    string entryKey = $"today|{entry.quest?.id ?? entry.assignment?.quest_definition_id ?? string.Empty}";
+                    this.DrawQuestEntry(entry, entryKey, withActions: true);
+                }
+            }
+        }
+
+        // ── Quest Entry Card (used by both day list and today list) ───────────
+
+        private void DrawQuestEntry(DailyQuestEntryData entry, string entryKey, bool withActions)
+        {
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            string questDefId = entry.quest?.id ?? entry.assignment?.quest_definition_id ?? string.Empty;
+            string questName = entry.quest?.name ?? questDefId;
+
+            if (!this.expandedQuests.ContainsKey(entryKey))
+                this.expandedQuests[entryKey] = false;
+
+            // Collapsible header: quest name + status badge
+            GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
+            foldoutStyle.fontSize = 12;
+            foldoutStyle.fontStyle = FontStyle.Bold;
+            Color titleColor = new Color(0.9f, 0.9f, 1f);
+            foldoutStyle.normal.textColor = titleColor;
+            foldoutStyle.onNormal.textColor = titleColor;
+            foldoutStyle.focused.textColor = titleColor;
+            foldoutStyle.onFocused.textColor = titleColor;
+            foldoutStyle.active.textColor = titleColor;
+            foldoutStyle.onActive.textColor = titleColor;
+
+            EditorGUILayout.BeginHorizontal();
+            this.expandedQuests[entryKey] = EditorGUILayout.Foldout(this.expandedQuests[entryKey], $"◆ {questName}", true, foldoutStyle);
+
+            if (!string.IsNullOrEmpty(entry.status))
+            {
+                GUIStyle statusBadge = new GUIStyle(EditorStyles.label);
+                statusBadge.fontSize = 11;
+                statusBadge.fontStyle = FontStyle.Bold;
+                statusBadge.alignment = TextAnchor.MiddleRight;
+                statusBadge.normal.textColor = this.GetStatusColor(entry.status);
+                EditorGUILayout.LabelField(entry.status.ToUpper(), statusBadge, GUILayout.MinWidth(90));
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (!this.expandedQuests[entryKey])
+            {
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space(2);
+                return;
+            }
+
+            this.DrawSeparator();
+
+            // Compact info
+            GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
+            labelStyle.fontSize = 10;
+            labelStyle.normal.textColor = new Color(0.6f, 0.6f, 0.6f);
 
             if (entry.quest != null)
             {
                 QuestDefinitionData quest = entry.quest;
-                EditorGUILayout.LabelField(quest.name, EditorStyles.boldLabel);
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField($"ID: {quest.id}");
-                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = quest.id;
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.LabelField($"Type: {quest.quest_type}  |  Active: {quest.is_active}");
+                EditorGUILayout.LabelField($"TYPE: {quest.quest_type?.ToUpper()}", labelStyle);
+                EditorGUILayout.LabelField($"SORT: {quest.sort_order}  |  HIDDEN: {(quest.is_hidden ? "YES" : "NO")}", labelStyle);
+
+                GUIStyle activeStyle = new GUIStyle(EditorStyles.label);
+                activeStyle.fontSize = 10;
+                activeStyle.fontStyle = FontStyle.Bold;
+                activeStyle.normal.textColor = quest.is_active ? new Color(0.3f, 1f, 0.5f) : new Color(0.6f, 0.6f, 0.6f);
+                EditorGUILayout.LabelField($"STATUS: {(quest.is_active ? "ACTIVE" : "INACTIVE")}", activeStyle);
+
+                this.DrawCodeAndIdRow(quest.code_name, quest.id);
 
                 if (!string.IsNullOrEmpty(quest.description))
-                    EditorGUILayout.LabelField($"Description: {quest.description}");
-
-                if (quest.rewards != null && quest.rewards.Length > 0)
                 {
-                    EditorGUILayout.LabelField($"Rewards ({quest.rewards.Length}):");
+                    GUIStyle descStyle = new GUIStyle(EditorStyles.label);
+                    descStyle.fontSize = 10;
+                    descStyle.normal.textColor = new Color(0.55f, 0.55f, 0.55f);
+                    descStyle.wordWrap = true;
+                    descStyle.fontStyle = FontStyle.Italic;
+                    EditorGUILayout.LabelField(quest.description, descStyle);
+                }
+
+                GUIStyle metaStyle = new GUIStyle(EditorStyles.label);
+                metaStyle.fontSize = 9;
+                metaStyle.normal.textColor = new Color(0.45f, 0.45f, 0.45f);
+                if (!string.IsNullOrEmpty(quest.created_at))
+                    EditorGUILayout.LabelField($"Created: {quest.created_at}  |  Updated: {quest.updated_at}", metaStyle);
+
+                // Conditions
+                this.DrawConditions(quest.conditions);
+
+                int visibleRewardCount = this.CountVisibleRewards(quest.rewards);
+                if (visibleRewardCount > 0)
+                {
+                    EditorGUILayout.Space(3);
+                    GUIStyle sectionStyle = new GUIStyle(EditorStyles.boldLabel);
+                    sectionStyle.fontSize = 10;
+                    sectionStyle.normal.textColor = new Color(1f, 0.84f, 0.2f);
+                    EditorGUILayout.LabelField($"🎁 REWARDS ({visibleRewardCount})", sectionStyle);
+
                     foreach (QuestReward reward in quest.rewards)
                     {
-                        if (reward.reward_type == "coin")
-                            EditorGUILayout.LabelField($"  • coin × {reward.amount}");
-                        else if (reward.reward_type == "item")
-                            EditorGUILayout.LabelField($"  • item {reward.item_definition_id} × {reward.quantity_min}-{reward.quantity_max}");
-                        else
-                            EditorGUILayout.LabelField($"  • {reward.reward_type}");
+                        if (this.IsHiddenReward(reward)) continue;
+                        this.DrawReward(reward);
                     }
                 }
             }
 
+            // Assignment info
             if (entry.assignment != null)
             {
+                EditorGUILayout.Space(3);
+                GUIStyle sectionStyle = new GUIStyle(EditorStyles.boldLabel);
+                sectionStyle.fontSize = 10;
+                sectionStyle.normal.textColor = new Color(0.7f, 0.9f, 1f);
+                EditorGUILayout.LabelField("📌 ASSIGNMENT", sectionStyle);
+
                 DailyAssignmentData a = entry.assignment;
+                GUIStyle idStyle = new GUIStyle(EditorStyles.label);
+                idStyle.fontSize = 10;
+                idStyle.normal.textColor = new Color(1f, 0.84f, 0f);
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField($"Assignment ID: {a.id}");
+                EditorGUILayout.LabelField($"Assignment ID: {a.id}", idStyle);
                 if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = a.id;
                 EditorGUILayout.EndHorizontal();
-                EditorGUILayout.LabelField($"Expires: {a.expires_at}");
+
+                GUIStyle dimStyle = new GUIStyle(EditorStyles.label);
+                dimStyle.fontSize = 9;
+                dimStyle.normal.textColor = new Color(0.55f, 0.55f, 0.55f);
+                this.DrawDimIdRow("Pool", a.pool_id, dimStyle);
+                this.DrawDimIdRow("User", a.user_id, dimStyle);
+                if (!string.IsNullOrEmpty(a.assigned_date)) EditorGUILayout.LabelField($"Assigned: {a.assigned_date}", dimStyle);
+                if (!string.IsNullOrEmpty(a.created_at)) EditorGUILayout.LabelField($"Created: {a.created_at}", dimStyle);
+
+                GUIStyle expireStyle = new GUIStyle(EditorStyles.label) { richText = true };
+                expireStyle.fontSize = 10;
+                EditorGUILayout.LabelField($"⏰ Expires: <color=#FF8888>{a.expires_at}</color>", expireStyle);
+            }
+
+            // Progress info
+            if (entry.progress != null)
+                this.DrawProgressBlock(entry.progress);
+
+            // Action buttons
+            if (withActions && !string.IsNullOrEmpty(questDefId))
+            {
+                EditorGUILayout.Space(6);
+                EditorGUILayout.BeginHorizontal();
+
+                bool isStarting = this.startingQuestId == questDefId;
+                bool isChecking = this.checkingQuestId == questDefId;
+                bool isClaiming = this.claimingQuestId == questDefId;
+                bool anyBusy = isStarting || isChecking || isClaiming;
+
+                GUI.backgroundColor = isStarting ? Color.gray : new Color(1f, 0.82f, 0.2f);
+                EditorGUI.BeginDisabledGroup(anyBusy);
+                if (GUILayout.Button(isStarting ? "▶ Starting..." : "▶ Start", GUILayout.Height(28)))
+                    this.RunStartQuest(questDefId);
+                EditorGUI.EndDisabledGroup();
+
+                GUI.backgroundColor = isChecking ? Color.gray : new Color(0.4f, 0.8f, 1f);
+                EditorGUI.BeginDisabledGroup(anyBusy);
+                if (GUILayout.Button(isChecking ? "🔄 Checking..." : "🔄 Check", GUILayout.Height(28)))
+                    this.RunCheckQuest(questDefId);
+                EditorGUI.EndDisabledGroup();
+
+                GUI.backgroundColor = isClaiming ? Color.gray : new Color(0.4f, 1f, 0.6f);
+                EditorGUI.BeginDisabledGroup(anyBusy);
+                if (GUILayout.Button(isClaiming ? "✓ Claiming..." : "✓ Claim", GUILayout.Height(28)))
+                    this.RunClaimQuest(questDefId);
+                EditorGUI.EndDisabledGroup();
+
+                GUI.backgroundColor = Color.white;
+                EditorGUILayout.EndHorizontal();
             }
 
             EditorGUILayout.EndVertical();
+            EditorGUILayout.Space(2);
         }
+
+        private void DrawReward(QuestReward reward)
+        {
+            GUIStyle richStyle = new GUIStyle(EditorStyles.label) { richText = true };
+            richStyle.fontSize = 10;
+
+            if (reward.reward_type == "item")
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"  <color=#66CCFF>● item</color> {reward.item_definition_id} × <b>{reward.quantity_min}-{reward.quantity_max}</b>", richStyle);
+                if (!string.IsNullOrEmpty(reward.item_definition_id) && GUILayout.Button("Copy", GUILayout.Width(50)))
+                    GUIUtility.systemCopyBuffer = reward.item_definition_id;
+                EditorGUILayout.EndHorizontal();
+            }
+            else
+            {
+                EditorGUILayout.LabelField($"  <color=#AAAAAA>●</color> {reward.reward_type}", richStyle);
+            }
+        }
+
+        // Coin rewards are hidden — backend doesn't process them.
+        private bool IsHiddenReward(QuestReward reward) => reward != null && reward.reward_type == "coin";
+
+        private int CountVisibleRewards(QuestReward[] rewards)
+        {
+            if (rewards == null) return 0;
+            int count = 0;
+            foreach (QuestReward r in rewards)
+                if (!this.IsHiddenReward(r)) count++;
+            return count;
+        }
+
+        // ── Style helpers ─────────────────────────────────────────────────────
+
+        private void DrawSeparator()
+        {
+            GUIStyle separatorStyle = new GUIStyle(EditorStyles.label);
+            separatorStyle.fontSize = 8;
+            separatorStyle.normal.textColor = new Color(0.3f, 0.3f, 0.3f);
+            EditorGUILayout.LabelField("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", separatorStyle);
+        }
+
+        private Color GetStatusColor(string status)
+        {
+            switch ((status ?? "").ToLower())
+            {
+                case "completed": return new Color(0f, 1f, 0.53f);   // Green
+                case "claimed": return new Color(1f, 0.84f, 0.2f); // Gold
+                case "in_progress": return new Color(0.4f, 0.8f, 1f);  // Cyan
+                default: return new Color(0.67f, 0.67f, 0.67f); // Gray (not_started)
+            }
+        }
+
+        // ── Network actions ───────────────────────────────────────────────────
 
         private void RunGetTodayQuests()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[DailyQuestEditor] SaiService not found!");
+                Debug.LogError("[DailyQuestEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[DailyQuestEditor] Not authenticated! Please login first.");
                 return;
@@ -368,134 +745,9 @@ namespace SaiGame.Services
             );
         }
 
-        private void DrawTodayQuestData(TodayQuestResponse data)
-        {
-            GUIStyle richBold = new GUIStyle(EditorStyles.boldLabel) { richText = true };
-
-            EditorGUILayout.LabelField($"Date: <b>{data.assigned_date}</b>", richBold);
-            EditorGUILayout.LabelField($"Entries: {data.entries?.Length ?? 0}");
-
-            // Streak
-            if (data.streak != null)
-            {
-                DailyStreakData s = data.streak;
-                EditorGUILayout.LabelField(
-                    $"Streak: <color=#FFD700><b>{s.current_streak}</b></color>  |  " +
-                    $"Longest: {s.longest_streak}  |  " +
-                    $"Completions: {s.total_completions}",
-                    richBold);
-            }
-
-            // Entries
-            if (data.entries != null && data.entries.Length > 0)
-            {
-                EditorGUI.indentLevel++;
-                foreach (DailyQuestEntryData entry in data.entries)
-                    this.DrawTodayQuestEntryWithActions(entry);
-                EditorGUI.indentLevel--;
-            }
-        }
-
-        private void DrawTodayQuestEntryWithActions(DailyQuestEntryData entry)
-        {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-
-            string questDefId = entry.quest?.id ?? entry.assignment?.quest_definition_id ?? string.Empty;
-
-            if (entry.quest != null)
-            {
-                QuestDefinitionData quest = entry.quest;
-                EditorGUILayout.LabelField(quest.name, EditorStyles.boldLabel);
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField($"ID: {quest.id}");
-                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = quest.id;
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.LabelField($"Type: {quest.quest_type}  |  Active: {quest.is_active}");
-
-                if (!string.IsNullOrEmpty(quest.description))
-                    EditorGUILayout.LabelField($"Description: {quest.description}");
-
-                if (quest.rewards != null && quest.rewards.Length > 0)
-                {
-                    EditorGUILayout.LabelField($"Rewards ({quest.rewards.Length}):");
-                    foreach (QuestReward reward in quest.rewards)
-                    {
-                        if (reward.reward_type == "coin")
-                            EditorGUILayout.LabelField($"  \u2022 coin \u00d7 {reward.amount}");
-                        else if (reward.reward_type == "item")
-                            EditorGUILayout.LabelField($"  \u2022 item {reward.item_definition_id} \u00d7 {reward.quantity_min}-{reward.quantity_max}");
-                        else
-                            EditorGUILayout.LabelField($"  \u2022 {reward.reward_type}");
-                    }
-                }
-            }
-
-            if (entry.assignment != null)
-            {
-                DailyAssignmentData a = entry.assignment;
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField($"Assignment ID: {a.id}");
-                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = a.id;
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.LabelField($"Expires: {a.expires_at}");
-            }
-
-            // Status badge
-            if (!string.IsNullOrEmpty(entry.status))
-            {
-                GUIStyle statusStyle = new GUIStyle(EditorStyles.boldLabel) { richText = true };
-                string statusColor;
-                switch (entry.status)
-                {
-                    case "completed":   statusColor = "#00FF88"; break;
-                    case "claimed":     statusColor = "#FFD700"; break;
-                    case "in_progress": statusColor = "#66CCFF"; break;
-                    default:            statusColor = "#AAAAAA"; break; // not_started
-                }
-                EditorGUILayout.LabelField(
-                    $"Status: <color={statusColor}><b>{entry.status}</b></color>",
-                    statusStyle);
-            }
-
-            // Action buttons
-            if (!string.IsNullOrEmpty(questDefId))
-            {
-                EditorGUILayout.Space(2);
-                EditorGUILayout.BeginHorizontal();
-
-                bool isStarting = this.startingQuestId == questDefId;
-                bool isChecking = this.checkingQuestId == questDefId;
-                bool isClaiming = this.claimingQuestId == questDefId;
-                bool anyBusy = isStarting || isChecking || isClaiming;
-
-                GUI.backgroundColor = isStarting ? Color.gray : new Color(1f, 0.82f, 0.2f);
-                EditorGUI.BeginDisabledGroup(anyBusy);
-                if (GUILayout.Button(isStarting ? "Starting..." : "Start", GUILayout.Height(22)))
-                    this.RunStartQuest(questDefId);
-                EditorGUI.EndDisabledGroup();
-
-                GUI.backgroundColor = isChecking ? Color.gray : new Color(0.4f, 0.8f, 1f);
-                EditorGUI.BeginDisabledGroup(anyBusy);
-                if (GUILayout.Button(isChecking ? "Checking..." : "Check", GUILayout.Height(22)))
-                    this.RunCheckQuest(questDefId);
-                EditorGUI.EndDisabledGroup();
-
-                GUI.backgroundColor = isClaiming ? Color.gray : new Color(0.4f, 1f, 0.6f);
-                EditorGUI.BeginDisabledGroup(anyBusy);
-                if (GUILayout.Button(isClaiming ? "Claiming..." : "Claim", GUILayout.Height(22)))
-                    this.RunClaimQuest(questDefId);
-                EditorGUI.EndDisabledGroup();
-
-                GUI.backgroundColor = Color.white;
-                EditorGUILayout.EndHorizontal();
-            }
-
-            EditorGUILayout.EndVertical();
-        }
-
         private void RunStartQuest(string questDefinitionId)
         {
-            if (SaiService.Instance == null || SaiService.Instance.QuestProgressor == null)
+            if (SaiServer.Instance == null || SaiServer.Instance.QuestProgressor == null)
             {
                 Debug.LogError("[DailyQuestEditor] QuestProgressor not found!");
                 return;
@@ -504,7 +756,7 @@ namespace SaiGame.Services
             this.startingQuestId = questDefinitionId;
             Repaint();
 
-            SaiService.Instance.QuestProgressor.StartQuest(
+            SaiServer.Instance.QuestProgressor.StartQuest(
                 questDefinitionId: questDefinitionId,
                 onSuccess: response =>
                 {
@@ -523,7 +775,7 @@ namespace SaiGame.Services
 
         private void RunCheckQuest(string questDefinitionId)
         {
-            if (SaiService.Instance == null || SaiService.Instance.QuestProgressor == null)
+            if (SaiServer.Instance == null || SaiServer.Instance.QuestProgressor == null)
             {
                 Debug.LogError("[DailyQuestEditor] QuestProgressor not found!");
                 return;
@@ -532,12 +784,13 @@ namespace SaiGame.Services
             this.checkingQuestId = questDefinitionId;
             Repaint();
 
-            SaiService.Instance.QuestProgressor.CheckQuest(
+            SaiServer.Instance.QuestProgressor.CheckQuest(
                 questDefinitionId: questDefinitionId,
                 onSuccess: response =>
                 {
                     this.checkingQuestId = null;
-                    Debug.Log($"[DailyQuestEditor] Quest checked: quest={response.quest_definition?.id}");
+                    this.ApplyCheckResponseToEntry(questDefinitionId, response);
+                    Debug.Log($"[DailyQuestEditor] Quest checked: quest={response.quest_definition?.id}, status={response.status}");
                     Repaint();
                 },
                 onError: error =>
@@ -551,7 +804,7 @@ namespace SaiGame.Services
 
         private void RunClaimQuest(string questDefinitionId)
         {
-            if (SaiService.Instance == null || SaiService.Instance.QuestProgressor == null)
+            if (SaiServer.Instance == null || SaiServer.Instance.QuestProgressor == null)
             {
                 Debug.LogError("[DailyQuestEditor] QuestProgressor not found!");
                 return;
@@ -560,7 +813,7 @@ namespace SaiGame.Services
             this.claimingQuestId = questDefinitionId;
             Repaint();
 
-            SaiService.Instance.QuestProgressor.ClaimQuest(
+            SaiServer.Instance.QuestProgressor.ClaimQuest(
                 questDefinitionId: questDefinitionId,
                 onSuccess: response =>
                 {
@@ -579,13 +832,13 @@ namespace SaiGame.Services
 
         private void RunAssignAhead()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[DailyQuestEditor] SaiService not found!");
+                Debug.LogError("[DailyQuestEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[DailyQuestEditor] Not authenticated! Please login first.");
                 return;
@@ -612,13 +865,13 @@ namespace SaiGame.Services
 
         private void LoadPools()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[DailyQuestEditor] SaiService not found!");
+                Debug.LogError("[DailyQuestEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[DailyQuestEditor] Not authenticated! Please login first.");
                 return;
@@ -633,7 +886,6 @@ namespace SaiGame.Services
                     this.isLoadingPools = false;
                     this.loadedPools = response.pools ?? new DailyQuestPoolData[0];
 
-                    // Build display labels: "display_name (pool_key)"
                     this.poolDisplayOptions = new string[this.loadedPools.Length];
                     for (int i = 0; i < this.loadedPools.Length; i++)
                     {
@@ -643,7 +895,6 @@ namespace SaiGame.Services
 
                     this.SyncDropdownSelectionFromProperty();
 
-                    // If nothing matched, default to first entry
                     if (this.selectedPoolIndex < 0 && this.loadedPools.Length > 0)
                     {
                         this.selectedPoolIndex = 0;
@@ -661,6 +912,337 @@ namespace SaiGame.Services
                     Repaint();
                 }
             );
+        }
+
+        // ── CODE + ID row helper ──────────────────────────────────────────────
+
+        /// <summary>
+        /// Draws "CODE: xxx [Copy]" and "ID: yyy [Copy]" on two separate rows.
+        /// If code_name is empty, only the ID row is rendered.
+        /// </summary>
+        private void DrawCodeAndIdRow(string codeName, string id)
+        {
+            GUIStyle idStyle = new GUIStyle(EditorStyles.label);
+            idStyle.fontSize = 10;
+            idStyle.normal.textColor = new Color(1f, 0.84f, 0f);
+
+            if (!string.IsNullOrEmpty(codeName))
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"CODE: {codeName}", idStyle);
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = codeName;
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (!string.IsNullOrEmpty(id))
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"ID: {id}", idStyle);
+                if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = id;
+                EditorGUILayout.EndHorizontal();
+            }
+        }
+
+        /// <summary>
+        /// Renders a "{label}: {id} [Copy]" row using the supplied dim style. No-op when id is empty.
+        /// </summary>
+        private void DrawDimIdRow(string label, string id, GUIStyle style)
+        {
+            if (string.IsNullOrEmpty(id)) return;
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"{label}: {id}", style);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = id;
+            EditorGUILayout.EndHorizontal();
+        }
+
+        // ── Check API → entry sync ────────────────────────────────────────────
+
+        /// <summary>
+        /// Updates the matching entry in CurrentTodayQuestResponse with fresh data from a Check call.
+        /// </summary>
+        private void ApplyCheckResponseToEntry(string questDefinitionId, CheckQuestResponse response)
+        {
+            if (response == null) return;
+
+            TodayQuestResponse today = this.dailyQuest?.CurrentTodayQuestResponse;
+            if (today?.entries == null) return;
+
+            foreach (DailyQuestEntryData entry in today.entries)
+            {
+                string entryQuestId = entry?.quest?.id ?? entry?.assignment?.quest_definition_id;
+                if (entryQuestId != questDefinitionId) continue;
+
+                if (response.quest_definition != null)
+                    entry.quest = response.quest_definition;
+
+                entry.progress = this.ToDailyProgress(response.progress);
+
+                // Prefer progress.status as source of truth — backend's top-level
+                // "status" can be stale relative to the actual progress record.
+                if (!string.IsNullOrEmpty(entry.progress?.status))
+                    entry.status = entry.progress.status;
+                else if (!string.IsNullOrEmpty(response.status))
+                    entry.status = response.status;
+
+                break;
+            }
+        }
+
+        private DailyQuestProgressData ToDailyProgress(CheckQuestProgressRecord src)
+        {
+            if (src == null) return null;
+            return new DailyQuestProgressData
+            {
+                id = src.id,
+                studio_id = src.studio_id,
+                game_id = src.game_id,
+                user_id = src.user_id,
+                quest_definition_id = src.quest_definition_id,
+                status = src.status,
+                completed_at = src.completed_at,
+                claimed_at = src.claimed_at,
+                reset_at = src.reset_at,
+                version = src.version,
+                created_at = src.created_at,
+                updated_at = src.updated_at,
+                progress_data_json = src.progress_data_json,
+            };
+        }
+
+        // ── Conditions ────────────────────────────────────────────────────────
+
+        private void DrawConditions(QuestConditions conditions)
+        {
+            if (conditions == null || conditions.clauses == null || conditions.clauses.Length == 0) return;
+
+            EditorGUILayout.Space(3);
+            GUIStyle sectionStyle = new GUIStyle(EditorStyles.boldLabel);
+            sectionStyle.fontSize = 10;
+            sectionStyle.normal.textColor = new Color(1f, 0.7f, 0.4f);
+            string op = string.IsNullOrEmpty(conditions.operator_type) ? "AND" : conditions.operator_type.ToUpper();
+            EditorGUILayout.LabelField($"⚙ CONDITIONS [{op}] ({conditions.clauses.Length})", sectionStyle);
+
+            GUIStyle clauseHeader = new GUIStyle(EditorStyles.label) { richText = true };
+            clauseHeader.fontSize = 10;
+            clauseHeader.fontStyle = FontStyle.Bold;
+            clauseHeader.normal.textColor = new Color(0.85f, 0.85f, 0.85f);
+
+            GUIStyle subStyle = new GUIStyle(EditorStyles.label) { richText = true };
+            subStyle.fontSize = 9;
+            subStyle.normal.textColor = new Color(0.7f, 0.7f, 0.7f);
+
+            foreach (QuestClause clause in conditions.clauses)
+            {
+                if (clause == null) continue;
+
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.LabelField($"  • <color=#AAAAAA>[{clause.clause_id}]</color> <color=#66CCFF>{clause.type}</color>", clauseHeader);
+
+                if (clause.items != null && clause.items.Length > 0)
+                {
+                    foreach (QuestClauseItem item in clause.items)
+                    {
+                        if (item == null) continue;
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.LabelField($"      <color=#888888>item:</color> {item.item_definition_id}  <b>×{item.quantity}</b>", subStyle);
+                        if (!string.IsNullOrEmpty(item.item_definition_id) && GUILayout.Button("Copy", GUILayout.Width(50)))
+                            GUIUtility.systemCopyBuffer = item.item_definition_id;
+                        EditorGUILayout.EndHorizontal();
+                    }
+                }
+
+                if (clause.packs != null && !string.IsNullOrEmpty(clause.packs.gacha_pack_id))
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField($"      <color=#888888>gacha:</color> {clause.packs.gacha_pack_id}  <b>×{clause.packs.quantity}</b>", subStyle);
+                    if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                        GUIUtility.systemCopyBuffer = clause.packs.gacha_pack_id;
+                    EditorGUILayout.EndHorizontal();
+                }
+
+                EditorGUILayout.EndVertical();
+            }
+        }
+
+        // ── Progress Block ────────────────────────────────────────────────────
+
+        private void DrawProgressBlock(DailyQuestProgressData p)
+        {
+            EditorGUILayout.Space(3);
+            GUIStyle sectionStyle = new GUIStyle(EditorStyles.boldLabel);
+            sectionStyle.fontSize = 10;
+            sectionStyle.normal.textColor = new Color(0.6f, 1f, 0.8f);
+            EditorGUILayout.LabelField("📈 PROGRESS", sectionStyle);
+
+            GUIStyle richStyle = new GUIStyle(EditorStyles.label) { richText = true };
+            richStyle.fontSize = 10;
+
+            string statusColor = this.GetStatusHex(p.status);
+            EditorGUILayout.LabelField($"Status: <color={statusColor}><b>{p.status}</b></color>  |  Version: <b>{p.version}</b>", richStyle);
+
+            GUIStyle idStyle = new GUIStyle(EditorStyles.label);
+            idStyle.fontSize = 10;
+            idStyle.normal.textColor = new Color(1f, 0.84f, 0f);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"Progress ID: {p.id}", idStyle);
+            if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = p.id;
+            EditorGUILayout.EndHorizontal();
+
+            GUIStyle dimStyle = new GUIStyle(EditorStyles.label);
+            dimStyle.fontSize = 9;
+            dimStyle.normal.textColor = new Color(0.55f, 0.55f, 0.55f);
+
+            if (!string.IsNullOrEmpty(p.completed_at)) EditorGUILayout.LabelField($"Completed: {p.completed_at}", dimStyle);
+            if (!string.IsNullOrEmpty(p.claimed_at)) EditorGUILayout.LabelField($"Claimed: {p.claimed_at}", dimStyle);
+            if (!string.IsNullOrEmpty(p.reset_at)) EditorGUILayout.LabelField($"Reset: {p.reset_at}", dimStyle);
+            if (!string.IsNullOrEmpty(p.created_at)) EditorGUILayout.LabelField($"Created: {p.created_at}", dimStyle);
+            if (!string.IsNullOrEmpty(p.updated_at)) EditorGUILayout.LabelField($"Updated: {p.updated_at}", dimStyle);
+
+            if (!string.IsNullOrEmpty(p.progress_data_json))
+                this.DrawProgressData(p.progress_data_json);
+        }
+
+        private string GetStatusHex(string status)
+        {
+            switch ((status ?? "").ToLower())
+            {
+                case "completed": return "#00FF88";
+                case "claimed": return "#FFD700";
+                case "in_progress": return "#66CCFF";
+                default: return "#AAAAAA";
+            }
+        }
+
+        // ── Dynamic JSON renderer (for progress_data) ─────────────────────────
+
+        private void DrawProgressData(string json)
+        {
+            EditorGUILayout.Space(2);
+            GUIStyle headerStyle = new GUIStyle(EditorStyles.boldLabel);
+            headerStyle.fontSize = 10;
+            headerStyle.normal.textColor = new Color(0.6f, 0.85f, 1f);
+            EditorGUILayout.LabelField("📊 PROGRESS DATA", headerStyle);
+
+            GUIStyle clauseHeader = new GUIStyle(EditorStyles.label) { richText = true, fontStyle = FontStyle.Bold, fontSize = 10 };
+            GUIStyle fieldLabel = new GUIStyle(EditorStyles.label) { richText = true, fontSize = 10 };
+
+            foreach (var clause in this.ParseTopLevelEntries(json))
+            {
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.LabelField($"<color=#4DD0E1><b>{clause.Key}</b></color>", clauseHeader);
+
+                if (clause.Value.TrimStart().StartsWith("{"))
+                {
+                    foreach (var field in this.ParseFlatObject(clause.Value))
+                    {
+                        bool isNumericProgress = field.Key == "opened" || field.Key == "required";
+                        string valColor = isNumericProgress ? "#FFD700" : "#CCCCCC";
+                        EditorGUILayout.LabelField(
+                            $"  <color=#888888>{field.Key}:</color>  <color={valColor}>{field.Value}</color>",
+                            fieldLabel);
+                    }
+                }
+                else
+                {
+                    EditorGUILayout.LabelField($"  <color=#CCCCCC>{clause.Value}</color>", fieldLabel);
+                }
+
+                EditorGUILayout.EndVertical();
+            }
+        }
+
+        private System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, string>>
+            ParseTopLevelEntries(string json)
+        {
+            var result = new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, string>>();
+            json = json.Trim();
+            if (json.StartsWith("{")) json = json.Substring(1);
+            if (json.EndsWith("}")) json = json.Substring(0, json.Length - 1);
+
+            int i = 0;
+            while (i < json.Length)
+            {
+                while (i < json.Length && char.IsWhiteSpace(json[i])) i++;
+                if (i >= json.Length) break;
+                if (json[i] == ',') { i++; continue; }
+                if (json[i] != '"') { i++; continue; }
+                i++;
+
+                int keyStart = i;
+                while (i < json.Length && json[i] != '"') i++;
+                string key = json.Substring(keyStart, i - keyStart);
+                i++;
+
+                while (i < json.Length && (char.IsWhiteSpace(json[i]) || json[i] == ':')) i++;
+                string value = this.ReadJsonValue(json, ref i);
+                result.Add(new System.Collections.Generic.KeyValuePair<string, string>(key, value));
+            }
+            return result;
+        }
+
+        private System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, string>>
+            ParseFlatObject(string json)
+        {
+            var result = new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, string>>();
+            json = json.Trim();
+            if (json.StartsWith("{")) json = json.Substring(1);
+            if (json.EndsWith("}")) json = json.Substring(0, json.Length - 1);
+
+            int i = 0;
+            while (i < json.Length)
+            {
+                while (i < json.Length && char.IsWhiteSpace(json[i])) i++;
+                if (i >= json.Length) break;
+                if (json[i] == ',') { i++; continue; }
+                if (json[i] != '"') { i++; continue; }
+                i++;
+
+                int keyStart = i;
+                while (i < json.Length && json[i] != '"') i++;
+                string key = json.Substring(keyStart, i - keyStart);
+                i++;
+
+                while (i < json.Length && (char.IsWhiteSpace(json[i]) || json[i] == ':')) i++;
+                string value = this.ReadJsonValue(json, ref i);
+
+                if (value.StartsWith("\"") && value.EndsWith("\""))
+                    value = value.Substring(1, value.Length - 2);
+
+                result.Add(new System.Collections.Generic.KeyValuePair<string, string>(key, value));
+            }
+            return result;
+        }
+
+        private string ReadJsonValue(string json, ref int i)
+        {
+            while (i < json.Length && char.IsWhiteSpace(json[i])) i++;
+            if (i >= json.Length) return "";
+
+            if (json[i] == '{' || json[i] == '[')
+            {
+                char open = json[i];
+                char close = open == '{' ? '}' : ']';
+                int start = i, depth = 0;
+                while (i < json.Length)
+                {
+                    if (json[i] == open) depth++;
+                    else if (json[i] == close) { depth--; if (depth == 0) { i++; break; } }
+                    i++;
+                }
+                return json.Substring(start, i - start);
+            }
+            if (json[i] == '"')
+            {
+                int start = i++;
+                while (i < json.Length && json[i] != '"') { if (json[i] == '\\') i++; i++; }
+                i++;
+                return json.Substring(start, i - start);
+            }
+            {
+                int start = i;
+                while (i < json.Length && json[i] != ',' && json[i] != '}' && json[i] != ']') i++;
+                return json.Substring(start, i - start).Trim();
+            }
         }
     }
 }

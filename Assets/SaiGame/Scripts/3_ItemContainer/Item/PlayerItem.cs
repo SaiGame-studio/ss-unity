@@ -55,7 +55,7 @@ namespace SaiGame.Services
             if (cached != null)
             {
                 runtimeCategoriesCache = cached;
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                     Debug.Log($"[ItemContainer] Categories loaded from cache ({cached.Length} items, still valid)");
                 return;
             }
@@ -66,12 +66,12 @@ namespace SaiGame.Services
 
         private IEnumerator FetchAndCacheCategoriesCoroutine()
         {
-            // Wait one frame so that SaiService fully initialises
+            // Wait one frame so that SaiServer fully initialises
             yield return null;
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogWarning("[ItemContainer] Cannot fetch categories: SaiService not found");
+                Debug.LogWarning("[ItemContainer] Cannot fetch categories: SaiServer not found");
                 yield break;
             }
 
@@ -81,14 +81,14 @@ namespace SaiGame.Services
                     SaveCategoriesToPrefs(categories);
                     runtimeCategoriesCache = categories;
 
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemContainer] Categories fetched and cached ({categories.Length} items)");
 
                     this.OnCategoriesLoaded?.Invoke(categories);
                 },
                 error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.LogWarning($"[ItemContainer] Failed to fetch categories on startup: {error}");
                 }
             ));
@@ -96,24 +96,24 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
@@ -121,19 +121,19 @@ namespace SaiGame.Services
         {
             if (!this.autoLoadOnLogin) return;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemContainer] Auto-loading inventory after successful login...");
 
             this.GetItems(
                 category: this.autoLoadCategory,
                 onSuccess: inventory =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemContainer] Inventory auto-loaded: {inventory.items.Length} items, total: {inventory.total}");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.LogWarning($"[ItemContainer] Auto-load inventory failed: {error}");
                 }
             );
@@ -141,12 +141,12 @@ namespace SaiGame.Services
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemContainer] Logout successful, clearing inventory data...");
 
             this.ClearLocalInventory();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemContainer] Inventory data cleared successfully");
         }
 
@@ -161,16 +161,16 @@ namespace SaiGame.Services
             System.Action<InventoryResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[ItemContainer] ► Get Items</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -190,13 +190,13 @@ namespace SaiGame.Services
             System.Action<InventoryResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/inventory?limit={limit}&offset={offset}&include_metadata=true";
 
             if (!string.IsNullOrEmpty(category))
                 endpoint += $"&category={category}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -209,11 +209,11 @@ namespace SaiGame.Services
                         InventoryResponse inventoryResponse = JsonUtility.FromJson<InventoryResponse>(sanitized);
                         this.currentInventory = inventoryResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[ItemContainer] Inventory loaded: {inventoryResponse.items.Length} items, total: {inventoryResponse.total}");
 
                         this.OnGetItemsSuccess?.Invoke(inventoryResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[ItemContainer] GetItems</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemContainer.cs › GetItemsCoroutine");
                         onSuccess?.Invoke(inventoryResponse);
                     }
@@ -221,7 +221,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get items response error: {e.Message}";
                         this.OnGetItemsFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[ItemContainer] GetItems</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemContainer.cs › GetItemsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -229,7 +229,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnGetItemsFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemContainer] GetItems</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemContainer.cs › GetItemsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -255,16 +255,16 @@ namespace SaiGame.Services
             System.Action<InventoryItemData> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[ItemContainer] ► Update Item Properties</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -285,13 +285,13 @@ namespace SaiGame.Services
             System.Action<InventoryItemData> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/inventory-items/{itemId}";
 
             // version is required by the schema but ignored server-side for optimistic locking
             string body = $"{{\"version\":0,\"properties\":{propertiesJson}}}";
 
-            yield return SaiService.Instance.PatchRequest(endpoint, body,
+            yield return SaiServer.Instance.PatchRequest(endpoint, body,
                 response =>
                 {
                     // Server returns {"message":"properties updated successfully"} — not a full item object.
@@ -312,17 +312,17 @@ namespace SaiGame.Services
                         }
                     }
 
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemContainer] Item {itemId} public_properties updated successfully. Server: {response}");
 
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.Log("<color=#66CCFF>[ItemContainer] UpdateItemProperties</color> → <b><color=#00FF88>onSuccess</color></b> callback | PlayerItem.cs › UpdateItemPropertiesCoroutine");
 
                     onSuccess?.Invoke(cachedItem);
                 },
                 error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemContainer] UpdateItemProperties</color> → <b><color=#FF4444>onError</color></b> callback (network) | PlayerItem.cs › UpdateItemPropertiesCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -334,11 +334,11 @@ namespace SaiGame.Services
         /// </summary>
         public void ClearInventory()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[ItemContainer] ► Clear Inventory</b></color>", gameObject);
             this.ClearLocalInventory();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemContainer] Inventory data cleared locally");
         }
 
@@ -406,9 +406,9 @@ namespace SaiGame.Services
                 return;
             }
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
@@ -430,7 +430,7 @@ namespace SaiGame.Services
         {
             const string endpoint = "/api/v1/items/categories";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try

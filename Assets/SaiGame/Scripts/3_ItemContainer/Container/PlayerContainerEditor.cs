@@ -346,13 +346,13 @@ namespace SaiGame.Services
 
         private void OpenGachaPack(string itemId, string gachaPackId, string containerId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[PlayerContainerEditor] SaiService not found!");
+                Debug.LogError("[PlayerContainerEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[PlayerContainerEditor] Not authenticated! Please login first.");
                 return;
@@ -368,7 +368,7 @@ namespace SaiGame.Services
                 {
                     this.loadingGachaItems.Remove(itemId);
 
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                     {
                         int count = response.items_granted?.Length ?? 0;
                         Debug.Log($"[PlayerContainerEditor] Gacha opened! {count} item(s) granted. Transaction: {response.transaction_id}");
@@ -380,7 +380,7 @@ namespace SaiGame.Services
                 {
                     this.loadingGachaItems.Remove(itemId);
 
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[PlayerContainerEditor] Failed to open gacha pack: {error}");
 
                     Repaint();
@@ -437,13 +437,13 @@ namespace SaiGame.Services
 
         private void LoadContainerItems(string containerId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[PlayerContainerEditor] SaiService not found!");
+                Debug.LogError("[PlayerContainerEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[PlayerContainerEditor] Not authenticated! Please login first.");
                 return;
@@ -462,7 +462,7 @@ namespace SaiGame.Services
                     this.showItemsFoldout[containerId] = true;
                     this.loadingContainerItems.Remove(containerId);
 
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[PlayerContainerEditor] Loaded {this.containerItems[containerId].Length} items for container {containerId}");
 
                     Repaint();
@@ -471,7 +471,7 @@ namespace SaiGame.Services
                 {
                     this.loadingContainerItems.Remove(containerId);
 
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[PlayerContainerEditor] Failed to load items for container {containerId}: {error}");
 
                     Repaint();
@@ -481,13 +481,13 @@ namespace SaiGame.Services
 
         private void LoadContainers()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[PlayerContainerEditor] SaiService not found!");
+                Debug.LogError("[PlayerContainerEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[PlayerContainerEditor] Not authenticated! Please login first.");
                 return;
@@ -496,12 +496,12 @@ namespace SaiGame.Services
             this.playerContainer.GetContainers(
                 onSuccess: response =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[PlayerContainerEditor] Loaded {response.containers.Length} containers");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[PlayerContainerEditor] Failed to load containers: {error}");
                 }
             );

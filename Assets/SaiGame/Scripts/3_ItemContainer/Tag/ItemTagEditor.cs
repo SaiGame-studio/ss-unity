@@ -67,13 +67,13 @@ namespace SaiGame.Services
                     itemTag.GetTags(
                         tags =>
                         {
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                                 Debug.Log($"[Editor] Tags loaded! Total: {tags.total}, Count: {tags.tags?.Length ?? 0}");
                             Repaint();
                         },
                         error =>
                         {
-                            if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                                 Debug.LogError($"[Editor] Get tags failed: {error}");
                         }
                     );
@@ -255,14 +255,14 @@ namespace SaiGame.Services
                     {
                         this.loadingItemTags.Remove(capturedKey);
                         this.tagItemsCache[capturedKey] = result;
-                        if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                             Debug.Log($"[Editor] Items for [{capturedKey}]: {result.total} total");
                         Repaint();
                     },
                     error =>
                     {
                         this.loadingItemTags.Remove(capturedKey);
-                        if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                             Debug.LogError($"[Editor] Get items for [{capturedKey}] failed: {error}");
                         Repaint();
                     }

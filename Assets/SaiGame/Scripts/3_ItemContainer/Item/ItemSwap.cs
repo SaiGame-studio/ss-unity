@@ -72,16 +72,16 @@ namespace SaiGame.Services
             System.Action<string> onSuccess = null,
             System.Action<string> onError   = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#00FF88><b>[ItemSwap] ► Swap Items</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -126,22 +126,22 @@ namespace SaiGame.Services
             System.Action<string> onSuccess,
             System.Action<string> onError)
         {
-            string gameId   = SaiService.Instance.GameId;
+            string gameId   = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/inventory/swap";
 
             string body = $"{{\"item_a_id\":\"{itemAId}\",\"item_b_id\":\"{itemBId}\"}}";
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log($"[ItemSwap] POST {endpoint} | body: {body}");
 
-            yield return SaiService.Instance.PostRequest(endpoint, body,
+            yield return SaiServer.Instance.PostRequest(endpoint, body,
                 response =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemSwap] Items swapped successfully. Server: {response}");
 
                     this.OnSwapSuccess?.Invoke(response);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.Log("<color=#66CCFF>[ItemSwap] Swap</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemSwap.cs › SwapCoroutine");
 
                     onSuccess?.Invoke(response);
@@ -149,7 +149,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnSwapFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemSwap] Swap</color> → <b><color=#FF4444>onError</color></b> callback | ItemSwap.cs › SwapCoroutine | {error}");
 
                     onError?.Invoke(error);

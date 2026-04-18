@@ -43,24 +43,24 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
@@ -68,18 +68,18 @@ namespace SaiGame.Services
         {
             if (!this.autoLoadOnLogin) return;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("Auto-loading mailbox after successful login...");
 
             this.GetMessages(
                 onSuccess: mailBox =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"Mailbox auto-loaded: {mailBox.messages.Length} messages, total: {mailBox.total}");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.LogWarning($"Auto-load mailbox failed: {error}");
                 }
             );
@@ -87,26 +87,26 @@ namespace SaiGame.Services
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[MailBox] Logout successful, clearing mailbox data...");
 
             this.ClearLocalMailBox();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[MailBox] Mailbox data cleared successfully");
         }
 
         public void GetMessages(int? limit = null, int? offset = null, System.Action<MailBoxResponse> onSuccess = null, System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[MailBox] ► Get Messages</b></color>", gameObject);
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -121,10 +121,10 @@ namespace SaiGame.Services
 
         private IEnumerator GetMessagesCoroutine(int limit, int offset, System.Action<MailBoxResponse> onSuccess, System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/mailbox/messages?limit={limit}&offset={offset}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -132,11 +132,11 @@ namespace SaiGame.Services
                         MailBoxResponse mailBoxResponse = JsonUtility.FromJson<MailBoxResponse>(response);
                         this.currentMailBox = mailBoxResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"Mailbox loaded: {mailBoxResponse.messages.Length} messages, total: {mailBoxResponse.total}");
 
                         OnGetMessagesSuccess?.Invoke(mailBoxResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[MailBox] GetMessages</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › GetMessagesCoroutine");
                         onSuccess?.Invoke(mailBoxResponse);
                     }
@@ -144,7 +144,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get messages response error: {e.Message}";
                         OnGetMessagesFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[MailBox] GetMessages</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › GetMessagesCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -152,7 +152,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     OnGetMessagesFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[MailBox] GetMessages</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › GetMessagesCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -161,15 +161,15 @@ namespace SaiGame.Services
 
         public void ReadMessage(string messageId, System.Action<MailboxMessage> onSuccess = null, System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FF88><b>[MailBox] ► Read Message</b></color>", gameObject);
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -180,11 +180,11 @@ namespace SaiGame.Services
 
         private IEnumerator ReadMessageCoroutine(string messageId, System.Action<MailboxMessage> onSuccess, System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{messageId}";
             string body = "{\"read\": true}";
 
-            yield return SaiService.Instance.PatchRequest(endpoint, body,
+            yield return SaiServer.Instance.PatchRequest(endpoint, body,
                 response =>
                 {
                     try
@@ -204,11 +204,11 @@ namespace SaiGame.Services
                             }
                         }
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"Message {messageId} marked as read");
 
                         OnReadMessageSuccess?.Invoke(message);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ReadMessageCoroutine");
                         onSuccess?.Invoke(message);
                     }
@@ -216,7 +216,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse read message response error: {e.Message}";
                         OnReadMessageFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › ReadMessageCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -224,7 +224,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     OnReadMessageFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[MailBox] ReadMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › ReadMessageCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -233,16 +233,16 @@ namespace SaiGame.Services
 
         public void UnreadMessage(string messageId, System.Action<MailboxMessage> onSuccess = null, System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FFA0A0><b>[MailBox] ► Unread Message</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -253,11 +253,11 @@ namespace SaiGame.Services
 
         private IEnumerator UnreadMessageCoroutine(string messageId, System.Action<MailboxMessage> onSuccess, System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{messageId}";
             string body = "{\"read\": false}";
 
-            yield return SaiService.Instance.PatchRequest(endpoint, body,
+            yield return SaiServer.Instance.PatchRequest(endpoint, body,
                 response =>
                 {
                     try
@@ -276,11 +276,11 @@ namespace SaiGame.Services
                             }
                         }
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"Message {messageId} marked as unread");
 
                         OnUnreadMessageSuccess?.Invoke(message);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[MailBox] UnreadMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › UnreadMessageCoroutine");
                         onSuccess?.Invoke(message);
                     }
@@ -288,7 +288,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse unread message response error: {e.Message}";
                         OnUnreadMessageFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[MailBox] UnreadMessage</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › UnreadMessageCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -296,7 +296,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     OnUnreadMessageFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[MailBox] UnreadMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › UnreadMessageCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -305,15 +305,15 @@ namespace SaiGame.Services
 
         public void ClaimMessage(string messageId, System.Action<MailboxMessage> onSuccess = null, System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FFD700><b>[MailBox] ► Claim Message</b></color>", gameObject);
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -324,10 +324,10 @@ namespace SaiGame.Services
 
         private IEnumerator ClaimMessageCoroutine(string messageId, System.Action<MailboxMessage> onSuccess, System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{messageId}/claim";
 
-            yield return SaiService.Instance.PostRequest(endpoint, "{}",
+            yield return SaiServer.Instance.PostRequest(endpoint, "{}",
                 response =>
                 {
                     try
@@ -348,11 +348,11 @@ namespace SaiGame.Services
                         }
 
                         MailboxMessage cached = this.GetMessageById(messageId);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"Message {messageId} claimed successfully");
 
                         OnClaimMessageSuccess?.Invoke(cached);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ClaimMessageCoroutine");
                         onSuccess?.Invoke(cached);
                     }
@@ -360,7 +360,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse claim message response error: {e.Message}";
                         OnClaimMessageFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Mailbox.cs › ClaimMessageCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -368,7 +368,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     OnClaimMessageFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › ClaimMessageCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -377,16 +377,16 @@ namespace SaiGame.Services
 
         public void UnclaimMessage(string messageId, System.Action<MailboxMessage> onSuccess = null, System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#CC88FF><b>[MailBox] ► Unclaim Message</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -397,10 +397,10 @@ namespace SaiGame.Services
 
         private IEnumerator UnclaimMessageCoroutine(string messageId, System.Action<MailboxMessage> onSuccess, System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{messageId}/claim";
 
-            yield return SaiService.Instance.DeleteRequest(endpoint,
+            yield return SaiServer.Instance.DeleteRequest(endpoint,
                 response =>
                 {
                     // Clear claimed_at locally
@@ -417,18 +417,18 @@ namespace SaiGame.Services
                     }
 
                     MailboxMessage cached = this.GetMessageById(messageId);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"Message {messageId} unclaimed successfully");
 
                     OnUnclaimMessageSuccess?.Invoke(cached);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.Log("<color=#66CCFF>[MailBox] UnclaimMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › UnclaimMessageCoroutine");
                     onSuccess?.Invoke(cached);
                 },
                 error =>
                 {
                     OnUnclaimMessageFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[MailBox] UnclaimMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › UnclaimMessageCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -437,15 +437,15 @@ namespace SaiGame.Services
 
         public void ClaimAllMessages(System.Action<MailboxMessage[]> onSuccess = null, System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FFD700><b>[MailBox] ► Claim All Messages</b></color>", gameObject);
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -471,14 +471,14 @@ namespace SaiGame.Services
                 if (msg.attachments == null || msg.attachments.Length == 0)
                     continue;
 
-                if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                     Debug.Log($"[MailBox] Claim message: \"{msg.subject}\" | ID: {msg.id}");
 
-                string gameId = SaiService.Instance.GameId;
+                string gameId = SaiServer.Instance.GameId;
                 string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{msg.id}/claim";
                 bool done = false;
 
-                yield return SaiService.Instance.PostRequest(endpoint, "{}",
+                yield return SaiServer.Instance.PostRequest(endpoint, "{}",
                     response =>
                     {
                         try
@@ -499,7 +499,7 @@ namespace SaiGame.Services
                                 }
                             }
 
-                            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                                 Debug.Log($"Message {msg.id} claimed successfully");
                         }
                         catch (System.Exception e)
@@ -522,18 +522,18 @@ namespace SaiGame.Services
             {
                 MailboxMessage[] result = claimed.ToArray();
                 OnClaimAllMessagesSuccess?.Invoke(result);
-                if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                     Debug.Log("<color=#66CCFF>[MailBox] ClaimAllMessages</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › ClaimAllMessagesCoroutine");
                 onSuccess?.Invoke(result);
 
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                     Debug.Log($"[MailBox] Claimed {result.Length}/{unclaimed.Length} messages");
             }
             else
             {
                 string errorMsg = lastError ?? "Failed to claim any messages.";
                 OnClaimAllMessagesFailure?.Invoke(errorMsg);
-                if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                     Debug.LogWarning($"<color=#66CCFF>[MailBox] ClaimAllMessages</color> → <b><color=#FF4444>onError</color></b> callback | Mailbox.cs › ClaimAllMessagesCoroutine | {errorMsg}");
                 onError?.Invoke(errorMsg);
             }
@@ -541,16 +541,16 @@ namespace SaiGame.Services
 
         public void DeleteMessage(string messageId, System.Action<string> onSuccess = null, System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF4444><b>[MailBox] ► Delete Message</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -561,10 +561,10 @@ namespace SaiGame.Services
 
         private IEnumerator DeleteMessageCoroutine(string messageId, System.Action<string> onSuccess, System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/mailbox/messages/{messageId}";
 
-            yield return SaiService.Instance.DeleteRequest(endpoint,
+            yield return SaiServer.Instance.DeleteRequest(endpoint,
                 response =>
                 {
                     // Remove message from local cache
@@ -576,18 +576,18 @@ namespace SaiGame.Services
                         this.currentMailBox.total = Mathf.Max(0, this.currentMailBox.total - 1);
                     }
 
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"Message {messageId} deleted successfully");
 
                     OnDeleteMessageSuccess?.Invoke(messageId);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.Log("<color=#66CCFF>[MailBox] DeleteMessage</color> → <b><color=#00FF88>onSuccess</color></b> callback | Mailbox.cs › DeleteMessageCoroutine");
                     onSuccess?.Invoke(messageId);
                 },
                 error =>
                 {
                     OnDeleteMessageFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[MailBox] DeleteMessage</color> → <b><color=#FF4444>onError</color></b> callback (network) | Mailbox.cs › DeleteMessageCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -596,11 +596,11 @@ namespace SaiGame.Services
 
         public void ClearMailBox()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[MailBox] ► Clear Mailbox</b></color>", gameObject);
             ClearLocalMailBox();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("Mailbox data cleared locally");
         }
 
@@ -701,7 +701,7 @@ namespace SaiGame.Services
         /// </summary>
         public MailboxMessage[] GetMessagesByStatus(MailboxStatusFilter filter)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog && filter != this.lastLoggedFilter)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog && filter != this.lastLoggedFilter)
             {
                 this.lastLoggedFilter = filter;
                 Debug.Log($"<color=#AADDFF><b>[MailBox] \u25ba Filter by Status: <color=#FFD700>{filter}</color></b></color>", gameObject);

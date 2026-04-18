@@ -62,8 +62,8 @@ namespace SaiGame.Services
             if (GUILayout.Button("Create Progress", GUILayout.Height(30)))
             {
                 gamerProgress.CreateProgress(
-                    progress => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Progress created! ID: {progress.id}, Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}"); },
-                    error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Create progress failed: {error}"); }
+                    progress => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Progress created! ID: {progress.id}, Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}"); },
+                    error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Create progress failed: {error}"); }
                 );
             }
             GUI.backgroundColor = Color.white;
@@ -72,8 +72,8 @@ namespace SaiGame.Services
             if (GUILayout.Button("Get Progress", GUILayout.Height(30)))
             {
                 gamerProgress.GetProgress(
-                    progress => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Progress retrieved! Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}, Game Data: {progress.game_data}"); },
-                    error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Get progress failed: {error}"); }
+                    progress => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Progress retrieved! Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}, Game Data: {progress.game_data}"); },
+                    error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Get progress failed: {error}"); }
                 );
             }
             GUI.backgroundColor = Color.white;
@@ -96,13 +96,13 @@ namespace SaiGame.Services
                         expDelta,
                         goldDelta,
                         null,
-                        progress => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Progress updated! Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}"); },
-                        error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Update progress failed: {error}"); }
+                        progress => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Progress updated! Level: {progress.level}, XP: {progress.experience}, Gold: {progress.gold}"); },
+                        error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Update progress failed: {error}"); }
                     );
                 }
                 else
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogWarning("[Editor] No progress found! Create progress first.");
                 }
             }

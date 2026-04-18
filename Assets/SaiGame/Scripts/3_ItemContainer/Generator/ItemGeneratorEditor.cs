@@ -631,13 +631,13 @@ namespace SaiGame.Services
 
         private void LoadGenerators()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ItemGeneratorEditor] SaiService not found!");
+                Debug.LogError("[ItemGeneratorEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ItemGeneratorEditor] Not authenticated! Please login first.");
                 return;
@@ -646,14 +646,14 @@ namespace SaiGame.Services
             this.itemGenerator.GetGenerators(
                 onSuccess: response =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemGeneratorEditor] Loaded {response.generators.Length} generators");
 
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[ItemGeneratorEditor] Failed to load generators: {error}");
 
                     Repaint();
@@ -663,13 +663,13 @@ namespace SaiGame.Services
 
         private void CheckGenerator(string inventoryItemId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ItemGeneratorEditor] SaiService not found!");
+                Debug.LogError("[ItemGeneratorEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ItemGeneratorEditor] Not authenticated! Please login first.");
                 return;
@@ -684,7 +684,7 @@ namespace SaiGame.Services
                 {
                     this.loadingCheckGenerators.Remove(inventoryItemId);
 
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemGeneratorEditor] Generator checked: {inventoryItemId} | Tickets: {generatorData.ticket_count}/{generatorData.capacity}");
 
                     Repaint();
@@ -693,7 +693,7 @@ namespace SaiGame.Services
                 {
                     this.loadingCheckGenerators.Remove(inventoryItemId);
 
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[ItemGeneratorEditor] Failed to check generator {inventoryItemId}: {error}");
 
                     Repaint();
@@ -703,13 +703,13 @@ namespace SaiGame.Services
 
         private void CollectGenerator(string inventoryItemId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ItemGeneratorEditor] SaiService not found!");
+                Debug.LogError("[ItemGeneratorEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ItemGeneratorEditor] Not authenticated! Please login first.");
                 return;
@@ -724,7 +724,7 @@ namespace SaiGame.Services
                 {
                     this.loadingCollectGenerators.Remove(inventoryItemId);
 
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                     {
                         string itemInfo = !string.IsNullOrEmpty(collectResponse.output_item_code) 
                             ? collectResponse.output_item_code 
@@ -738,7 +738,7 @@ namespace SaiGame.Services
                 {
                     this.loadingCollectGenerators.Remove(inventoryItemId);
 
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[ItemGeneratorEditor] Failed to collect from generator {inventoryItemId}: {error}");
 
                     Repaint();

@@ -3,20 +3,18 @@ using System;
 namespace SaiGame.Services
 {
     /// <summary>
-    /// The progress snapshot returned by POST .../quests/{questDefinitionId}/check
-    /// progress_data is a dynamic object and cannot be deserialized by JsonUtility.
+    /// Progress block embedded in a DailyQuestEntryData.
+    /// Maps to the "progress" object inside each entry of the today-quest response.
+    /// progress_data is dynamic JSON; stored as raw string in progress_data_json (parsed manually).
     /// </summary>
     [Serializable]
-    public class CheckQuestProgressRecord
+    public class DailyQuestProgressData
     {
         public string id;
         public string studio_id;
         public string game_id;
         public string user_id;
         public string quest_definition_id;
-        // progress_data is a dynamic key-value object; JsonUtility cannot deserialize it.
-        // It is extracted manually as a raw JSON string after parsing.
-        public string progress_data_json;
         public string status;
         public string completed_at;
         public string claimed_at;
@@ -24,5 +22,7 @@ namespace SaiGame.Services
         public int version;
         public string created_at;
         public string updated_at;
+
+        [NonSerialized] public string progress_data_json;
     }
 }

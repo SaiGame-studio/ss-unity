@@ -384,13 +384,13 @@ namespace SaiGame.Services
 
         private void LoadShops()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ShopEditor] SaiService not found!");
+                Debug.LogError("[ShopEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ShopEditor] Not authenticated! Please login first.");
                 return;
@@ -399,13 +399,13 @@ namespace SaiGame.Services
             this.shop.GetShops(
                 onSuccess: response =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ShopEditor] Loaded {response.shops.Length} shops (total: {response.total})");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[ShopEditor] Failed to load shops: {error}");
                 }
             );
@@ -413,13 +413,13 @@ namespace SaiGame.Services
 
         private void LoadShopItemsForShop(string shopId)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[ShopEditor] SaiService not found!");
+                Debug.LogError("[ShopEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[ShopEditor] Not authenticated! Please login first.");
                 return;
@@ -436,7 +436,7 @@ namespace SaiGame.Services
                     this.shopItemsCache[shopId] = response;
                     this.shopItemsFoldout[shopId] = true;
 
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ShopEditor] Loaded {response.items?.Length ?? 0} items for shop {shopId}");
                     Repaint();
                 },
@@ -444,7 +444,7 @@ namespace SaiGame.Services
                 {
                     this.loadingShops.Remove(shopId);
 
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[ShopEditor] Failed to load items for shop {shopId}: {error}");
                     Repaint();
                 }

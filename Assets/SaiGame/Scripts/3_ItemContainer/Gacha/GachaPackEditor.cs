@@ -136,13 +136,13 @@ namespace SaiGame.Services
 
         private void DoOpenGachaPack()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[GachaPackEditor] SaiService not found!");
+                Debug.LogError("[GachaPackEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[GachaPackEditor] Not authenticated! Please login first.");
                 return;
@@ -182,13 +182,13 @@ namespace SaiGame.Services
 
         private void DoOpenGachaPackByCode()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[GachaPackEditor] SaiService not found!");
+                Debug.LogError("[GachaPackEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[GachaPackEditor] Not authenticated! Please login first.");
                 return;

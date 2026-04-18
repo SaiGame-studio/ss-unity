@@ -7,10 +7,10 @@ using UnityEngine.Networking;
 namespace SaiGame.Services
 {
     [DefaultExecutionOrder(-100)]
-    public class SaiService : SaiSingleton<SaiService>
+    public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.30";
-        public const string PACKAGE_NAME = "SaiGame Services";
+        public const string PACKAGE_VERSION = "0.2.31";
+        public const string PACKAGE_NAME = "Sai Server";
 
         [SerializeField] protected SaiAuth saiAuth;
         [SerializeField] protected GamerProgress gamerProgress;
@@ -26,7 +26,7 @@ namespace SaiGame.Services
         [SerializeField] protected Shop shop;
         [SerializeField] protected ChainQuest chainQuest;
         [SerializeField] protected QuestProgressor questProgressor;
-        [SerializeField] protected QuestStatus questClaims;
+        [SerializeField] protected QuestHistory questHistory;
         [SerializeField] protected DailyQuest dailyQuest;
         [SerializeField] protected ItemMove itemMove;
         [SerializeField] protected ItemSwap itemSwap;
@@ -122,7 +122,7 @@ namespace SaiGame.Services
 
         public QuestProgressor QuestProgressor => this.questProgressor;
 
-        public QuestStatus QuestClaims => this.questClaims;
+        public QuestHistory QuestHistory => this.questHistory;
 
         public DailyQuest DailyQuest => this.dailyQuest;
 
@@ -213,14 +213,14 @@ namespace SaiGame.Services
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "GET"))
             {
                 if (this.showUrlRequest)
-                    Debug.Log($"[SaiService] GET {request.url}");
+                    Debug.Log($"[SaiServer] GET {request.url}");
 
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
                     if (this.showJsonResponse)
-                        Debug.Log($"[SaiService] GET Response\n{request.downloadHandler.text}");
+                        Debug.Log($"[SaiServer] GET Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else
@@ -241,16 +241,16 @@ namespace SaiGame.Services
                 request.SetRequestHeader("Content-Type", "application/json");
 
                 if (this.showUrlRequest)
-                    Debug.Log($"[SaiService] POST {request.url}");
+                    Debug.Log($"[SaiServer] POST {request.url}");
                 if (this.showJsonRequest)
-                    Debug.Log($"[SaiService] POST Request Body\n{jsonData}");
+                    Debug.Log($"[SaiServer] POST Request Body\n{jsonData}");
 
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
                     if (this.showJsonResponse)
-                        Debug.Log($"[SaiService] POST Response\n{request.downloadHandler.text}");
+                        Debug.Log($"[SaiServer] POST Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else
@@ -271,16 +271,16 @@ namespace SaiGame.Services
                 request.SetRequestHeader("Content-Type", "application/json");
 
                 if (this.showUrlRequest)
-                    Debug.Log($"[SaiService] PUT {request.url}");
+                    Debug.Log($"[SaiServer] PUT {request.url}");
                 if (this.showJsonRequest)
-                    Debug.Log($"[SaiService] PUT Request Body\n{jsonData}");
+                    Debug.Log($"[SaiServer] PUT Request Body\n{jsonData}");
 
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
                     if (this.showJsonResponse)
-                        Debug.Log($"[SaiService] PUT Response\n{request.downloadHandler.text}");
+                        Debug.Log($"[SaiServer] PUT Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else
@@ -301,16 +301,16 @@ namespace SaiGame.Services
                 request.SetRequestHeader("Content-Type", "application/json");
 
                 if (this.showUrlRequest)
-                    Debug.Log($"[SaiService] PATCH {request.url}");
+                    Debug.Log($"[SaiServer] PATCH {request.url}");
                 if (this.showJsonRequest)
-                    Debug.Log($"[SaiService] PATCH Request Body\n{jsonData}");
+                    Debug.Log($"[SaiServer] PATCH Request Body\n{jsonData}");
 
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
                     if (this.showJsonResponse)
-                        Debug.Log($"[SaiService] PATCH Response\n{request.downloadHandler.text}");
+                        Debug.Log($"[SaiServer] PATCH Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else
@@ -327,14 +327,14 @@ namespace SaiGame.Services
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "DELETE"))
             {
                 if (this.showUrlRequest)
-                    Debug.Log($"[SaiService] DELETE {request.url}");
+                    Debug.Log($"[SaiServer] DELETE {request.url}");
 
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
                     if (this.showJsonResponse)
-                        Debug.Log($"[SaiService] DELETE Response\n{request.downloadHandler.text}");
+                        Debug.Log($"[SaiServer] DELETE Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
                 else
@@ -386,7 +386,7 @@ namespace SaiGame.Services
             this.LoadShop();
             this.LoadChainQuest();
             this.LoadQuestProgressor();
-            this.LoadQuestStatus();
+            this.LoadQuestHistory();
             this.LoadDailyQuest();
             this.LoadItemTag();
             this.LoadItemMove();
@@ -525,12 +525,12 @@ namespace SaiGame.Services
                 Debug.Log(transform.name + ": LoadDailyQuest", gameObject);
         }
 
-        protected virtual void LoadQuestStatus()
+        protected virtual void LoadQuestHistory()
         {
-            if (this.questClaims != null) return;
-            this.questClaims = GetComponentInChildren<QuestStatus>();
+            if (this.questHistory != null) return;
+            this.questHistory = GetComponentInChildren<QuestHistory>();
             if (this.showDebugLog)
-                Debug.Log(transform.name + ": LoadQuestStatus", gameObject);
+                Debug.Log(transform.name + ": LoadQuestHistory", gameObject);
         }
 
         protected virtual void LoadItemMove()
@@ -598,7 +598,7 @@ namespace SaiGame.Services
         public void ManualSaveServerEndpoint()
         {
             if (this.showButtonsLog)
-                Debug.Log("<color=#00FF88><b>[SaiService] ► Save Server Endpoint to PlayerPrefs</b></color>", gameObject);
+                Debug.Log("<color=#00FF88><b>[SaiServer] ► Save Server Endpoint to PlayerPrefs</b></color>", gameObject);
             this.SaveServerEndpointToPlayerPrefs();
         }
 
@@ -649,7 +649,7 @@ namespace SaiGame.Services
                 PlayerPrefs.SetString(PREF_GAME_ID, normalized);
                 PlayerPrefs.Save();
                 if (this.showDebugLog)
-                    Debug.Log($"[SaiService] Game ID auto-saved to PlayerPrefs: {normalized}");
+                    Debug.Log($"[SaiServer] Game ID auto-saved to PlayerPrefs: {normalized}");
             }
 
         }
@@ -657,14 +657,14 @@ namespace SaiGame.Services
         public void ManualSaveGameId()
         {
             if (this.showButtonsLog)
-                Debug.Log("<color=#00FF88><b>[SaiService] ► Save Game ID to PlayerPrefs</b></color>", gameObject);
+                Debug.Log("<color=#00FF88><b>[SaiServer] ► Save Game ID to PlayerPrefs</b></color>", gameObject);
             this.SaveGameIdToPlayerPrefs();
         }
 
         public void ManualClearGameId()
         {
             if (this.showButtonsLog)
-                Debug.Log("<color=#FF6666><b>[SaiService] ► Clear PlayerPrefs</b></color>", gameObject);
+                Debug.Log("<color=#FF6666><b>[SaiServer] ► Clear PlayerPrefs</b></color>", gameObject);
             if (PlayerPrefs.HasKey(PREF_GAME_ID))
             {
                 PlayerPrefs.DeleteKey(PREF_GAME_ID);
@@ -684,7 +684,7 @@ namespace SaiGame.Services
         public void TestConnection(Action<bool> callback = null)
         {
             if (this.showButtonsLog)
-                Debug.Log("<color=#66CCFF><b>[SaiService] ► Test Connection</b></color>", gameObject);
+                Debug.Log("<color=#66CCFF><b>[SaiServer] ► Test Connection</b></color>", gameObject);
             StartCoroutine(TestConnectionCoroutine(callback));
         }
 

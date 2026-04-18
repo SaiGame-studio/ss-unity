@@ -446,11 +446,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: password
-      value: 
+      value: 123qweasd
       objectReference: {fileID: 0}
     - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: username
-      value: 
+      value: username_player1_1776472928402
       objectReference: {fileID: 0}
     - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: autoLogin
@@ -474,7 +474,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_Name
-      value: SaiService
+      value: SaiServer
       objectReference: {fileID: 0}
     - target: {fileID: 8153881721212893719, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: autoLoadOnLogin
@@ -526,7 +526,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: gameId
-      value: a52d72bc-6512-4bd3-9e2c-7471f9308387
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: useHttps

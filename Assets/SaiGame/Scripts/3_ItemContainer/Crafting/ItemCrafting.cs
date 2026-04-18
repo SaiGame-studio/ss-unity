@@ -42,22 +42,22 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            if (SaiServer.Instance?.SaiAuth == null) return;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            if (SaiServer.Instance?.SaiAuth == null) return;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
@@ -65,7 +65,7 @@ namespace SaiGame.Services
         {
             if (!this.autoLoadOnLogin) return;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemCrafting] Auto-loading crafting history after login...");
 
             this.GetCraftingHistory(
@@ -73,12 +73,12 @@ namespace SaiGame.Services
                 pageSize: this.historyPageSize,
                 onSuccess: history =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemCrafting] History auto-loaded: {history.transactions.Length} transactions");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.LogWarning($"[ItemCrafting] Auto-load history failed: {error}");
                 }
             );
@@ -86,12 +86,12 @@ namespace SaiGame.Services
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemCrafting] Logout successful, clearing history data...");
 
             this.ClearHistory();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemCrafting] History data cleared successfully");
         }
 
@@ -105,16 +105,16 @@ namespace SaiGame.Services
             System.Action<CraftingResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#FFD700><b>[ItemCrafting] ► Craft: {recipeId}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -133,16 +133,16 @@ namespace SaiGame.Services
             System.Action<CraftingResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#FFD700><b>[ItemCrafting] ► CraftByKey: {recipeKey}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -157,7 +157,7 @@ namespace SaiGame.Services
             System.Action<CraftingResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/crafting/craft";
 
             // Use provided key or generate a new one
@@ -179,7 +179,7 @@ namespace SaiGame.Services
             System.Action<CraftingResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/crafting/craft";
 
             if (string.IsNullOrEmpty(idempotencyKey))
@@ -200,17 +200,17 @@ namespace SaiGame.Services
             System.Action<CraftingResponse> onSuccess,
             System.Action<string> onError)
         {
-            yield return SaiService.Instance.PostRequest(endpoint, body,
+            yield return SaiServer.Instance.PostRequest(endpoint, body,
                 response =>
                 {
                     try
                     {
                         var craftingResponse = JsonUtility.FromJson<CraftingResponse>(response);
                         
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[ItemCrafting] Crafted successfully. Tx Id: {craftingResponse.transaction_id}");
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#FFD700>[ItemCrafting] Craft</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemCrafting.cs › CraftCoroutine");
 
                         this.OnCraftSuccess?.Invoke(craftingResponse);
@@ -219,7 +219,7 @@ namespace SaiGame.Services
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse craft response error: {e.Message}";
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#FFD700>[ItemCrafting] Craft</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemCrafting.cs › CraftCoroutine | {errorMsg}");
                         this.OnCraftFailure?.Invoke(errorMsg);
                         onError?.Invoke(errorMsg);
@@ -227,7 +227,7 @@ namespace SaiGame.Services
                 },
                 error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#FFD700>[ItemCrafting] Craft</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemCrafting.cs › CraftCoroutine | {error}");
                     this.OnCraftFailure?.Invoke(error);
                     onError?.Invoke(error);
@@ -247,16 +247,16 @@ namespace SaiGame.Services
             System.Action<CraftingHistoryResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[ItemCrafting] ► Get Crafting History</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -276,7 +276,7 @@ namespace SaiGame.Services
             System.Action<CraftingHistoryResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/crafting/history?page={page}&page_size={pageSize}";
             
             if (!string.IsNullOrEmpty(recipeId))
@@ -284,7 +284,7 @@ namespace SaiGame.Services
             if (!string.IsNullOrEmpty(status))
                 endpoint += $"&status={status}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -292,10 +292,10 @@ namespace SaiGame.Services
                         var historyResponse = JsonUtility.FromJson<CraftingHistoryResponse>(response);
                         this.currentHistory = historyResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[ItemCrafting] History loaded: {historyResponse.transactions?.Length ?? 0} records");
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[ItemCrafting] GetCraftingHistory</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemCrafting.cs › GetCraftingHistoryCoroutine");
 
                         this.OnGetHistorySuccess?.Invoke(historyResponse);
@@ -304,7 +304,7 @@ namespace SaiGame.Services
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse history response error: {e.Message}";
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[ItemCrafting] GetCraftingHistory</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemCrafting.cs › GetCraftingHistoryCoroutine | {errorMsg}");
                         this.OnGetHistoryFailure?.Invoke(errorMsg);
                         onError?.Invoke(errorMsg);
@@ -312,7 +312,7 @@ namespace SaiGame.Services
                 },
                 error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemCrafting] GetCraftingHistory</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemCrafting.cs › GetCraftingHistoryCoroutine | {error}");
                     this.OnGetHistoryFailure?.Invoke(error);
                     onError?.Invoke(error);
@@ -329,16 +329,16 @@ namespace SaiGame.Services
             System.Action<RecipeDetail> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#66CCFF><b>[ItemCrafting] ► Get Recipe By Key: {recipeKey}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -358,20 +358,20 @@ namespace SaiGame.Services
             System.Action<RecipeDetail> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/crafting/recipes-by-key/{recipeKey}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
                     {
                         var recipe = JsonUtility.FromJson<RecipeDetail>(response);
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[ItemCrafting] Recipe loaded: {recipe.name} ({recipe.recipe_key})");
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[ItemCrafting] GetRecipeByKey</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemCrafting.cs › GetRecipeByKeyCoroutine");
 
                         this.OnGetRecipeByKeySuccess?.Invoke(recipe);
@@ -380,7 +380,7 @@ namespace SaiGame.Services
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse recipe response error: {e.Message}";
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[ItemCrafting] GetRecipeByKey</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemCrafting.cs › GetRecipeByKeyCoroutine | {errorMsg}");
                         this.OnGetRecipeByKeyFailure?.Invoke(errorMsg);
                         onError?.Invoke(errorMsg);
@@ -388,7 +388,7 @@ namespace SaiGame.Services
                 },
                 error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemCrafting] GetRecipeByKey</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemCrafting.cs › GetRecipeByKeyCoroutine | {error}");
                     this.OnGetRecipeByKeyFailure?.Invoke(error);
                     onError?.Invoke(error);
@@ -398,10 +398,10 @@ namespace SaiGame.Services
 
         public void ClearHistory()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[ItemCrafting] ► Clear History</b></color>", gameObject);
             this.ClearLocalHistory();
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemCrafting] History data cleared locally");
         }
 

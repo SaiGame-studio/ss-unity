@@ -157,8 +157,8 @@ namespace SaiGame.Services
                     serializedObject.FindProperty("registerEmail").stringValue,
                     serializedObject.FindProperty("registerUsername").stringValue,
                     serializedObject.FindProperty("registerPassword").stringValue,
-                    response => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Registration success! User: {response.user.username} ({response.user.email}), Active: {response.user.is_active}, Verified: {response.user.is_verified}"); },
-                    error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Registration failed: {error}"); }
+                    response => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Registration success! User: {response.user.username} ({response.user.email}), Active: {response.user.is_active}, Verified: {response.user.is_verified}"); },
+                    error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Registration failed: {error}"); }
                 );
             }
             GUI.backgroundColor = Color.white;
@@ -169,8 +169,8 @@ namespace SaiGame.Services
                 saiAuth.Login(
                     serializedObject.FindProperty("username").stringValue,
                     serializedObject.FindProperty("password").stringValue,
-                    response => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Login success! User: {response.user.username}, Token expires in: {response.expires_in}s"); },
-                    error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Login failed: {error}"); }
+                    response => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Login success! User: {response.user.username}, Token expires in: {response.expires_in}s"); },
+                    error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Login failed: {error}"); }
                 );
             }
             GUI.backgroundColor = Color.white;
@@ -192,13 +192,13 @@ namespace SaiGame.Services
                 if (saiAuth.IsAuthenticated)
                 {
                     saiAuth.RefreshAuthToken(
-                        response => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Token refreshed successfully! New token expires in: {response.expires_in}s"); },
-                        error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Refresh token failed: {error}"); }
+                        response => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Token refreshed successfully! New token expires in: {response.expires_in}s"); },
+                        error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Refresh token failed: {error}"); }
                     );
                 }
                 else
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogWarning("[Editor] Not authenticated! Please login first.");
                 }
             }
@@ -210,13 +210,13 @@ namespace SaiGame.Services
                 if (saiAuth.IsAuthenticated)
                 {
                     saiAuth.GetMyProfile(
-                        userData => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.Log($"[Editor] Profile retrieved: {userData.username} ({userData.email}), Active: {userData.is_active}, Verified: {userData.is_verified}"); },
-                        error => { if (SaiService.Instance == null || SaiService.Instance.ShowDebug) Debug.LogError($"[Editor] Get profile failed: {error}"); }
+                        userData => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Profile retrieved: {userData.username} ({userData.email}), Active: {userData.is_active}, Verified: {userData.is_verified}"); },
+                        error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Get profile failed: {error}"); }
                     );
                 }
                 else
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogWarning("[Editor] Not authenticated! Please login first.");
                 }
             }

@@ -7,7 +7,7 @@ namespace SaiGame.Services
     /// </summary>
     public class AuthEventListener : SaiBehaviour
     {
-        private SaiAuth saiAuth => SaiService.Instance?.GetComponent<SaiAuth>();
+        private SaiAuth saiAuth => SaiServer.Instance?.GetComponent<SaiAuth>();
 
         protected override void LoadComponents()
         {

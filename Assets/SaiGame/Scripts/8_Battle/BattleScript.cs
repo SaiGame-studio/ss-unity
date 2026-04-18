@@ -33,16 +33,16 @@ namespace SaiGame.Services
             Action<string> onSuccess = null,
             Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[BattleScript] ► Run Script</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -65,26 +65,26 @@ namespace SaiGame.Services
             Action<string> onSuccess,
             Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/scripts/{name}/run";
 
-            yield return SaiService.Instance.PostRequest(endpoint, jsonBody ?? "{}",
+            yield return SaiServer.Instance.PostRequest(endpoint, jsonBody ?? "{}",
                 response =>
                 {
                     this.jsonResponse = JsonBeautify(response);
 
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[BattleScript] Script '{name}' response received.");
 
                     this.OnRunScriptSuccess?.Invoke(response);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.Log("<color=#66CCFF>[BattleScript] RunScript</color> → <b><color=#00FF88>onSuccess</color></b> callback | BattleScript.cs › RunScriptCoroutine");
                     onSuccess?.Invoke(response);
                 },
                 error =>
                 {
                     this.OnRunScriptFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[BattleScript] RunScript</color> → <b><color=#FF4444>onError</color></b> callback | BattleScript.cs › RunScriptCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -157,7 +157,7 @@ namespace SaiGame.Services
         /// <summary>Clears the stored JSON response.</summary>
         public void ClearResponse()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[BattleScript] ► Clear Response</b></color>", gameObject);
 
             this.jsonResponse = string.Empty;

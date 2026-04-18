@@ -285,13 +285,13 @@ namespace SaiGame.Services
             this.leaderboard.ListBoards(
                 onSuccess: result =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[LeaderboardEditor] Loaded {result.boards?.Length ?? 0} boards");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[LeaderboardEditor] List boards failed: {error}");
                 }
             );
@@ -312,13 +312,13 @@ namespace SaiGame.Services
                 id,
                 onSuccess: result =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[LeaderboardEditor] Got board: {result?.name} (id: {result?.id})");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[LeaderboardEditor] Get board failed: {error}");
                 }
             );
@@ -339,13 +339,13 @@ namespace SaiGame.Services
                 id,
                 onSuccess: result =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[LeaderboardEditor] Got {result?.entries?.Length ?? 0} entries (total: {result?.total}) for board: {id}");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[LeaderboardEditor] Get top N rankings failed: {error}");
                 }
             );
@@ -366,13 +366,13 @@ namespace SaiGame.Services
                 id,
                 onSuccess: result =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[LeaderboardEditor] My rank for {id}: rank #{result?.rank}, score: {result?.score}");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[LeaderboardEditor] Get my rank failed: {error}");
                 }
             );
@@ -380,13 +380,13 @@ namespace SaiGame.Services
 
         private bool CheckReady(string prefix)
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError($"{prefix} SaiService not found!");
+                Debug.LogError($"{prefix} SaiServer not found!");
                 return false;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError($"{prefix} Not authenticated! Please login first.");
                 return false;

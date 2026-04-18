@@ -84,16 +84,16 @@ namespace SaiGame.Services
             System.Action<string> onSuccess = null,
             System.Action<string> onError   = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#00FF88><b>[ItemMove] ► Move Item</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -144,22 +144,22 @@ namespace SaiGame.Services
             System.Action<string> onSuccess,
             System.Action<string> onError)
         {
-            string gameId   = SaiService.Instance.GameId;
+            string gameId   = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/inventory/move";
 
             string body = $"{{\"item_id\":\"{itemId}\",\"target_container_id\":\"{targetContainerId}\",\"quantity\":{quantity},\"grid_x\":{gridX},\"grid_y\":{gridY}}}";
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log($"[ItemMove] POST {endpoint} | body: {body}");
 
-            yield return SaiService.Instance.PostRequest(endpoint, body,
+            yield return SaiServer.Instance.PostRequest(endpoint, body,
                 response =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemMove] Item moved successfully. Server: {response}");
 
                     this.OnMoveSuccess?.Invoke(response);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.Log("<color=#66CCFF>[ItemMove] Move</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemMove.cs › MoveCoroutine");
 
                     onSuccess?.Invoke(response);
@@ -167,7 +167,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnMoveFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemMove] Move</color> → <b><color=#FF4444>onError</color></b> callback | ItemMove.cs › MoveCoroutine | {error}");
 
                     onError?.Invoke(error);

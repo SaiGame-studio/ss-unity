@@ -35,24 +35,24 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
@@ -60,18 +60,18 @@ namespace SaiGame.Services
         {
             if (!this.autoLoadOnLogin) return;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[PlayerContainer] Auto-loading containers after successful login...");
 
             this.GetContainers(
                 onSuccess: containers =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"[PlayerContainer] Containers auto-loaded: {containers.containers.Length} containers");
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.LogWarning($"[PlayerContainer] Auto-load containers failed: {error}");
                 }
             );
@@ -79,12 +79,12 @@ namespace SaiGame.Services
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[PlayerContainer] Logout successful, clearing container data...");
 
             this.ClearLocalContainers();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[PlayerContainer] Container data cleared successfully");
         }
 
@@ -98,16 +98,16 @@ namespace SaiGame.Services
             System.Action<ContainerResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[PlayerContainer] ► Get Containers</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -125,10 +125,10 @@ namespace SaiGame.Services
             System.Action<ContainerResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/containers?limit={limit}&offset={offset}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -136,11 +136,11 @@ namespace SaiGame.Services
                         ContainerResponse containerResponse = JsonUtility.FromJson<ContainerResponse>(response);
                         this.currentContainers = containerResponse;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[PlayerContainer] Containers loaded: {containerResponse.containers.Length} containers");
 
                         this.OnGetContainersSuccess?.Invoke(containerResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[PlayerContainer] GetContainers</color> → <b><color=#00FF88>onSuccess</color></b> callback | PlayerContainer.cs › GetContainersCoroutine");
                         onSuccess?.Invoke(containerResponse);
                     }
@@ -148,7 +148,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get containers response error: {e.Message}";
                         this.OnGetContainersFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[PlayerContainer] GetContainers</color> → <b><color=#FF4444>onError</color></b> callback (parse) | PlayerContainer.cs › GetContainersCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -156,7 +156,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnGetContainersFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[PlayerContainer] GetContainers</color> → <b><color=#FF4444>onError</color></b> callback (network) | PlayerContainer.cs › GetContainersCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -168,11 +168,11 @@ namespace SaiGame.Services
         /// </summary>
         public void ClearContainers()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[PlayerContainer] ► Clear Containers</b></color>", gameObject);
             this.ClearLocalContainers();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[PlayerContainer] Container data cleared locally");
         }
 
@@ -231,7 +231,7 @@ namespace SaiGame.Services
             if (items == null)   return new InventoryItemData[0];
             if (filter == null || filter.IsEmpty)
             {
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                     Debug.Log("<color=#00FFDD><b>[PlayerContainer] ► FilterItems</b></color> | no active filters – returning all items | <i>PlayerContainer.cs › FilterItems</i>", gameObject);
                 return items;
             }
@@ -271,7 +271,7 @@ namespace SaiGame.Services
                 result.Add(item);
             }
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
             {
                 string nameLabel     = string.IsNullOrEmpty(filter.nameSearch) ? "*"        : $"'{filter.nameSearch}'";
                 string catLabel      = string.IsNullOrEmpty(filter.category)   ? "*"        : $"'{filter.category}'";
@@ -299,16 +299,16 @@ namespace SaiGame.Services
             System.Action<ContainerItemsResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#00FFFF><b>[PlayerContainer] ► Get Container Items: {containerId}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -326,31 +326,31 @@ namespace SaiGame.Services
         {
             string endpoint = $"/api/v1/containers/{containerId}/items?limit={limit}&offset={offset}";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
                     {
                         ContainerItemsResponse itemsResponse = JsonUtility.FromJson<ContainerItemsResponse>(response);
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[PlayerContainer] Container items loaded: {itemsResponse.items?.Length ?? 0} items for container {containerId}");
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[PlayerContainer] GetContainerItems</color> → <b><color=#00FF88>onSuccess</color></b> callback | PlayerContainer.cs › GetContainerItemsCoroutine");
                         onSuccess?.Invoke(itemsResponse);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse container items response error: {e.Message}";
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[PlayerContainer] GetContainerItems</color> → <b><color=#FF4444>onError</color></b> callback (parse) | PlayerContainer.cs › GetContainerItemsCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[PlayerContainer] GetContainerItems</color> → <b><color=#FF4444>onError</color></b> callback (network) | PlayerContainer.cs › GetContainerItemsCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -369,16 +369,16 @@ namespace SaiGame.Services
             System.Action<GachaResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log($"<color=#FFD700><b>[PlayerContainer] ► Open Gacha Pack: {gachaPackDefId}</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -393,22 +393,22 @@ namespace SaiGame.Services
             System.Action<GachaResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/gacha/{gachaPackDefId}";
             string idempotencyKey = $"{UnityEngine.Random.Range(1000000, 9999999)}-{UnityEngine.Random.Range(1000000, 9999999)}-{UnityEngine.Random.Range(1000000, 9999999)}";
             string body = $"{{\"idempotency_key\":\"{idempotencyKey}\",\"container_id\":\"{containerId}\"}}";
 
-            yield return SaiService.Instance.PostRequest(endpoint, body,
+            yield return SaiServer.Instance.PostRequest(endpoint, body,
                 response =>
                 {
                     try
                     {
                         GachaResponse gachaResponse = JsonUtility.FromJson<GachaResponse>(response);
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[PlayerContainer] Gacha pack opened: {gachaResponse.items_granted?.Length ?? 0} items granted (duplicate={gachaResponse.is_duplicate})");
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#FFD700>[PlayerContainer] OpenGachaPack</color> → <b><color=#00FF88>onSuccess</color></b> callback | PlayerContainer.cs › OpenGachaPackCoroutine");
 
                         onSuccess?.Invoke(gachaResponse);
@@ -416,14 +416,14 @@ namespace SaiGame.Services
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse gacha response error: {e.Message}";
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#FFD700>[PlayerContainer] OpenGachaPack</color> → <b><color=#FF4444>onError</color></b> callback (parse) | PlayerContainer.cs › OpenGachaPackCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#FFD700>[PlayerContainer] OpenGachaPack</color> → <b><color=#FF4444>onError</color></b> callback (network) | PlayerContainer.cs › OpenGachaPackCoroutine | {error}");
                     onError?.Invoke(error);
                 }

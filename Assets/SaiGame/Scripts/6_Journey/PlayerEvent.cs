@@ -31,24 +31,24 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += this.HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
         }
 
@@ -57,13 +57,13 @@ namespace SaiGame.Services
             // Generate a fresh session ID for each login
             this.sessionId = Guid.NewGuid().ToString();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log($"[PlayerEvent] New session ID generated on login: {this.sessionId}");
         }
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[PlayerEvent] Logout - clearing session ID");
 
             this.sessionId = "";
@@ -81,16 +81,16 @@ namespace SaiGame.Services
             System.Action<TrackEventResponse> onSuccess = null,
             System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF88FF><b>[PlayerEvent] ► Track Event</b></color>", gameObject);
 
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -114,7 +114,7 @@ namespace SaiGame.Services
             System.Action<TrackEventResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/events";
 
             // Build JSON manually so raw event_data is embedded without re-encoding
@@ -123,18 +123,18 @@ namespace SaiGame.Services
             string escapedSession = sessionId.Replace("\\", "\\\\").Replace("\"", "\\\"");
             string jsonData = $"{{\"event_type\":\"{escapedType}\",\"session_id\":\"{escapedSession}\",\"event_data\":{dataJson}}}";
 
-            yield return SaiService.Instance.PostRequest(endpoint, jsonData,
+            yield return SaiServer.Instance.PostRequest(endpoint, jsonData,
                 response =>
                 {
                     try
                     {
                         TrackEventResponse trackResponse = JsonUtility.FromJson<TrackEventResponse>(response);
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[PlayerEvent] Event tracked: {eventType} (session: {sessionId})");
 
                         this.OnTrackEventSuccess?.Invoke(trackResponse);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[PlayerEvent] TrackEvent</color> → <b><color=#00FF88>onSuccess</color></b> callback | PlayerEvent.cs › TrackEventCoroutine");
                         onSuccess?.Invoke(trackResponse);
                     }
@@ -142,7 +142,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse track event response error: {e.Message}";
                         this.OnTrackEventFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[PlayerEvent] TrackEvent</color> → <b><color=#FF4444>onError</color></b> callback (parse) | PlayerEvent.cs › TrackEventCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -150,7 +150,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     this.OnTrackEventFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[PlayerEvent] TrackEvent</color> → <b><color=#FF4444>onError</color></b> callback (network) | PlayerEvent.cs › TrackEventCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -162,7 +162,7 @@ namespace SaiGame.Services
         {
             this.sessionId = Guid.NewGuid().ToString();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log($"[PlayerEvent] Session ID regenerated: {this.sessionId}");
         }
 

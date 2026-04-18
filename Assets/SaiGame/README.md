@@ -15,7 +15,7 @@ Full tutorials and documentation are available at: https://admin.saigame.studio/
 - **Networking**: REST API via `UnityWebRequest` (GET/POST/PUT/PATCH/DELETE)
 - **UI**: Unity UIElements / UIDocument (UXML-based)
 - **Serialization**: `JsonUtility` with custom helpers
-- **Entry Point**: `SaiService` singleton manages all subsystems and HTTP communication
+- **Entry Point**: `SaiServer` singleton manages all subsystems and HTTP communication
 
 ## Project Structure
 
@@ -43,14 +43,14 @@ Assets/SaiGame/
 │   ├── 6_Journey/          # Event tracking / analytics
 │   ├── 7_Leaderboard/      # Competitive rankings
 │   ├── 8_Battle/           # Battle session management
-│   ├── Common/             # SaiService, singletons, encryption, HTTP layer
+│   ├── Common/             # SaiServer, singletons, encryption, HTTP layer
 │   └── Editor/             # Custom inspectors & debug tools
 ├── UI/
 │   ├── Common/             # UIRouter, UIPanelBase, TopNavigatorUI
 │   ├── GamerProgress/      # Player stats panel
 │   └── Login/              # Auth UI
 ├── Prefabs/
-│   └── SaiService.prefab   # Drop-in prefab with all services pre-wired
+│   └── SaiServer.prefab   # Drop-in prefab with all services pre-wired
 └── Scenes/
     ├── demo.unity           # Main demo scene
     └── demo-ui.unity        # UI demo scene
@@ -73,8 +73,8 @@ Assets/SaiGame/
 
 ## Quick Start
 
-1. Drop the `SaiService` prefab into your scene
-2. Configure the server endpoint (Local / Production) on the `SaiService` component
+1. Drop the `SaiServer` prefab into your scene
+2. Configure the server endpoint (Local / Production) on the `SaiServer` component
 3. Set your Game ID
 4. Enable `autoLoadOnLogin` on subsystems you need
 5. Use events (e.g. `OnLoginSuccess`, `OnGetItemsSuccess`) to react to service responses

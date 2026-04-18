@@ -38,24 +38,24 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLoginSuccess += HandleLoginSuccess;
+            SaiServer.Instance.SaiAuth.OnLoginSuccess += HandleLoginSuccess;
         }
 
         protected virtual void RegisterLogoutListener()
         {
-            if (SaiService.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance?.SaiAuth == null) return;
 
-            SaiService.Instance.SaiAuth.OnLogoutSuccess += HandleLogoutSuccess;
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess += HandleLogoutSuccess;
         }
 
         protected virtual void OnDestroy()
         {
-            if (SaiService.Instance?.SaiAuth != null)
+            if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiService.Instance.SaiAuth.OnLoginSuccess -= HandleLoginSuccess;
-                SaiService.Instance.SaiAuth.OnLogoutSuccess -= HandleLogoutSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLogoutSuccess -= HandleLogoutSuccess;
             }
         }
 
@@ -63,18 +63,18 @@ namespace SaiGame.Services
         {
             if (!autoLoadOnLogin) return;
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("Auto-loading progress after successful login...");
 
             GetProgress(
                 progress =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"Progress auto-loaded: Level {progress.level}, XP {progress.experience}, Gold {progress.gold}");
                 },
                 error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.LogWarning($"Auto-load progress failed: {error}");
                 }
             );
@@ -82,12 +82,12 @@ namespace SaiGame.Services
 
         protected virtual void HandleLogoutSuccess()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[GamerProgress] Logout successful, clearing progress data...");
 
             ClearLocalProgress();
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[GamerProgress] Progress data cleared successfully");
         }
 
@@ -217,15 +217,15 @@ namespace SaiGame.Services
 
         public void CreateProgress(System.Action<GamerProgressData> onSuccess = null, System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[GamerProgress] ► Create Progress</b></color>", gameObject);
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -236,10 +236,10 @@ namespace SaiGame.Services
 
         private IEnumerator CreateProgressCoroutine(System.Action<GamerProgressData> onSuccess, System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/gamer-progress";
 
-            string userId = SaiService.Instance.CurrentUser?.id ?? "";
+            string userId = SaiServer.Instance.CurrentUser?.id ?? "";
 
             // Ensure game_data is valid JSON
             string gameDataJson = string.IsNullOrEmpty(this.gameData) ? "{}" : this.gameData;
@@ -253,7 +253,7 @@ namespace SaiGame.Services
     ""game_data"": {gameDataJson}
 }}";
 
-            yield return SaiService.Instance.PostRequest(endpoint, jsonData,
+            yield return SaiServer.Instance.PostRequest(endpoint, jsonData,
                 response =>
                 {
                     try
@@ -267,7 +267,7 @@ namespace SaiGame.Services
                             this.currentProgress.game_data = gameDataJson;
 
                         OnCreateProgressSuccess?.Invoke(progressResponse.data);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[GamerProgress] CreateProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › CreateProgressCoroutine");
                         onSuccess?.Invoke(progressResponse.data);
                     }
@@ -275,7 +275,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse create progress response error: {e.Message}";
                         OnCreateProgressFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[GamerProgress] CreateProgress</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GamerProgress.cs › CreateProgressCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -283,7 +283,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     OnCreateProgressFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[GamerProgress] CreateProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › CreateProgressCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -292,15 +292,15 @@ namespace SaiGame.Services
 
         public void GetProgress(System.Action<GamerProgressData> onSuccess = null, System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FF88><b>[GamerProgress] ► Get Progress</b></color>", gameObject);
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                onError?.Invoke("SaiService not found!");
+                onError?.Invoke("SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 onError?.Invoke("Not authenticated! Please login first.");
                 return;
@@ -311,10 +311,10 @@ namespace SaiGame.Services
 
         private IEnumerator GetProgressCoroutine(System.Action<GamerProgressData> onSuccess, System.Action<string> onError)
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/my-gamer-progress";
 
-            yield return SaiService.Instance.GetRequest(endpoint,
+            yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
                 {
                     try
@@ -334,11 +334,11 @@ namespace SaiGame.Services
                             }
                         }
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"Progress loaded: Level {progress.level}, XP {progress.experience}, Gold {progress.gold}, Game Data: {progress.game_data}");
 
                         OnGetProgressSuccess?.Invoke(progress);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[GamerProgress] GetProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › GetProgressCoroutine");
                         onSuccess?.Invoke(progress);
                     }
@@ -346,7 +346,7 @@ namespace SaiGame.Services
                     {
                         string errorMsg = $"Parse get progress response error: {e.Message}";
                         OnGetProgressFailure?.Invoke(errorMsg);
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[GamerProgress] GetProgress</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GamerProgress.cs › GetProgressCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
@@ -354,7 +354,7 @@ namespace SaiGame.Services
                 error =>
                 {
                     OnGetProgressFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[GamerProgress] GetProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › GetProgressCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -363,7 +363,7 @@ namespace SaiGame.Services
 
         public void UpdateProgress(int experienceDelta, int goldDelta, string newGameData = null, System.Action<GamerProgressData> onSuccess = null, System.Action<string> onError = null)
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FFD700><b>[GamerProgress] ► Update Progress</b></color>", gameObject);
             if (this.currentProgress == null)
             {
@@ -391,13 +391,13 @@ namespace SaiGame.Services
     ""game_data"": {gameDataJson}
 }}";
 
-            if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
             {
                 Debug.Log($"Updating progress with deltas - XP: +{experienceDelta}, Gold: +{goldDelta}");
                 Debug.Log($"Request JSON: {jsonData}");
             }
 
-            yield return SaiService.Instance.PatchRequest(endpoint, jsonData,
+            yield return SaiServer.Instance.PatchRequest(endpoint, jsonData,
                 response =>
                 {
                     try
@@ -410,24 +410,24 @@ namespace SaiGame.Services
                         if (this.currentProgress != null)
                             this.currentProgress.game_data = gameDataJson;
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"Progress updated successfully! New values - Level: {updatedProgress.level}, XP: {updatedProgress.experience}, Gold: {updatedProgress.gold}");
 
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[GamerProgress] UpdateProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › UpdateProgressCoroutine");
                         onSuccess?.Invoke(updatedProgress);
                     }
                     catch (System.Exception e)
                     {
                         string errorMsg = $"Parse update progress response error: {e.Message}";
-                        if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.LogWarning($"<color=#66CCFF>[GamerProgress] UpdateProgress</color> → <b><color=#FF4444>onError</color></b> callback (parse) | GamerProgress.cs › UpdateProgressCoroutine | {errorMsg}");
                         onError?.Invoke(errorMsg);
                     }
                 },
                 error =>
                 {
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[GamerProgress] UpdateProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › UpdateProgressCoroutine | {error}");
                     onError?.Invoke(error);
                 }
@@ -436,19 +436,19 @@ namespace SaiGame.Services
 
         public void ClearProgress()
         {
-            if (SaiService.Instance != null && SaiService.Instance.ShowButtonsLog)
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[GamerProgress] ► Clear Progress</b></color>", gameObject);
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
                 ClearLocalProgress();
                 Debug.Log("Progress data cleared locally (no service available)");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 ClearLocalProgress();
-                if (SaiService.Instance != null && SaiService.Instance.ShowDebug)
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                     Debug.Log("Progress data cleared locally (not authenticated)");
                 return;
             }
@@ -458,22 +458,22 @@ namespace SaiGame.Services
 
         private IEnumerator ClearProgressCoroutine()
         {
-            string gameId = SaiService.Instance.GameId;
+            string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/my-gamer-progress";
 
-            yield return SaiService.Instance.DeleteRequest(endpoint,
+            yield return SaiServer.Instance.DeleteRequest(endpoint,
                 response =>
                 {
                     ClearLocalProgress();
                     OnDeleteProgressSuccess?.Invoke();
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.Log("<color=#66CCFF>[GamerProgress] ClearProgress</color> → <b><color=#00FF88>onSuccess</color></b> callback | GamerProgress.cs › ClearProgressCoroutine");
                 },
                 error =>
                 {
                     ClearLocalProgress();
                     OnDeleteProgressFailure?.Invoke(error);
-                    if (SaiService.Instance != null && SaiService.Instance.ShowCallbackLog)
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[GamerProgress] ClearProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › ClearProgressCoroutine | {error}");
                 }
             );

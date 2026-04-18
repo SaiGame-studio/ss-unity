@@ -160,13 +160,13 @@ namespace SaiGame.Services
 
         private void RunScript()
         {
-            if (SaiService.Instance == null)
+            if (SaiServer.Instance == null)
             {
-                Debug.LogError("[BattleScriptEditor] SaiService not found!");
+                Debug.LogError("[BattleScriptEditor] SaiServer not found!");
                 return;
             }
 
-            if (!SaiService.Instance.IsAuthenticated)
+            if (!SaiServer.Instance.IsAuthenticated)
             {
                 Debug.LogError("[BattleScriptEditor] Not authenticated! Please login first.");
                 return;
@@ -176,13 +176,13 @@ namespace SaiGame.Services
                 overrideRequestBody: this.battleScript.RequestBody,
                 onSuccess: response =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[BattleScriptEditor] Script response received ({response.Length} chars)");
                     Repaint();
                 },
                 onError: error =>
                 {
-                    if (SaiService.Instance == null || SaiService.Instance.ShowDebug)
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[BattleScriptEditor] Failed to run script: {error}");
                 }
             );
