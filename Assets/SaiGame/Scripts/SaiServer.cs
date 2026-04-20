@@ -9,7 +9,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.31";
+        public const string PACKAGE_VERSION = "0.2.32";
         public const string PACKAGE_NAME = "Sai Server";
 
         [SerializeField] protected SaiAuth saiAuth;

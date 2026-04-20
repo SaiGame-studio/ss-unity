@@ -513,12 +513,12 @@ namespace SaiGame.Services
 
             if (!string.IsNullOrEmpty(entry.status))
             {
-                GUIStyle statusBadge = new GUIStyle(EditorStyles.label);
-                statusBadge.fontSize = 11;
+                GUIStyle statusBadge = new GUIStyle(EditorStyles.miniLabel);
+                statusBadge.fontSize = 10;
                 statusBadge.fontStyle = FontStyle.Bold;
                 statusBadge.alignment = TextAnchor.MiddleRight;
-                statusBadge.normal.textColor = this.GetStatusColor(entry.status);
-                EditorGUILayout.LabelField(entry.status.ToUpper(), statusBadge, GUILayout.MinWidth(90));
+                statusBadge.normal.textColor = QuestStatusIcons.GetColor(entry.status);
+                GUILayout.Label($"{QuestStatusIcons.GetIcon(entry.status)} {entry.status.ToLower()}", statusBadge, GUILayout.ExpandWidth(false));
             }
             EditorGUILayout.EndHorizontal();
 
@@ -699,17 +699,6 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", separatorStyle);
         }
 
-        private Color GetStatusColor(string status)
-        {
-            switch ((status ?? "").ToLower())
-            {
-                case "completed": return new Color(0f, 1f, 0.53f);   // Green
-                case "claimed": return new Color(1f, 0.84f, 0.2f); // Gold
-                case "in_progress": return new Color(0.4f, 0.8f, 1f);  // Cyan
-                default: return new Color(0.67f, 0.67f, 0.67f); // Gray (not_started)
-            }
-        }
-
         // ── Network actions ───────────────────────────────────────────────────
 
         private void RunGetTodayQuests()
@@ -762,6 +751,7 @@ namespace SaiGame.Services
                 {
                     this.startingQuestId = null;
                     Debug.Log($"[DailyQuestEditor] Quest started: id={response.id}, status={response.status}");
+                    this.ApplyEntryStatus(questDefinitionId, response.status);
                     Repaint();
                 },
                 onError: error =>
@@ -819,6 +809,8 @@ namespace SaiGame.Services
                 {
                     this.claimingQuestId = null;
                     Debug.Log($"[DailyQuestEditor] Quest claimed: id={response.id}, claimed_at={response.claimed_at}");
+                    // Claim response has no status field — claimed_at is present, so the quest is "claimed".
+                    this.ApplyEntryStatus(questDefinitionId, "claimed");
                     Repaint();
                 },
                 onError: error =>
@@ -958,6 +950,29 @@ namespace SaiGame.Services
         // ── Check API → entry sync ────────────────────────────────────────────
 
         /// <summary>
+        /// Writes the new status back onto the matching <see cref="DailyQuestEntryData"/>
+        /// in <c>CurrentTodayQuestResponse</c> so the inspector pill updates immediately
+        /// after Start / Claim without waiting for a Check round-trip.
+        /// </summary>
+        private void ApplyEntryStatus(string questDefinitionId, string newStatus)
+        {
+            if (string.IsNullOrEmpty(questDefinitionId) || string.IsNullOrEmpty(newStatus)) return;
+
+            TodayQuestResponse today = this.dailyQuest?.CurrentTodayQuestResponse;
+            if (today?.entries == null) return;
+
+            foreach (DailyQuestEntryData entry in today.entries)
+            {
+                string entryQuestId = entry?.quest?.id ?? entry?.assignment?.quest_definition_id;
+                if (entryQuestId == questDefinitionId)
+                {
+                    entry.status = newStatus;
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
         /// Updates the matching entry in CurrentTodayQuestResponse with fresh data from a Check call.
         /// </summary>
         private void ApplyCheckResponseToEntry(string questDefinitionId, CheckQuestResponse response)
@@ -1077,8 +1092,9 @@ namespace SaiGame.Services
             GUIStyle richStyle = new GUIStyle(EditorStyles.label) { richText = true };
             richStyle.fontSize = 10;
 
-            string statusColor = this.GetStatusHex(p.status);
-            EditorGUILayout.LabelField($"Status: <color={statusColor}><b>{p.status}</b></color>  |  Version: <b>{p.version}</b>", richStyle);
+            string statusColor = QuestStatusIcons.GetHex(p.status);
+            string statusIcon = QuestStatusIcons.GetIcon(p.status);
+            EditorGUILayout.LabelField($"Status: <color={statusColor}><b>{statusIcon} {p.status}</b></color>  |  Version: <b>{p.version}</b>", richStyle);
 
             GUIStyle idStyle = new GUIStyle(EditorStyles.label);
             idStyle.fontSize = 10;
@@ -1100,17 +1116,6 @@ namespace SaiGame.Services
 
             if (!string.IsNullOrEmpty(p.progress_data_json))
                 this.DrawProgressData(p.progress_data_json);
-        }
-
-        private string GetStatusHex(string status)
-        {
-            switch ((status ?? "").ToLower())
-            {
-                case "completed": return "#00FF88";
-                case "claimed": return "#FFD700";
-                case "in_progress": return "#66CCFF";
-                default: return "#AAAAAA";
-            }
         }
 
         // ── Dynamic JSON renderer (for progress_data) ─────────────────────────

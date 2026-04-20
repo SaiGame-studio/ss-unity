@@ -326,17 +326,12 @@ namespace SaiGame.Services
             EditorGUILayout.BeginHorizontal();
             this.expandedMembers[memberKey] = EditorGUILayout.Foldout(this.expandedMembers[memberKey], $"◆ {questName}", true, foldoutStyle);
 
-            // Status badge from cached check (if any) — mirrors Daily quest entry header.
-            string memberStatus = this.GetCachedMemberStatus(member.quest_definition_id);
+            // Prominent status pill — prefers member.status from API, falls back to cached check.
+            string memberStatus = !string.IsNullOrEmpty(member.status)
+                ? member.status
+                : this.GetCachedMemberStatus(member.quest_definition_id);
             if (!string.IsNullOrEmpty(memberStatus))
-            {
-                GUIStyle statusBadge = new GUIStyle(EditorStyles.label);
-                statusBadge.fontSize = 11;
-                statusBadge.fontStyle = FontStyle.Bold;
-                statusBadge.alignment = TextAnchor.MiddleRight;
-                statusBadge.normal.textColor = this.GetStatusColor(memberStatus);
-                EditorGUILayout.LabelField(memberStatus.ToUpper(), statusBadge, GUILayout.MinWidth(90));
-            }
+                this.DrawStatusPill(memberStatus);
 
             if (member.definition != null)
             {
@@ -544,8 +539,9 @@ namespace SaiGame.Services
             GUIStyle richStyle = new GUIStyle(EditorStyles.label) { richText = true };
             richStyle.fontSize = 10;
 
-            string statusColor = this.GetStatusHex(p.status);
-            EditorGUILayout.LabelField($"Status: <color={statusColor}><b>{p.status}</b></color>  |  Version: <b>{p.version}</b>", richStyle);
+            string statusColor = QuestStatusIcons.GetHex(p.status);
+            string statusIcon = QuestStatusIcons.GetIcon(p.status);
+            EditorGUILayout.LabelField($"Status: <color={statusColor}><b>{statusIcon} {p.status}</b></color>  |  Version: <b>{p.version}</b>", richStyle);
 
             GUIStyle idStyle = new GUIStyle(EditorStyles.label);
             idStyle.fontSize = 10;
@@ -622,6 +618,8 @@ namespace SaiGame.Services
                 {
                     this.startingQuestId = null;
                     Debug.Log($"[ChainQuestEditor] Quest started: id={response.id}, status={response.status}");
+                    this.ApplyMemberStatus(questDefinitionId, response.status);
+                    Repaint();
                     // Refresh cached state by issuing a Check
                     this.RunCheckQuest(questDefinitionId);
                 },
@@ -652,6 +650,7 @@ namespace SaiGame.Services
                     this.checkingQuestId = null;
                     this.memberCheckCache[questDefinitionId] = response;
                     Debug.Log($"[ChainQuestEditor] Quest checked: status={response.status}");
+                    this.ApplyMemberStatus(questDefinitionId, response.progress?.status ?? response.status);
                     Repaint();
                 },
                 onError: error =>
@@ -680,6 +679,9 @@ namespace SaiGame.Services
                 {
                     this.claimingQuestId = null;
                     Debug.Log($"[ChainQuestEditor] Quest claimed: id={response.id}, claimed_at={response.claimed_at}");
+                    // Claim response has no status field — claimed_at is present, so the quest is "claimed".
+                    this.ApplyMemberStatus(questDefinitionId, "claimed");
+                    Repaint();
                     // Refresh cached state by issuing a Check
                     this.RunCheckQuest(questDefinitionId);
                 },
@@ -693,6 +695,25 @@ namespace SaiGame.Services
         }
 
         // ── Cache lookups & status helpers ───────────────────────────────────
+
+        /// <summary>
+        /// Writes the new status back onto every cached <see cref="ChainMemberData"/>
+        /// whose quest_definition_id matches, so the inspector pill updates immediately
+        /// after Start / Check / Claim without waiting for a full members reload.
+        /// </summary>
+        private void ApplyMemberStatus(string questDefinitionId, string newStatus)
+        {
+            if (string.IsNullOrEmpty(questDefinitionId) || string.IsNullOrEmpty(newStatus)) return;
+            foreach (ChainMembersResponse cached in this.membersCache.Values)
+            {
+                if (cached?.members == null) continue;
+                foreach (ChainMemberData m in cached.members)
+                {
+                    if (m != null && m.quest_definition_id == questDefinitionId)
+                        m.status = newStatus;
+                }
+            }
+        }
 
         private CheckQuestResponse GetCachedMemberCheck(string questDefinitionId)
         {
@@ -713,26 +734,18 @@ namespace SaiGame.Services
             return cached.status;
         }
 
-        private Color GetStatusColor(string status)
+        /// <summary>
+        /// Compact colored status label for the member header — icon + lowercase status,
+        /// sized to content so the row height doesn't grow when collapsed.
+        /// </summary>
+        private void DrawStatusPill(string status)
         {
-            switch ((status ?? "").ToLower())
-            {
-                case "completed":   return new Color(0f, 1f, 0.53f);
-                case "claimed":     return new Color(1f, 0.84f, 0.2f);
-                case "in_progress": return new Color(0.4f, 0.8f, 1f);
-                default:            return new Color(0.67f, 0.67f, 0.67f);
-            }
-        }
-
-        private string GetStatusHex(string status)
-        {
-            switch ((status ?? "").ToLower())
-            {
-                case "completed":   return "#00FF88";
-                case "claimed":     return "#FFD700";
-                case "in_progress": return "#66CCFF";
-                default:            return "#AAAAAA";
-            }
+            GUIStyle s = new GUIStyle(EditorStyles.miniLabel);
+            s.fontSize = 10;
+            s.fontStyle = FontStyle.Bold;
+            s.alignment = TextAnchor.MiddleRight;
+            s.normal.textColor = QuestStatusIcons.GetColor(status);
+            GUILayout.Label($"{QuestStatusIcons.GetIcon(status)} {status.ToLower()}", s, GUILayout.ExpandWidth(false));
         }
 
         // ── Dynamic JSON renderer (for progress_data) ─────────────────────────
@@ -874,15 +887,8 @@ namespace SaiGame.Services
             if (node == null) return;
 
             string indent = new string(' ', depth * 4);
-            string statusColor;
-            string statusIcon;
-            switch (node.status)
-            {
-                case "completed": statusColor = "#00FF88"; statusIcon = "✓"; break;
-                case "active":    statusColor = "#FFD700"; statusIcon = "●"; break;
-                case "locked":    statusColor = "#666666"; statusIcon = "🔒"; break;
-                default:          statusColor = "#AAAAAA"; statusIcon = "○"; break;
-            }
+            string statusColor = QuestStatusIcons.GetHex(node.status);
+            string statusIcon = QuestStatusIcons.GetIcon(node.status);
 
             GUIStyle richStyle = new GUIStyle(EditorStyles.label) { richText = true };
             richStyle.fontSize = 10;

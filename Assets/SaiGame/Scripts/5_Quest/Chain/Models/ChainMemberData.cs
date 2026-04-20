@@ -14,6 +14,7 @@ namespace SaiGame.Services
         public int sort_order;
         public string[] unlock_quest_ids;
         public QuestDefinitionData definition;
+        public string status;
         public string created_at;
         public string updated_at;
     }
