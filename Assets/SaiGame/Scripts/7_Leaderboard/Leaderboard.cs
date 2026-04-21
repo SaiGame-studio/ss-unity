@@ -33,6 +33,9 @@ namespace SaiGame.Services
         // Dictionary to store top rankings per board (keyed by board id)
         private System.Collections.Generic.Dictionary<string, LeaderboardRankingsResponse> boardTopRankings = new System.Collections.Generic.Dictionary<string, LeaderboardRankingsResponse>();
 
+        // Dictionary to store my rank per board (keyed by board id)
+        private System.Collections.Generic.Dictionary<string, LeaderboardLocalRankingResponse> boardMyRanks = new System.Collections.Generic.Dictionary<string, LeaderboardLocalRankingResponse>();
+
         public LeaderboardBoardsResponse CurrentBoards => this.currentBoards;
         public bool HasBoards => this.currentBoards != null && this.currentBoards.boards != null && this.currentBoards.boards.Length > 0;
         public LeaderboardRankingsResponse CurrentTopRankings => this.currentTopRankings;
@@ -348,6 +351,9 @@ namespace SaiGame.Services
                         LeaderboardLocalRankingResponse parsed = JsonUtility.FromJson<LeaderboardLocalRankingResponse>(response);
                         this.currentMyRank = parsed;
 
+                        // Store my rank per board
+                        this.boardMyRanks[boardId] = parsed;
+
                         if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[Leaderboard] My rank for board {boardId}: rank #{parsed.rank}, score: {parsed.score}");
 
@@ -495,10 +501,21 @@ namespace SaiGame.Services
         {
             if (string.IsNullOrEmpty(boardId) || this.boardTopRankings == null)
                 return null;
-            
+
             if (this.boardTopRankings.ContainsKey(boardId))
                 return this.boardTopRankings[boardId];
-            
+
+            return null;
+        }
+
+        public LeaderboardLocalRankingResponse GetBoardMyRank(string boardId)
+        {
+            if (string.IsNullOrEmpty(boardId) || this.boardMyRanks == null)
+                return null;
+
+            if (this.boardMyRanks.ContainsKey(boardId))
+                return this.boardMyRanks[boardId];
+
             return null;
         }
 
@@ -506,6 +523,8 @@ namespace SaiGame.Services
         {
             if (this.boardTopRankings != null)
                 this.boardTopRankings.Clear();
+            if (this.boardMyRanks != null)
+                this.boardMyRanks.Clear();
         }
     }
 }

@@ -11,13 +11,11 @@ namespace SaiGame.Services
         private SerializedProperty autoLoadOnLogin;
         private SerializedProperty currentBoards;
         private SerializedProperty currentTopRankings;
-        private SerializedProperty currentMyRank;
         private SerializedProperty selectedBoardId;
         private SerializedProperty selectedBoardKey;
 
         private bool showCurrentBoards = true;
         private bool showBoardList = true;
-        private bool showMyRank = true;
         private bool showUtilityButtons = true;
         private System.Collections.Generic.Dictionary<string, bool> boardFoldouts = new System.Collections.Generic.Dictionary<string, bool>();
     // Dictionary for ranking entry expand state: key = "boardId_rank"
@@ -31,7 +29,6 @@ namespace SaiGame.Services
             this.autoLoadOnLogin = serializedObject.FindProperty("autoLoadOnLogin");
             this.currentBoards = serializedObject.FindProperty("currentBoards");
             this.currentTopRankings = serializedObject.FindProperty("currentTopRankings");
-            this.currentMyRank = serializedObject.FindProperty("currentMyRank");
             this.selectedBoardId = serializedObject.FindProperty("selectedBoardId");
             this.selectedBoardKey = serializedObject.FindProperty("selectedBoardKey");
         }
@@ -80,45 +77,6 @@ namespace SaiGame.Services
                 else
                 {
                     EditorGUILayout.LabelField("No boards loaded.", EditorStyles.miniLabel);
-                }
-
-                EditorGUI.indentLevel--;
-            }
-
-            EditorGUILayout.Space();
-
-            // My Rank Data
-            var myRank = this.leaderboard.CurrentMyRank;
-            string myRankLabel = (myRank != null && myRank.user_id != null)
-                ? $"My Rank  (#{myRank.rank}  score: {myRank.score})"
-                : "My Rank";
-            this.showMyRank = EditorGUILayout.Foldout(this.showMyRank, myRankLabel, true);
-            if (this.showMyRank)
-            {
-                EditorGUI.indentLevel++;
-
-                if (myRank != null && myRank.user_id != null)
-                {
-                    EditorGUILayout.LabelField($"Rank: #{myRank.rank}");
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.LabelField($"User ID: {myRank.user_id}");
-                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = myRank.user_id;
-                    EditorGUILayout.EndHorizontal();
-                    EditorGUILayout.LabelField($"Score: {myRank.score}");
-                    if (!string.IsNullOrEmpty(myRank.metadata) && myRank.metadata != "null")
-                        EditorGUILayout.LabelField($"Metadata: {myRank.metadata}");
-                    if (myRank.season != null && !string.IsNullOrEmpty(myRank.season.id))
-                    {
-                        EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.LabelField($"Season: #{myRank.season.season_number}  ({myRank.season.id})");
-                        if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = myRank.season.id;
-                        EditorGUILayout.EndHorizontal();
-                    }
-                    EditorGUILayout.LabelField($"Updated: {myRank.updated_at}");
-                }
-                else
-                {
-                    EditorGUILayout.LabelField("No rank loaded. Press \"Get My Rank\".", EditorStyles.miniLabel);
                 }
 
                 EditorGUI.indentLevel--;
@@ -357,23 +315,90 @@ namespace SaiGame.Services
 
                 EditorGUI.indentLevel--;
 
-                // Draw Top Rankings for this board
+                // Draw Top Rankings for this board (always visible)
                 var topRankings = this.leaderboard.GetBoardTopRankings(board.id);
                 EditorGUILayout.Space(4);
-                if (topRankings != null && topRankings.entries != null && topRankings.entries.Length > 0)
+
+                GUIStyle topNHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
+                topNHeaderStyle.fontSize = 10;
+                topNHeaderStyle.normal.textColor = new Color(0.7f, 0.9f, 1f);
+
+                bool hasTopRankings = topRankings != null && topRankings.entries != null && topRankings.entries.Length > 0;
+                string topNHeader = hasTopRankings
+                    ? $"📊 Top N Rankings ({topRankings.entries.Length}/{topRankings.total})"
+                    : "📊 Top N Rankings";
+                EditorGUILayout.LabelField(topNHeader, topNHeaderStyle);
+
+                EditorGUI.indentLevel++;
+                if (hasTopRankings)
                 {
-                    GUIStyle topNHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
-                    topNHeaderStyle.fontSize = 10;
-                    topNHeaderStyle.normal.textColor = new Color(0.7f, 0.9f, 1f);
-                    EditorGUILayout.LabelField($"📊 Top N Rankings ({topRankings.entries.Length}/{topRankings.total})", topNHeaderStyle);
-                    
-                    EditorGUI.indentLevel++;
                     foreach (LeaderboardRankingEntry entry in topRankings.entries)
                     {
                         DrawRankingEntry(entry, board.id);
                     }
-                    EditorGUI.indentLevel--;
                 }
+                else
+                {
+                    EditorGUILayout.LabelField("No rankings loaded. Press \"Get Top N\".", EditorStyles.miniLabel);
+                }
+                EditorGUI.indentLevel--;
+
+                // Draw My Rank for this board (always visible)
+                var myRank = this.leaderboard.GetBoardMyRank(board.id);
+                EditorGUILayout.Space(4);
+
+                GUIStyle myRankHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
+                myRankHeaderStyle.fontSize = 10;
+                myRankHeaderStyle.normal.textColor = new Color(0.85f, 0.75f, 1f);
+
+                bool hasMyRank = myRank != null && !string.IsNullOrEmpty(myRank.user_id);
+                string myRankHeader = hasMyRank
+                    ? $"🏅 My Rank  (#{myRank.rank}  score: {myRank.score})"
+                    : "🏅 My Rank";
+                EditorGUILayout.LabelField(myRankHeader, myRankHeaderStyle);
+
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+                if (hasMyRank)
+                {
+                    GUIStyle myRankRichStyle = new GUIStyle(EditorStyles.label);
+                    myRankRichStyle.fontSize = 10;
+                    myRankRichStyle.richText = true;
+
+                    string cMyRank   = ColorUtility.ToHtmlStringRGB(new Color(1f,    0.72f, 0.25f)); // amber
+                    string cMyScore  = ColorUtility.ToHtmlStringRGB(new Color(0.50f, 1f,    0.65f)); // green
+                    string cMyUser   = ColorUtility.ToHtmlStringRGB(new Color(0.55f, 0.85f, 1f));    // sky blue
+                    string cMyMeta   = ColorUtility.ToHtmlStringRGB(new Color(0.90f, 0.90f, 0.90f)); // soft white
+                    string cMySeason = ColorUtility.ToHtmlStringRGB(new Color(0.80f, 0.80f, 1f));    // periwinkle
+                    string cMyDate   = ColorUtility.ToHtmlStringRGB(new Color(0.75f, 0.75f, 0.75f)); // gray
+
+                    EditorGUILayout.LabelField($"Rank: <b><color=#{cMyRank}>#{myRank.rank}</color></b>", myRankRichStyle);
+                    EditorGUILayout.LabelField($"Score: <b><color=#{cMyScore}>{myRank.score}</color></b>", myRankRichStyle);
+
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField($"User ID: <b><color=#{cMyUser}>{myRank.user_id}</color></b>", myRankRichStyle);
+                    if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = myRank.user_id;
+                    EditorGUILayout.EndHorizontal();
+
+                    if (!string.IsNullOrEmpty(myRank.metadata) && myRank.metadata != "null")
+                        EditorGUILayout.LabelField($"Metadata: <color=#{cMyMeta}>{myRank.metadata}</color>", myRankRichStyle);
+
+                    if (myRank.season != null && !string.IsNullOrEmpty(myRank.season.id))
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.LabelField($"Season: <b><color=#{cMySeason}>#{myRank.season.season_number}  ({myRank.season.id})</color></b>", myRankRichStyle);
+                        if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = myRank.season.id;
+                        EditorGUILayout.EndHorizontal();
+                    }
+
+                    EditorGUILayout.LabelField($"Updated: <color=#{cMyDate}>{myRank.updated_at}</color>", myRankRichStyle);
+                }
+                else
+                {
+                    EditorGUILayout.LabelField("No rank loaded. Press \"My Rank\".", EditorStyles.miniLabel);
+                }
+
+                EditorGUILayout.EndVertical();
 
                 EditorGUILayout.BeginHorizontal();
 
