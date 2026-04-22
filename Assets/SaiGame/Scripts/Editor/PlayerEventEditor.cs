@@ -9,13 +9,13 @@ namespace SaiGame.Services
     {
         private SerializedProperty sessionId;
         private SerializedProperty eventType;
-        private SerializedProperty eventDataJson;
+        // private SerializedProperty eventDataJson; // tạm ẩn — chưa dùng
 
         private void OnEnable()
         {
             this.sessionId = serializedObject.FindProperty("sessionId");
             this.eventType = serializedObject.FindProperty("eventType");
-            this.eventDataJson = serializedObject.FindProperty("eventDataJson");
+            // this.eventDataJson = serializedObject.FindProperty("eventDataJson"); // tạm ẩn — chưa dùng
         }
 
         public override void OnInspectorGUI()
@@ -59,6 +59,8 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("Event Settings", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(this.eventType, new GUIContent("Event Type", "The type of event to track (e.g. join_game, start_level, quit_game)"));
 
+            // --- Event Data (JSON) UI tạm ẩn — chưa dùng đến. Không xóa để dễ khôi phục sau. ---
+            /*
             EditorGUILayout.Space(4);
 
             // Event Data JSON textarea
@@ -88,6 +90,7 @@ namespace SaiGame.Services
             }
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
+            */
 
             serializedObject.ApplyModifiedProperties();
 

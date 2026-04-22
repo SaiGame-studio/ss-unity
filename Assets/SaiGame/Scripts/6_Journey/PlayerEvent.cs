@@ -16,7 +16,7 @@ namespace SaiGame.Services
 
         [Header("Event Settings")]
         [SerializeField] protected string eventType = "ending1";
-        [SerializeField, TextArea(4, 12)] protected string eventDataJson = "{\n  \"source\": \"game\"\n}";
+        [HideInInspector, SerializeField, TextArea(4, 12)] protected string eventDataJson = "{\n  \"source\": \"game\"\n}";
 
         public string SessionId => this.sessionId;
         public string EventType => this.eventType;
