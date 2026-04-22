@@ -440,49 +440,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 770429900078848718, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: createMode
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: password
-      value: ECreVwVLK1vS4gdj
-      objectReference: {fileID: 0}
-    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: username
-      value: simonsai
-      objectReference: {fileID: 0}
-    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: autoLogin
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1993458322055049526, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: autoLoadOnLogin
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2893519870010327973, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: autoGetSlots
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2893519870010327973, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: autoGetEquipped
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2893519870010327973, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: autoLoadOnLogin
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3712696907917878105, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: autoLoadOnLogin
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_Name
       value: SaiServer
-      objectReference: {fileID: 0}
-    - target: {fileID: 8153881721212893719, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: autoLoadOnLogin
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalPosition.x
@@ -522,26 +482,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: port
-      value: 82
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: gameId
-      value: 25a7a3a7-0d0f-44ac-9ee4-b6bab8acf9bc
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: useHttps
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: domainOption
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: serverEndpoint
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

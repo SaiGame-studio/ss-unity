@@ -13,6 +13,7 @@ namespace SaiGame.Services
         public const string PACKAGE_NAME = "Sai Server";
 
         [SerializeField] protected SaiAuth saiAuth;
+        [SerializeField] protected GoogleBackendLogin googleBackendLogin;
         [SerializeField] protected GamerProgress gamerProgress;
         [SerializeField] protected Mailbox mailbox;
         [SerializeField] protected PlayerItem playerItem;
@@ -139,6 +140,8 @@ namespace SaiGame.Services
         public BattleScript BattleScript => this.battleScript;
 
         public SaiAuth SaiAuth => saiAuth;
+
+        public GoogleBackendLogin GoogleBackendLogin => this.googleBackendLogin;
 
         public string GameId => this.NormalizeInput(this.gameId);
 
@@ -372,6 +375,7 @@ namespace SaiGame.Services
             this.LoadServerEndpointFromPlayerPrefs();
             this.SyncLegacyServerFieldsFromEndpoint();
             this.LoadSaiAuth();
+            this.LoadGoogleBackendLogin();
             this.LoadGamerProgress();
             this.LoadMailbox();
             this.LoadPlayerEvent();
@@ -403,6 +407,14 @@ namespace SaiGame.Services
             this.saiAuth = GetComponent<SaiAuth>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadSaiAuth", gameObject);
+        }
+
+        protected virtual void LoadGoogleBackendLogin()
+        {
+            if (this.googleBackendLogin != null) return;
+            this.googleBackendLogin = GetComponentInChildren<GoogleBackendLogin>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadGoogleBackendLogin", gameObject);
         }
 
         protected virtual void LoadPlayerEvent()

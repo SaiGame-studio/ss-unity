@@ -359,7 +359,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.EquipmentSlotManager
   autoGetSlots: 1
-  autoGetEquipped: 0
+  autoGetEquipped: 1
   currentSlots:
     slots: []
     total: 0
@@ -433,7 +433,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4ef981143f99834ea48393d1367f838, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerCrafting
-  autoLoadOnLogin: 0
+  autoLoadOnLogin: 1
   currentHistory:
     page: 0
     page_size: 0
@@ -575,6 +575,7 @@ GameObject:
   - component: {fileID: 8277413932139228352}
   - component: {fileID: 8686393883881292769}
   - component: {fileID: 813458455079530658}
+  - component: {fileID: 207283731097068101}
   - component: {fileID: 3797376410084372741}
   - component: {fileID: 390271473075436921}
   - component: {fileID: 27159321914394544}
@@ -617,6 +618,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiServer
   saiAuth: {fileID: 813458455079530658}
+  googleBackendLogin: {fileID: 0}
   gamerProgress: {fileID: 3797376410084372741}
   mailbox: {fileID: 390271473075436921}
   playerItem: {fileID: 8153881721212893719}
@@ -638,11 +640,11 @@ MonoBehaviour:
   leaderboard: {fileID: 1993458322055049526}
   battleSessions: {fileID: 8438002230962336466}
   battleScript: {fileID: 5292617345916487666}
-  serverEndpoint: 1
-  domainOption: 1
-  port: 443
-  useHttps: 1
-  gameId: ab8b18d3-5a69-4fea-9dea-43a9f4c6e6d2
+  serverEndpoint: 0
+  domainOption: 0
+  port: 82
+  useHttps: 0
+  gameId: 25a7a3a7-0d0f-44ac-9ee4-b6bab8acf9bc
   requestTimeout: 30
   showButtonsLog: 1
   showCallbackLog: 1
@@ -677,11 +679,40 @@ MonoBehaviour:
   autoLogin: 1
   autoRefreshToken: 1
   refreshBeforeExpire: 2
-  username: 
-  password: 
+  username: simonsai
+  password: ECreVwVLK1vS4gdj
   registerEmail: 
   registerUsername: 
   registerPassword: 
+--- !u!114 &207283731097068101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6971719431293405431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef3a5bffa3fad0a498905dcf2a23ed5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.GoogleBackendLogin
+  accessToken: 
+  refreshToken: 
+  expiresIn: 0
+  userData:
+    id: 
+    email: 
+    username: 
+    display_name: 
+    is_active: 0
+    is_verified: 0
+    created_at: 0
+  loginTime: 0
+  sessionId: 
+  authUrl: 
+  isLoggingIn: 0
+  maxLoginDurationSeconds: 300
+  defaultPollIntervalSeconds: 2
 --- !u!114 &3797376410084372741
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -754,7 +785,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e6266713b40fa645aec9176b05fc4af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.Leaderboard
-  autoLoadOnLogin: 0
+  autoLoadOnLogin: 1
   currentBoards:
     boards: []
   currentTopRankings:
