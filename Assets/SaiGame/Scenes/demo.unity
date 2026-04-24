@@ -440,6 +440,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 27159321914394544, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: eventType
+      value: buy_starter_pack
+      objectReference: {fileID: 0}
+    - target: {fileID: 27159321914394544, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: sessionId
+      value: e8e3d396-09e8-4f7e-91d9-f8ed6784b0d2
+      objectReference: {fileID: 0}
     - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: password
       value: 
