@@ -4,6 +4,17 @@ using UnityEngine;
 
 namespace SaiGame.Services
 {
+    /// <summary>
+    /// Sends player behavior events to the server for analytics.
+    ///
+    /// Why Session ID:
+    /// - Groups events belonging to the same play session, so they can be distinguished
+    ///   from other sessions of the same user.
+    /// - Enables per-session analytics (duration, action sequence, drop-off) that user_id alone cannot.
+    /// - Lets us replay the exact flow of one play session when debugging.
+    /// - Generated fresh on each login, cleared on logout — avoids mixing sessions across
+    ///   multiple logins or devices.
+    /// </summary>
     [DefaultExecutionOrder(-99)]
     public class PlayerEvent : SaiBehaviour
     {
@@ -11,11 +22,8 @@ namespace SaiGame.Services
         public event Action<TrackEventResponse> OnTrackEventSuccess;
         public event Action<string> OnTrackEventFailure;
 
-        [Header("Session Settings")]
         [SerializeField] protected string sessionId = "";
-
-        [Header("Event Settings")]
-        [SerializeField] protected string eventType = "ending1";
+        [SerializeField] protected string eventType = "";
         [SerializeField, TextArea(4, 12)] protected string eventDataJson = "{\n  \"source\": \"game\"\n}";
 
         public string SessionId => this.sessionId;

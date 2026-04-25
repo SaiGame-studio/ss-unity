@@ -10,6 +10,7 @@ namespace SaiGame.Services
         private const string PREF_AUTO_REFRESH = "SaiAuthEditor.showAutoRefreshSettings";
         private const string PREF_LOGIN_INPUTS = "SaiAuthEditor.showLoginInputs";
         private const string PREF_REGISTER_INPUTS = "SaiAuthEditor.showRegisterInputs";
+        private const string PREF_SHOW_PASSWORDS = "SaiAuthEditor.showPasswords";
 
         private bool showAutoSettings
         {
@@ -35,10 +36,36 @@ namespace SaiGame.Services
             set => EditorPrefs.SetBool(PREF_REGISTER_INPUTS, value);
         }
 
+        private bool showPasswords
+        {
+            get => EditorPrefs.GetBool(PREF_SHOW_PASSWORDS, false);
+            set => EditorPrefs.SetBool(PREF_SHOW_PASSWORDS, value);
+        }
+
+        private void DrawPasswordPropertyField(SerializedProperty property, string label)
+        {
+            string value = property.stringValue;
+            string updatedValue = this.showPasswords
+                ? EditorGUILayout.TextField(label, value)
+                : EditorGUILayout.PasswordField(label, value);
+
+            if (updatedValue != value)
+            {
+                property.stringValue = updatedValue;
+            }
+        }
+
         private void DrawInputWithSaveLoad(SerializedProperty property, string label, System.Action onSave, System.Action onLoad)
         {
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField(property, new GUIContent(label));
+            if (label == "Password")
+            {
+                this.DrawPasswordPropertyField(property, label);
+            }
+            else
+            {
+                EditorGUILayout.PropertyField(property, new GUIContent(label));
+            }
 
             Color prevColor = GUI.backgroundColor;
 
@@ -138,7 +165,7 @@ namespace SaiGame.Services
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("registerEmail"), new GUIContent("Register Email"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("registerUsername"), new GUIContent("Register Username"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("registerPassword"), new GUIContent("Register Password"));
+                this.DrawPasswordPropertyField(serializedObject.FindProperty("registerPassword"), "Register Password");
                 EditorGUI.indentLevel--;
             }
 
@@ -146,6 +173,13 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Actions", EditorStyles.boldLabel);
+
+            EditorGUILayout.Space(5);
+            string toggleLabel = this.showPasswords ? "Hide Passwords" : "Show Passwords";
+            if (GUILayout.Button(toggleLabel, GUILayout.Width(140)))
+            {
+                this.showPasswords = !this.showPasswords;
+            }
 
             EditorGUILayout.Space(5);
 

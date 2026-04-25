@@ -2,6 +2,8 @@
 
 ## 1. Language and Communication
 - **English Mandatory:** All code (variables, functions, classes), comments, and documentation must be written in **English** only.
+- **No Vietnamese in Code Artifacts:** Never write code, comments, or technical documentation in Vietnamese.
+- **Localization-Only Exception:** Non-English text is allowed only in dedicated multilingual localization/translation files.
 - **Tone:** Technical, concise, and professional.
 
 ## 2. Coding Standards

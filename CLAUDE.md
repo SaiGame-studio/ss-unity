@@ -32,6 +32,11 @@ These rules are MANDATORY for all code contributions in this Unity project. They
 ### A.5 Mandatory Compliance Note
 - Start or end every response with a brief "✅ Compliance" note, or "⚠️ Warning" if rules cannot be met.
 
+### A.6 Language Restriction (Code and Comments)
+- All source code, identifiers, inline comments, and technical documentation must be written in English only.
+- Vietnamese (or any non-English language) is forbidden in code and comments.
+- The only exception is dedicated multilingual localization/translation files.
+
 ---
 
 ## B. C# / Unity Code Rules
