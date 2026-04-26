@@ -170,7 +170,7 @@ namespace SaiGame.Services
                 GUI.backgroundColor = Color.yellow;
                 if (GUILayout.Button("Sync with PlayerItem", GUILayout.Height(30)))
                 {
-                    PlayerItem pItem = FindObjectOfType<PlayerItem>();
+                    PlayerItem pItem = FindFirstObjectByType<PlayerItem>();
                     if (pItem != null)
                     {
                         pItem.GetItems(null, null, null,
@@ -453,7 +453,7 @@ namespace SaiGame.Services
 
             if (preset.slots != null && preset.slots.Length > 0)
             {
-                PlayerItem pItemInfo = FindObjectOfType<PlayerItem>();
+                PlayerItem pItemInfo = FindFirstObjectByType<PlayerItem>();
                 var sortedSlots = System.Linq.Enumerable.OrderBy(preset.slots, s => s.slot_index).ToArray();
 
                 foreach (var slot in sortedSlots)
@@ -554,7 +554,7 @@ namespace SaiGame.Services
             addHeaderStyle.normal.textColor = new Color(0.4f, 1f, 0.6f);
             EditorGUILayout.LabelField("➕ ADD ITEM TO SLOT", addHeaderStyle);
 
-            PlayerItem playerItem = FindObjectOfType<PlayerItem>();
+            PlayerItem playerItem = FindFirstObjectByType<PlayerItem>();
             if (playerItem == null || playerItem.CurrentInventory == null || playerItem.CurrentInventory.items == null || playerItem.CurrentInventory.items.Length == 0)
             {
                 EditorGUILayout.HelpBox("No PlayerItem or Inventory data found. Click 'Sync Player Inventory' under Utility Actions first.", MessageType.Warning);

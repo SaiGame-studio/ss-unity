@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.SceneManagement;
+using System;
 
 namespace SaiGame.Services
 {
@@ -159,6 +161,51 @@ namespace SaiGame.Services
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
 
+            EditorGUILayout.Space(4);
+            GUI.backgroundColor = new Color(1f, 0.65f, 0.2f);
+            if (GUILayout.Button("Full Reset", GUILayout.Height(28)))
+            {
+                if (saiServer != null)
+                {
+                    bool confirmed = EditorUtility.DisplayDialog(
+                        "Confirm Full Reset",
+                        "This will invoke reset on all components in this object and all child objects. Continue?",
+                        "Reset All",
+                        "Cancel");
+
+                    if (confirmed)
+                    {
+                        SaiBehaviour[] hierarchyComponents = saiServer.GetComponentsInChildren<SaiBehaviour>(true);
+                        Undo.RecordObjects(hierarchyComponents, "SaiServer Full Reset");
+
+                        int resetCount = 0;
+                        int totalCount = hierarchyComponents.Length;
+
+                        for (int i = 0; i < hierarchyComponents.Length; i++)
+                        {
+                            SaiBehaviour component = hierarchyComponents[i];
+                            if (component == null)
+                            {
+                                continue;
+                            }
+
+                            bool hookInvoked = saiServer.ManualInvokeResetHooks(component);
+                            bool serializedReset = this.ResetComponentSerializedFieldsToDefaults(component);
+                            if (hookInvoked || serializedReset)
+                            {
+                                resetCount++;
+                            }
+
+                            EditorUtility.SetDirty(component);
+                        }
+
+                        EditorSceneManager.MarkSceneDirty(saiServer.gameObject.scene);
+                        EditorUtility.DisplayDialog("Full Reset Complete", $"Reset executed on {resetCount}/{totalCount} SaiBehaviour component(s).", "OK");
+                    }
+                }
+            }
+            GUI.backgroundColor = Color.white;
+
             EditorGUILayout.Space(5);
 
             EditorGUILayout.BeginHorizontal();
@@ -196,6 +243,41 @@ namespace SaiGame.Services
                 }
             }
             EditorGUILayout.EndHorizontal();
+        }
+
+        private bool ResetComponentSerializedFieldsToDefaults(Component targetComponent)
+        {
+            if (targetComponent == null)
+            {
+                return false;
+            }
+
+            Type componentType = targetComponent.GetType();
+            GameObject tempObject = new GameObject($"__TempReset_{componentType.Name}");
+            tempObject.hideFlags = HideFlags.HideAndDontSave;
+
+            try
+            {
+                Component tempComponent = tempObject.AddComponent(componentType);
+                if (tempComponent == null)
+                {
+                    return false;
+                }
+
+                EditorUtility.CopySerialized(tempComponent, targetComponent);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                if (tempObject != null)
+                {
+                    DestroyImmediate(tempObject);
+                }
+            }
         }
     }
 }

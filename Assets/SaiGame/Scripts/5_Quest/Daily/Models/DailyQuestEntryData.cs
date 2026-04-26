@@ -13,5 +13,7 @@ namespace SaiGame.Services
         /// <summary>Quest progress status: not_started | in_progress | completed | claimed</summary>
         public string status;
         public DailyQuestProgressData progress;
+        /// <summary>Resolved rewards with item definitions populated by the server.</summary>
+        public DailyRewardData[] rewards;
     }
 }

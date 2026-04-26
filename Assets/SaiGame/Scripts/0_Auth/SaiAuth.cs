@@ -68,7 +68,7 @@ namespace SaiGame.Services
             base.ResetValue();
         }
 
-        protected virtual void Start()
+        protected override void Start()
         {
             if (this.autoLogin) this.AutoLogin();
         }

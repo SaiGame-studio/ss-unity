@@ -16,7 +16,6 @@ namespace SaiGame.Services
         private bool showCurrentData = false;
         private bool showDaysList = true;
         private bool showTodayData = false;
-        private bool showUtilityButtons = true;
 
         // Pool dropdown state
         private DailyQuestPoolData[] loadedPools = null;
@@ -253,9 +252,7 @@ namespace SaiGame.Services
 
         private bool SelectedPoolSupportsAssignAhead()
         {
-            if (this.loadedPools == null || this.selectedPoolIndex < 0 || this.selectedPoolIndex >= this.loadedPools.Length)
-                return true;
-            return this.loadedPools[this.selectedPoolIndex].assignment_strategy == "weighted_random";
+            return true;
         }
 
         // ── Selected Pool Info Card ───────────────────────────────────────────
@@ -317,14 +314,6 @@ namespace SaiGame.Services
                 $"⚙ Strategy: <color={strategyColor}><b>{pool.assignment_strategy}</b></color>  |  " +
                 $"Slots/day: <b>{pool.slots_per_day}</b>  |  Reset UTC: <b>{pool.reset_hour_utc}:00</b>",
                 richBold);
-
-            if (pool.assignment_strategy != "weighted_random")
-            {
-                EditorGUILayout.Space(2);
-                EditorGUILayout.HelpBox(
-                    $"Strategy '{pool.assignment_strategy}' does not support Assign Ahead.",
-                    MessageType.Warning);
-            }
 
             EditorGUILayout.EndVertical();
         }
@@ -568,22 +557,6 @@ namespace SaiGame.Services
 
                 // Conditions
                 this.DrawConditions(quest.conditions);
-
-                int visibleRewardCount = this.CountVisibleRewards(quest.rewards);
-                if (visibleRewardCount > 0)
-                {
-                    EditorGUILayout.Space(3);
-                    GUIStyle sectionStyle = new GUIStyle(EditorStyles.boldLabel);
-                    sectionStyle.fontSize = 10;
-                    sectionStyle.normal.textColor = new Color(1f, 0.84f, 0.2f);
-                    EditorGUILayout.LabelField($"🎁 REWARDS ({visibleRewardCount})", sectionStyle);
-
-                    foreach (QuestReward reward in quest.rewards)
-                    {
-                        if (this.IsHiddenReward(reward)) continue;
-                        this.DrawReward(reward);
-                    }
-                }
             }
 
             // Assignment info
@@ -620,6 +593,10 @@ namespace SaiGame.Services
             // Progress info
             if (entry.progress != null)
                 this.DrawProgressBlock(entry.progress);
+
+            // Entry-level resolved rewards (include item definitions)
+            if (entry.rewards != null && entry.rewards.Length > 0)
+                this.DrawEntryRewards(entry.rewards);
 
             // Action buttons
             if (withActions && !string.IsNullOrEmpty(questDefId))
@@ -674,6 +651,82 @@ namespace SaiGame.Services
             else
             {
                 EditorGUILayout.LabelField($"  <color=#AAAAAA>●</color> {reward.reward_type}", richStyle);
+            }
+        }
+
+        private void DrawEntryRewards(DailyRewardData[] rewards)
+        {
+            EditorGUILayout.Space(3);
+            GUIStyle sectionStyle = new GUIStyle(EditorStyles.boldLabel);
+            sectionStyle.fontSize = 10;
+            sectionStyle.normal.textColor = new Color(1f, 0.84f, 0.2f);
+            EditorGUILayout.LabelField($"🎁 REWARDS ({rewards.Length})", sectionStyle);
+
+            GUIStyle richStyle = new GUIStyle(EditorStyles.label) { richText = true };
+            richStyle.fontSize = 10;
+
+            GUIStyle dimStyle = new GUIStyle(EditorStyles.label);
+            dimStyle.fontSize = 9;
+            dimStyle.normal.textColor = new Color(0.55f, 0.55f, 0.55f);
+
+            foreach (DailyRewardData reward in rewards)
+            {
+                if (reward == null) continue;
+
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+                if (reward.item_definition != null)
+                {
+                    ItemDefinitionData def = reward.item_definition;
+
+                    Color rarityColor = this.GetRarityColor(def.rarity);
+                    GUIStyle nameStyle = new GUIStyle(EditorStyles.boldLabel) { richText = true };
+                    nameStyle.fontSize = 11;
+                    nameStyle.normal.textColor = rarityColor;
+
+                    string qtyLabel = reward.quantity_min == reward.quantity_max
+                        ? $"× {reward.quantity_min}"
+                        : $"× {reward.quantity_min}–{reward.quantity_max}";
+
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField($"<b>{def.name}</b>  <color=#AAAAAA>{qtyLabel}</color>", nameStyle, GUILayout.ExpandWidth(true));
+                    EditorGUILayout.EndHorizontal();
+
+                    EditorGUILayout.LabelField($"CODE: {def.item_code}  |  CATEGORY: {def.category}  |  RARITY: {def.rarity}", dimStyle);
+
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField($"ID: {def.id}", dimStyle, GUILayout.ExpandWidth(true));
+                    if (!string.IsNullOrEmpty(def.id) && GUILayout.Button("Copy", GUILayout.Width(50)))
+                        GUIUtility.systemCopyBuffer = def.id;
+                    EditorGUILayout.EndHorizontal();
+                }
+                else
+                {
+                    string qtyLabel = reward.quantity_min == reward.quantity_max
+                        ? $"× {reward.quantity_min}"
+                        : $"× {reward.quantity_min}–{reward.quantity_max}";
+
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField($"  <color=#66CCFF>● {reward.reward_type}</color>  {reward.item_definition_id}  {qtyLabel}", richStyle);
+                    if (!string.IsNullOrEmpty(reward.item_definition_id) && GUILayout.Button("Copy", GUILayout.Width(50)))
+                        GUIUtility.systemCopyBuffer = reward.item_definition_id;
+                    EditorGUILayout.EndHorizontal();
+                }
+
+                EditorGUILayout.EndVertical();
+            }
+        }
+
+        private Color GetRarityColor(string rarity)
+        {
+            switch (rarity)
+            {
+                case "common":    return new Color(0.85f, 0.85f, 0.85f);
+                case "uncommon":  return new Color(0.3f, 1f, 0.5f);
+                case "rare":      return new Color(0.3f, 0.6f, 1f);
+                case "epic":      return new Color(0.7f, 0.3f, 1f);
+                case "legendary": return new Color(1f, 0.7f, 0.1f);
+                default:          return new Color(0.7f, 0.7f, 0.7f);
             }
         }
 

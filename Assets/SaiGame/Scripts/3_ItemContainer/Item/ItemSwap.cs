@@ -47,11 +47,11 @@ namespace SaiGame.Services
         {
             if (this.playerItem == null)
                 this.playerItem = GetComponentInParent<PlayerItem>(true)
-                    ?? FindObjectOfType<PlayerItem>(true);
+                    ?? FindFirstObjectByType<PlayerItem>(FindObjectsInactive.Include);
 
             if (this.playerContainer == null)
                 this.playerContainer = GetComponentInParent<PlayerContainer>(true)
-                    ?? FindObjectOfType<PlayerContainer>(true);
+                    ?? FindFirstObjectByType<PlayerContainer>(FindObjectsInactive.Include);
         }
 
         // ── Inspector-exposed setters ──────────────────────────────────────────

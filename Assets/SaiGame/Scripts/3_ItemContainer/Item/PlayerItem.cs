@@ -75,6 +75,9 @@ namespace SaiGame.Services
                 yield break;
             }
 
+            if (!SaiServer.Instance.IsAuthenticated)
+                yield break;
+
             yield return StartCoroutine(this.GetItemCategoriesCoroutine(
                 categories =>
                 {
@@ -120,6 +123,10 @@ namespace SaiGame.Services
         protected virtual void HandleLoginSuccess(LoginResponse response)
         {
             if (!this.autoLoadOnLogin) return;
+
+            // Fetch categories now that we're authenticated, if cache was missing/expired at startup
+            if (runtimeCategoriesCache == null)
+                StartCoroutine(this.FetchAndCacheCategoriesCoroutine());
 
             if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[ItemContainer] Auto-loading inventory after successful login...");

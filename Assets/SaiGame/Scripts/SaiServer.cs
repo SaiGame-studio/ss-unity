@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -9,7 +10,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.34";
+        public const string PACKAGE_VERSION = "0.2.35";
         public const string PACKAGE_NAME = "Sai Server";
 
         [SerializeField] protected SaiAuth saiAuth;
@@ -691,6 +692,86 @@ namespace SaiGame.Services
                     Debug.Log("Cleared Server Endpoint from PlayerPrefs");
             }
             PlayerPrefs.Save();
+        }
+
+        public int ManualFullResetHierarchyComponents()
+        {
+            _ = Instance;
+            Component[] hierarchyComponents = this.GetComponentsInChildren<Component>(true);
+            int resetCount = 0;
+
+            for (int i = 0; i < hierarchyComponents.Length; i++)
+            {
+                Component component = hierarchyComponents[i];
+                if (component == null)
+                {
+                    continue;
+                }
+
+                if (this.ManualInvokeResetHooks(component))
+                {
+                    resetCount++;
+                }
+            }
+
+            return resetCount;
+        }
+
+        public bool ManualInvokeResetHooks(Component component)
+        {
+            if (component == null)
+            {
+                return false;
+            }
+
+            if (this.TryInvokeParameterlessMethod(component, "Reset"))
+            {
+                return true;
+            }
+
+            return this.TryInvokeParameterlessMethod(component, "ResetValue");
+        }
+
+        private bool TryInvokeParameterlessMethod(Component component, string methodName)
+        {
+            MethodInfo methodInfo = this.FindParameterlessMethod(component.GetType(), methodName);
+
+            if (methodInfo == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                methodInfo.Invoke(component, null);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private MethodInfo FindParameterlessMethod(Type currentType, string methodName)
+        {
+            while (currentType != null)
+            {
+                MethodInfo methodInfo = currentType.GetMethod(
+                    methodName,
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly,
+                    null,
+                    Type.EmptyTypes,
+                    null);
+
+                if (methodInfo != null)
+                {
+                    return methodInfo;
+                }
+
+                currentType = currentType.BaseType;
+            }
+
+            return null;
         }
 
         public void TestConnection(Action<bool> callback = null)
