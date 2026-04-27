@@ -215,12 +215,43 @@ namespace SaiGame.Services
                     EditorGUILayout.LabelField($"Attachments: {message.attachments.Length}");
                     foreach (var attachment in message.attachments)
                     {
+                        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
                         EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.LabelField($"  - {attachment.definition_id}");
+                        ItemDefinitionData def = attachment.item_definition;
+                        string displayName = def != null && !string.IsNullOrEmpty(def.name) ? def.name : attachment.definition_id;
+                        EditorGUILayout.LabelField(displayName, EditorStyles.boldLabel);
                         GUIStyle qtyStyle = new GUIStyle(EditorStyles.boldLabel);
                         qtyStyle.normal.textColor = new Color(0.4f, 1f, 0.9f);
                         GUILayout.Label($"x{attachment.quantity}", qtyStyle, GUILayout.ExpandWidth(false));
                         EditorGUILayout.EndHorizontal();
+
+                        EditorGUI.indentLevel++;
+                        EditorGUILayout.LabelField($"type: {attachment.type}");
+
+                        if (def != null)
+                        {
+                            if (!string.IsNullOrEmpty(def.item_code))
+                                EditorGUILayout.LabelField($"item code: {def.item_code}");
+                            if (!string.IsNullOrEmpty(def.category))
+                                EditorGUILayout.LabelField($"category: {def.category}");
+                            if (!string.IsNullOrEmpty(def.rarity))
+                                EditorGUILayout.LabelField($"rarity: {def.rarity}");
+                            EditorGUILayout.LabelField($"stackable: {def.is_stackable}  max stack: {def.max_stack_size}  grid: {def.grid_width}x{def.grid_height}");
+                            if (def.metadata != null && !string.IsNullOrEmpty(def.metadata.icon))
+                                EditorGUILayout.LabelField($"icon: {def.metadata.icon}");
+                            if (def.metadata != null && !string.IsNullOrEmpty(def.metadata.flavor_text))
+                                EditorGUILayout.LabelField($"flavor: {def.metadata.flavor_text}");
+                        }
+
+                        EditorGUILayout.BeginHorizontal();
+                        string idToCopy = def != null && !string.IsNullOrEmpty(def.id) ? def.id : attachment.definition_id;
+                        EditorGUILayout.LabelField($"id: {idToCopy}", EditorStyles.miniLabel);
+                        if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = idToCopy;
+                        EditorGUILayout.EndHorizontal();
+
+                        EditorGUI.indentLevel--;
+                        EditorGUILayout.EndVertical();
                     }
                 }
 

@@ -319,6 +319,109 @@ namespace SaiGame.Services
         }
 
         /// <summary>
+        /// Removes an item from a preset slot.
+        /// Endpoint: DELETE /api/v1/games/{game_id}/presets/{container_id}/slots/{slot_index}
+        /// </summary>
+        public void RemoveItemFromPreset(
+            string presetId,
+            int slotIndex,
+            System.Action<PresetData> onSuccess = null,
+            System.Action<string> onError = null)
+        {
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
+                Debug.Log($"<color=#FF6666><b>[ItemPreset] ► Remove Item From Preset slot {slotIndex}</b></color>", gameObject);
+
+            if (SaiServer.Instance == null)
+            {
+                onError?.Invoke("SaiServer not found!");
+                return;
+            }
+
+            if (!SaiServer.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(presetId))
+            {
+                onError?.Invoke("preset_id cannot be empty.");
+                return;
+            }
+
+            StartCoroutine(this.RemoveItemFromPresetCoroutine(presetId, slotIndex, onSuccess, onError));
+        }
+
+        private IEnumerator RemoveItemFromPresetCoroutine(
+            string presetId,
+            int slotIndex,
+            System.Action<PresetData> onSuccess,
+            System.Action<string> onError)
+        {
+            string gameId = SaiServer.Instance.GameId;
+            string deleteEndpoint = $"/api/v1/games/{gameId}/presets/{presetId}/slots/{slotIndex}";
+
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                Debug.Log($"[ItemPreset] Removing item from preset {presetId} at slot {slotIndex}");
+
+            yield return SaiServer.Instance.DeleteRequest(deleteEndpoint,
+                deleteResponse =>
+                {
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                        Debug.Log($"[ItemPreset] DELETE slot successful. Fetching updated preset...");
+
+                    string getEndpoint = $"/api/v1/games/{gameId}/presets/{presetId}";
+                    StartCoroutine(SaiServer.Instance.GetRequest(getEndpoint,
+                        getResponse =>
+                        {
+                            try
+                            {
+                                PresetDetailResponse detail = JsonUtility.FromJson<PresetDetailResponse>(getResponse);
+                                if (detail != null && detail.container != null)
+                                {
+                                    detail.container.slots = detail.slots;
+
+                                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                                        Debug.Log($"[ItemPreset] Preset data updated after remove: {detail.container.id}");
+
+                                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                                        Debug.Log("<color=#66CCFF>[ItemPreset] RemoveItemFromPreset</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemPreset.cs › RemoveItemFromPresetCoroutine");
+
+                                    onSuccess?.Invoke(detail.container);
+                                }
+                                else
+                                {
+                                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                                        Debug.LogWarning("[ItemPreset] RemoveItemFromPreset → Error: Received empty or invalid PresetDetailResponse");
+                                    onError?.Invoke("Received empty or invalid PresetDetailResponse");
+                                }
+                            }
+                            catch (System.Exception e)
+                            {
+                                string errorMsg = $"Parse get preset detail response error: {e.Message}";
+                                if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                                    Debug.LogWarning($"<color=#66CCFF>[ItemPreset] RemoveItemFromPreset</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemPreset.cs › RemoveItemFromPresetCoroutine | {errorMsg}");
+                                onError?.Invoke(errorMsg);
+                            }
+                        },
+                        getError =>
+                        {
+                            if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                                Debug.LogWarning($"<color=#66CCFF>[ItemPreset] RemoveItemFromPreset</color> → <b><color=#FF4444>onError</color></b> callback (GET network) | ItemPreset.cs › RemoveItemFromPresetCoroutine | {getError}");
+                            onError?.Invoke(getError);
+                        }
+                    ));
+                },
+                error =>
+                {
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[ItemPreset] RemoveItemFromPreset</color> → <b><color=#FF4444>onError</color></b> callback (DELETE network) | ItemPreset.cs › RemoveItemFromPresetCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
+            );
+        }
+
+        /// <summary>
         /// Fetches all presets for the current game.
         /// Endpoint: GET /api/v1/games/{game_id}/presets
         /// </summary>

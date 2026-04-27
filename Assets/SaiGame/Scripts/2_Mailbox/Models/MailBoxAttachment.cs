@@ -11,5 +11,6 @@ namespace SaiGame.Services
         public string type;
         public string definition_id;
         public int quantity;
+        public ItemDefinitionData item_definition;
     }
 }

@@ -504,6 +504,13 @@ namespace SaiGame.Services
                         rarityBadge.alignment = TextAnchor.MiddleRight;
                         EditorGUILayout.LabelField(itemInfo.definition.rarity.ToUpper(), rarityBadge, GUILayout.MinWidth(70));
                     }
+
+                    GUI.backgroundColor = new Color(1f, 0.4f, 0.4f);
+                    if (GUILayout.Button("✕ Remove", GUILayout.Width(80)))
+                    {
+                        this.InvokeRemoveItemFromPreset(preset, slot.slot_index);
+                    }
+                    GUI.backgroundColor = Color.white;
                     EditorGUILayout.EndHorizontal();
 
                     if (this.presetSlotFoldouts[slotKey])
@@ -622,6 +629,42 @@ namespace SaiGame.Services
 
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space(4);
+        }
+
+        private void InvokeRemoveItemFromPreset(PresetData preset, int slotIndex)
+        {
+            if (!EditorUtility.DisplayDialog(
+                "Remove Item",
+                $"Remove item from slot {slotIndex} of preset \"{(string.IsNullOrEmpty(preset.name) ? preset.id : preset.name)}\"?",
+                "Remove",
+                "Cancel"))
+                return;
+
+            this.itemPreset.RemoveItemFromPreset(preset.id, slotIndex,
+                onSuccess: updatedPreset =>
+                {
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
+                        Debug.Log($"[Editor] Item removed from preset {preset.id} slot {slotIndex}");
+
+                    if (this.itemPreset.CurrentPresets != null && this.itemPreset.CurrentPresets.containers != null)
+                    {
+                        for (int i = 0; i < this.itemPreset.CurrentPresets.containers.Length; i++)
+                        {
+                            if (this.itemPreset.CurrentPresets.containers[i].id == updatedPreset.id)
+                            {
+                                this.itemPreset.CurrentPresets.containers[i] = updatedPreset;
+                                break;
+                            }
+                        }
+                    }
+                    Repaint();
+                },
+                onError: err =>
+                {
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
+                        Debug.LogError($"[Editor] Failed to remove item from slot {slotIndex}: {err}");
+                }
+            );
         }
 
         private void DrawPresetTypeBanner(string presetType, bool isTemp)
