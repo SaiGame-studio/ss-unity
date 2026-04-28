@@ -351,14 +351,12 @@ namespace SaiGame.Services
                         EditorGUILayout.Space(4);
                         EditorGUILayout.LabelField("Metadata", EditorStyles.boldLabel);
 
-                        if (!string.IsNullOrEmpty(d.metadata.flavor_text))
-                            EditorGUILayout.LabelField("Flavor Text", d.metadata.flavor_text);
-
-                        if (!string.IsNullOrEmpty(d.metadata.icon))
-                            EditorGUILayout.LabelField("Icon", d.metadata.icon);
-
-                        if (!string.IsNullOrEmpty(d.metadata.gacha_pack_id))
-                            DrawIdField("Gacha Pack ID", d.metadata.gacha_pack_id);
+                        string metaJson = PrettyJson(JsonUtility.ToJson(d.metadata));
+                        EditorGUI.indentLevel++;
+                        EditorGUILayout.SelectableLabel(metaJson,
+                            EditorStyles.textArea,
+                            GUILayout.MinHeight(EditorStyles.textArea.lineHeight * (CountLines(metaJson) + 1)));
+                        EditorGUI.indentLevel--;
 
                         if (d.metadata.gacha_pack_ids != null && d.metadata.gacha_pack_ids.Length > 0)
                         {
