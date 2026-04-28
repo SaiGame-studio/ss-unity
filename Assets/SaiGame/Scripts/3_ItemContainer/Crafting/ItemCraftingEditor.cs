@@ -505,16 +505,20 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField($"Category: {def.category}  |  Rarity: {def.rarity}", labelStyle);
             EditorGUILayout.LabelField($"Stackable: {(def.is_stackable ? "✔" : "✘")}  |  Max Stack: {def.max_stack_size}  |  Grid: {def.grid_width}x{def.grid_height}", labelStyle);
 
-            if (def.metadata != null)
+            if (!string.IsNullOrEmpty(def.metadata))
             {
-                if (!string.IsNullOrEmpty(def.metadata.icon))
-                    EditorGUILayout.LabelField($"Icon: {def.metadata.icon}", labelStyle);
-                if (!string.IsNullOrEmpty(def.metadata.flavor_text))
-                    EditorGUILayout.LabelField($"Flavor: {def.metadata.flavor_text}", labelStyle);
-                if (!string.IsNullOrEmpty(def.metadata.currency_code))
-                    EditorGUILayout.LabelField($"Currency: {def.metadata.currency_code}{(def.metadata.is_default_currency ? " (default)" : "")}", labelStyle);
-                if (!string.IsNullOrEmpty(def.metadata.description))
-                    EditorGUILayout.LabelField($"Desc: {def.metadata.description}", labelStyle);
+                ItemDefinitionMetadata parsedMeta = def.ParsedMetadata;
+                if (parsedMeta != null)
+                {
+                    if (!string.IsNullOrEmpty(parsedMeta.icon))
+                        EditorGUILayout.LabelField($"Icon: {parsedMeta.icon}", labelStyle);
+                    if (!string.IsNullOrEmpty(parsedMeta.flavor_text))
+                        EditorGUILayout.LabelField($"Flavor: {parsedMeta.flavor_text}", labelStyle);
+                    if (!string.IsNullOrEmpty(parsedMeta.currency_code))
+                        EditorGUILayout.LabelField($"Currency: {parsedMeta.currency_code}{(parsedMeta.is_default_currency ? " (default)" : "")}", labelStyle);
+                    if (!string.IsNullOrEmpty(parsedMeta.description))
+                        EditorGUILayout.LabelField($"Desc: {parsedMeta.description}", labelStyle);
+                }
             }
 
             if (!string.IsNullOrEmpty(def.base_stats) && def.base_stats != "{}")

@@ -20,6 +20,7 @@ namespace SaiGame.Services
         private static readonly string[] ObjectStringFields =
         {
             "base_stats",
+            "metadata",
             "public_properties",
             "private_properties",
             "custom_properties",

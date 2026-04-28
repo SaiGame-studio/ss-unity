@@ -1,10 +1,12 @@
 using System;
+using UnityEngine;
 
 namespace SaiGame.Services
 {
     /// <summary>
     /// Represents the item definition (template/blueprint) for an inventory item.
-    /// base_stats is a raw JSON string. metadata is a typed object deserialized by JsonUtility.
+    /// base_stats and metadata are raw JSON strings pre-processed by InventoryJsonHelper.
+    /// Use ParsedMetadata for typed access to known metadata fields.
     /// </summary>
     [Serializable]
     public class ItemDefinitionData
@@ -18,8 +20,12 @@ namespace SaiGame.Services
         public string rarity;
         // Raw JSON string – parse with your own deserializer as needed
         public string base_stats;
-        // Typed object – fields unknown to JsonUtility are silently ignored
-        public ItemDefinitionMetadata metadata;
+        // Raw JSON string pre-processed by InventoryJsonHelper
+        public string metadata;
+
+        // Typed access to known metadata fields (gacha_pack_ids, craft_recipe_input_ids, etc.)
+        public ItemDefinitionMetadata ParsedMetadata =>
+            string.IsNullOrEmpty(this.metadata) ? null : JsonUtility.FromJson<ItemDefinitionMetadata>(this.metadata);
         public bool is_stackable;
         public int max_stack_size;
         public int grid_width;

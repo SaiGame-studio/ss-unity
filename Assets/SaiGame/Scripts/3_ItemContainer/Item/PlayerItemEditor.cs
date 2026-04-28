@@ -346,23 +346,25 @@ namespace SaiGame.Services
                     }
 
                     // ── Metadata ─────────────────────────────────────────────
-                    if (d.metadata != null)
+                    if (!string.IsNullOrEmpty(d.metadata))
                     {
                         EditorGUILayout.Space(4);
                         EditorGUILayout.LabelField("Metadata", EditorStyles.boldLabel);
 
-                        string metaJson = PrettyJson(JsonUtility.ToJson(d.metadata));
+                        string metaJson = PrettyJson(d.metadata);
                         EditorGUI.indentLevel++;
                         EditorGUILayout.SelectableLabel(metaJson,
                             EditorStyles.textArea,
                             GUILayout.MinHeight(EditorStyles.textArea.lineHeight * (CountLines(metaJson) + 1)));
                         EditorGUI.indentLevel--;
 
-                        if (d.metadata.gacha_pack_ids != null && d.metadata.gacha_pack_ids.Length > 0)
+                        ItemDefinitionMetadata parsedMeta = d.ParsedMetadata;
+
+                        if (parsedMeta != null && parsedMeta.gacha_pack_ids != null && parsedMeta.gacha_pack_ids.Length > 0)
                         {
-                            EditorGUILayout.LabelField($"Gacha Pack IDs ({d.metadata.gacha_pack_ids.Length})");
+                            EditorGUILayout.LabelField($"Gacha Pack IDs ({parsedMeta.gacha_pack_ids.Length})");
                             EditorGUI.indentLevel++;
-                            foreach (string packId in d.metadata.gacha_pack_ids)
+                            foreach (string packId in parsedMeta.gacha_pack_ids)
                             {
                                 EditorGUILayout.BeginHorizontal();
                                 EditorGUILayout.LabelField(packId);
@@ -377,11 +379,11 @@ namespace SaiGame.Services
                             EditorGUI.indentLevel--;
                         }
 
-                        if (d.metadata.craft_recipe_input_ids != null && d.metadata.craft_recipe_input_ids.Length > 0)
+                        if (parsedMeta != null && parsedMeta.craft_recipe_input_ids != null && parsedMeta.craft_recipe_input_ids.Length > 0)
                         {
-                            EditorGUILayout.LabelField($"Craft Recipe Input IDs ({d.metadata.craft_recipe_input_ids.Length})");
+                            EditorGUILayout.LabelField($"Craft Recipe Input IDs ({parsedMeta.craft_recipe_input_ids.Length})");
                             EditorGUI.indentLevel++;
-                            foreach (string recipeInputId in d.metadata.craft_recipe_input_ids)
+                            foreach (string recipeInputId in parsedMeta.craft_recipe_input_ids)
                             {
                                 EditorGUILayout.BeginHorizontal();
                                 EditorGUILayout.LabelField(recipeInputId);
