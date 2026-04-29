@@ -238,10 +238,14 @@ namespace SaiGame.Services
                             if (!string.IsNullOrEmpty(def.rarity))
                                 EditorGUILayout.LabelField($"rarity: {def.rarity}");
                             EditorGUILayout.LabelField($"stackable: {def.is_stackable}  max stack: {def.max_stack_size}  grid: {def.grid_width}x{def.grid_height}");
-                            if (def.metadata != null && !string.IsNullOrEmpty(def.metadata.icon))
-                                EditorGUILayout.LabelField($"icon: {def.metadata.icon}");
-                            if (def.metadata != null && !string.IsNullOrEmpty(def.metadata.flavor_text))
-                                EditorGUILayout.LabelField($"flavor: {def.metadata.flavor_text}");
+                            if (!string.IsNullOrEmpty(def.metadata))
+                            {
+                                ItemDefinitionMetadata parsedMeta = def.ParsedMetadata;
+                                if (parsedMeta != null && !string.IsNullOrEmpty(parsedMeta.icon))
+                                    EditorGUILayout.LabelField($"icon: {parsedMeta.icon}");
+                                if (parsedMeta != null && !string.IsNullOrEmpty(parsedMeta.flavor_text))
+                                    EditorGUILayout.LabelField($"flavor: {parsedMeta.flavor_text}");
+                            }
                         }
 
                         EditorGUILayout.BeginHorizontal();

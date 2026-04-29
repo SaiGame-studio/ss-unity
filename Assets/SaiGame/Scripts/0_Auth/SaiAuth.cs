@@ -547,10 +547,15 @@ namespace SaiGame.Services
 
         public void SetLoginData(string access, string refresh, int expires, UserData user = null)
         {
+            this.StopTokenExpirationCheck();
+
             this.accessToken = access;
             this.refreshToken = refresh;
             this.expiresIn = expires;
             this.userData = user;
+            this.loginTime = string.IsNullOrEmpty(access) ? 0 : Time.time;
+
+            this.StartTokenExpirationCheck();
         }
 
         public void SetAutoLogin(bool auto)

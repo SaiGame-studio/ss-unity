@@ -12,8 +12,6 @@ namespace SaiGame.Services
     {
         public string flavor_text;
         public string icon;
-        // Legacy single-pack field – kept for backward compatibility
-        public string gacha_pack_id;
         // Multi-pack field: one gacha item can reference several gacha pack definitions
         public string[] gacha_pack_ids;
         // Recipe item: list of craft_recipe_input definition IDs this recipe unlocks

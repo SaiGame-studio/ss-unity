@@ -10,7 +10,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.35b2";
+        public const string PACKAGE_VERSION = "0.2.35b5";
         public const string PACKAGE_NAME = "Sai Server";
 
         [SerializeField] protected SaiAuth saiAuth;
@@ -179,19 +179,19 @@ namespace SaiGame.Services
 
         public void SetAccessToken(string token)
         {
-            if (saiAuth != null)
+            if (this.saiAuth != null)
             {
-                saiAuth.SetAccessToken(token);
-                OnTokenRefreshed?.Invoke(token);
+                this.saiAuth.SetAccessToken(token);
+                this.OnTokenRefreshed?.Invoke(token);
             }
         }
 
         public void SetLoginData(string access, string refresh, int expires, UserData user = null)
         {
-            if (saiAuth != null)
+            if (this.saiAuth != null)
             {
-                saiAuth.SetLoginData(access, refresh, expires, user);
-                OnTokenRefreshed?.Invoke(access);
+                this.saiAuth.SetLoginData(access, refresh, expires, user);
+                this.OnTokenRefreshed?.Invoke(access);
             }
         }
 

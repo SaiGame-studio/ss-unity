@@ -13,7 +13,6 @@ Full tutorials and documentation are available at: https://admin.saigame.studio/
 
 - **Pattern**: Service-based with Singleton (`SaiSingleton<T>`) and event-driven design
 - **Networking**: REST API via `UnityWebRequest` (GET/POST/PUT/PATCH/DELETE)
-- **UI**: Unity UIElements / UIDocument (UXML-based)
 - **Serialization**: `JsonUtility` with custom helpers
 - **Entry Point**: `SaiServer` singleton manages all subsystems and HTTP communication
 
@@ -45,15 +44,10 @@ Assets/SaiGame/
 │   ├── 8_Battle/           # Battle session management
 │   ├── Common/             # SaiServer, singletons, encryption, HTTP layer
 │   └── Editor/             # Custom inspectors & debug tools
-├── UI/
-│   ├── Common/             # UIRouter, UIPanelBase, TopNavigatorUI
-│   ├── GamerProgress/      # Player stats panel
-│   └── Login/              # Auth UI
 ├── Prefabs/
 │   └── SaiServer.prefab   # Drop-in prefab with all services pre-wired
 └── Scenes/
-    ├── demo.unity           # Main demo scene
-    └── demo-ui.unity        # UI demo scene
+    └── demo.unity           # Main demo scene
 ```
 
 ## Key Systems
@@ -89,7 +83,6 @@ Assets/SaiGame/
 
 ## Dependencies
 
-- Unity UIElements (`UIDocument`, `VisualElement`, UXML)
 - `UnityEngine.Networking` (`UnityWebRequest`)
 - .NET Cryptography (AES)
 
@@ -99,7 +92,6 @@ Assets/SaiGame/
 - Initial documented version
 - 8 core service systems (Auth, GamerProgress, Mailbox, ItemContainer, Shop, Quest, Journey, Leaderboard)
 - Battle session management
-- UIRouter-based navigation system
 - Editor debugging tools
 - AES encryption utility
 - Local and production server support

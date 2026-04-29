@@ -395,26 +395,18 @@ namespace SaiGame.Services
         /// </summary>
         private string[] GetGachaPackIdsFromMetadata(ItemDefinitionData definition)
         {
-            if (definition == null || definition.metadata == null)
+            if (definition == null || string.IsNullOrEmpty(definition.metadata))
+                return null;
+
+            ItemDefinitionMetadata parsed = definition.ParsedMetadata;
+            if (parsed == null || parsed.gacha_pack_ids == null || parsed.gacha_pack_ids.Length == 0)
                 return null;
 
             var ids = new System.Collections.Generic.List<string>();
-
-            // Collect from multi-pack array first
-            if (definition.metadata.gacha_pack_ids != null)
+            foreach (string id in parsed.gacha_pack_ids)
             {
-                foreach (string id in definition.metadata.gacha_pack_ids)
-                {
-                    if (!string.IsNullOrEmpty(id) && !ids.Contains(id))
-                        ids.Add(id);
-                }
-            }
-
-            // Also include legacy single-pack id if not already present
-            if (!string.IsNullOrEmpty(definition.metadata.gacha_pack_id)
-                && !ids.Contains(definition.metadata.gacha_pack_id))
-            {
-                ids.Add(definition.metadata.gacha_pack_id);
+                if (!string.IsNullOrEmpty(id) && !ids.Contains(id))
+                    ids.Add(id);
             }
 
             return ids.Count > 0 ? ids.ToArray() : null;
