@@ -119,6 +119,50 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!114 &21836224 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2399963655362431771, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c63fb5eb6a0f8014191c7f501bc3bc33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.QuestHistory
+--- !u!114 &21836225 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1892399005449690324, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e68b60ef6fe0a04d894b74183e60aaa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.DailyQuest
+--- !u!114 &21836226 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4308186167237759036, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36ec70f365f23d14d8b1ec6507fddf4b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ChainQuest
+--- !u!114 &21836227 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1733594213501630859, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a39f709729bc4224ea2b8b948b695f77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.QuestProgressor
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -443,6 +487,204 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6db983f2c2c1aa41811cf2f9bb125c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerContainer
+--- !u!114 &1932942304 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6807877424875840272, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fb16424f332d864cace82e69820cfbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemSwap
+--- !u!114 &1932942305 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6379628580400705291, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 080d13a2dcabfcb4faf996c5058de245, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemMove
+--- !u!114 &1932942306 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3712696907917878105, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4ef981143f99834ea48393d1367f838, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemCrafting
+--- !u!114 &1932942307 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7695481116977442798, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a5f35307d642124fb8589881a3e2f35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemAddDeduct
+--- !u!114 &1932942308 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 770429900078848718, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7de018e797516c74c91f20dc9ccd0047, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemPreset
+--- !u!114 &1932942309 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 9128749862781184251, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29a87983e55107345b16dd8a48151c8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemTag
+--- !u!114 &1932942310 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2893519870010327973, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2dd93f7e8951b74dbef0ac5a3a78033, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.EquipmentSlot
+--- !u!114 &1932942311 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8359460651495667961, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcbee3008849b86478e24bfd11ceb552, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemGenerator
+--- !u!114 &1932942312 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8153881721212893719, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27b40b3f397144a45a96173283e22f3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerItem
+--- !u!114 &1932942313 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7399820738238440333, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce67d82f3c0b926408f098106fda71db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.Shop
+--- !u!114 &2014578015 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1993458322055049526, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e6266713b40fa645aec9176b05fc4af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.Leaderboard
+--- !u!114 &2014578016 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 27159321914394544, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 704b42a5b4a0a3b4b99d1606c15c7fe5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerEvent
+--- !u!114 &2014578017 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 390271473075436921, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 758266cf2b48d774c9c79233eb6a4e91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.Mailbox
+--- !u!114 &2014578018 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3797376410084372741, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 955393e378c76224bb83c843d7a6411f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.GamerProgress
+--- !u!114 &2014578019 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 207283731097068101, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef3a5bffa3fad0a498905dcf2a23ed5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.GoogleBackendLogin
+--- !u!114 &2014578020 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb92c51d95c8cc142a356069c666972e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiAuth
+--- !u!114 &2105092037 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5292617345916487666, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db608e07204a27a448e2db9b3934afa4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.BattleScript
+--- !u!114 &2105092038 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8438002230962336466, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe8598ccc1b445942b788756e3147514, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.BattleSessions
 --- !u!1001 &8872317261903600714
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -598,31 +840,31 @@ PrefabInstance:
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: shop
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932942313}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: gameId
-      value: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: itemTag
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932942309}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: mailbox
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2014578017}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: saiAuth
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2014578020}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: itemMove
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932942305}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: itemSwap
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932942304}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: useHttps
       value: 1
@@ -630,31 +872,31 @@ PrefabInstance:
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: chainQuest
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 21836226}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: dailyQuest
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 21836225}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: itemPreset
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932942308}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: playerItem
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932942312}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: leaderboard
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2014578015}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: playerEvent
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2014578016}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: battleScript
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2105092037}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: domainOption
       value: 1
@@ -662,27 +904,27 @@ PrefabInstance:
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: itemCrafting
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932942306}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: questHistory
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 21836224}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: gamerProgress
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2014578018}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: itemAddDeduct
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932942307}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: itemGenerator
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932942311}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: battleSessions
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2105092038}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: serverEndpoint
       value: 1
@@ -690,19 +932,19 @@ PrefabInstance:
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: playerContainer
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932942301}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: questProgressor
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 21836227}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: googleBackendLogin
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2014578019}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: equipmentSlotManager
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1932942310}
     - target: {fileID: 9128749862781184251, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: autoLoadOnLogin
       value: 0
