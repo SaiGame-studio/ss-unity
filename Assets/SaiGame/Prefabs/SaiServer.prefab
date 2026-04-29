@@ -1,5 +1,49 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1694213750892974901
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7391328292783992900}
+  - component: {fileID: 3731728121393147189}
+  m_Layer: 0
+  m_Name: LuaScript
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7391328292783992900
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1694213750892974901}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8277413932139228352}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3731728121393147189
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1694213750892974901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52c6cde7e9904265a0230f8bb0cc8266, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.LuaScriptManager
 --- !u!1 &4330135680898373133
 GameObject:
   m_ObjectHideFlags: 0
@@ -113,7 +157,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36ec70f365f23d14d8b1ec6507fddf4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ChainQuest
-  autoLoadOnLogin: 1
+  autoLoadOnLogin: 0
   currentChainResponse:
     chains: []
     limit: 0
@@ -133,7 +177,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e68b60ef6fe0a04d894b74183e60aaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.DailyQuest
-  autoLoadOnLogin: 1
+  autoLoadOnLogin: 0
   dqPoolId: 
   daysAhead: 7
   currentAssignAheadResponse:
@@ -181,7 +225,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c63fb5eb6a0f8014191c7f501bc3bc33, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.QuestClaims
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.QuestHistory
   claimsLimit: 50
   claimsOffset: 0
   currentClaimsResponse:
@@ -275,8 +319,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce67d82f3c0b926408f098106fda71db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.Shop
-  autoLoadOnLogin: 1
-  autoRefreshAfterPurchase: 1
+  autoLoadOnLogin: 0
+  autoRefreshAfterPurchase: 0
   currentShopResponse:
     shops: []
     limit: 0
@@ -301,7 +345,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27b40b3f397144a45a96173283e22f3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerItem
-  autoLoadOnLogin: 1
+  autoLoadOnLogin: 0
   autoLoadCategory: 
   currentInventory:
     items: []
@@ -323,7 +367,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6db983f2c2c1aa41811cf2f9bb125c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerContainer
-  autoLoadOnLogin: 1
+  autoLoadOnLogin: 0
   currentContainers:
     containers: []
     has_more: 0
@@ -343,7 +387,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcbee3008849b86478e24bfd11ceb552, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemGenerator
-  autoLoadOnLogin: 1
+  autoLoadOnLogin: 0
   currentGenerators:
     generators: []
 --- !u!114 &2893519870010327973
@@ -357,9 +401,9 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a2dd93f7e8951b74dbef0ac5a3a78033, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.EquipmentSlotManager
-  autoGetSlots: 1
-  autoGetEquipped: 1
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.EquipmentSlot
+  autoGetSlots: 0
+  autoGetEquipped: 0
   currentSlots:
     slots: []
     total: 0
@@ -377,7 +421,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29a87983e55107345b16dd8a48151c8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemTag
-  autoLoadOnLogin: 1
+  autoLoadOnLogin: 0
   currentTags:
     limit: 0
     offset: 0
@@ -397,7 +441,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7de018e797516c74c91f20dc9ccd0047, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemPreset
-  autoLoadOnLogin: 1
+  autoLoadOnLogin: 0
   currentPresets:
     containers: []
   createMode: 0
@@ -432,8 +476,8 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a4ef981143f99834ea48393d1367f838, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerCrafting
-  autoLoadOnLogin: 1
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemCrafting
+  autoLoadOnLogin: 0
   currentHistory:
     page: 0
     page_size: 0
@@ -473,7 +517,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemSwap
   playerItem: {fileID: 8153881721212893719}
-  playerContainer: {fileID: 0}
+  playerContainer: {fileID: 4042283287993455742}
   itemAId: 
   itemBId: 
 --- !u!114 &8395767071459126564
@@ -541,7 +585,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe8598ccc1b445942b788756e3147514, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.BattleSessions
-  autoLoadOnLogin: 1
+  autoLoadOnLogin: 0
   currentSessions:
     limit: 0
     offset: 0
@@ -603,6 +647,7 @@ Transform:
   - {fileID: 750887673584618928}
   - {fileID: 3667272808700333575}
   - {fileID: 8448881463889205349}
+  - {fileID: 7391328292783992900}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8686393883881292769
@@ -618,7 +663,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiServer
   saiAuth: {fileID: 813458455079530658}
-  googleBackendLogin: {fileID: 0}
+  googleBackendLogin: {fileID: 207283731097068101}
   gamerProgress: {fileID: 3797376410084372741}
   mailbox: {fileID: 390271473075436921}
   playerItem: {fileID: 8153881721212893719}
@@ -640,11 +685,11 @@ MonoBehaviour:
   leaderboard: {fileID: 1993458322055049526}
   battleSessions: {fileID: 8438002230962336466}
   battleScript: {fileID: 5292617345916487666}
-  serverEndpoint: 0
-  domainOption: 0
-  port: 82
-  useHttps: 0
-  gameId: 25a7a3a7-0d0f-44ac-9ee4-b6bab8acf9bc
+  serverEndpoint: 1
+  domainOption: 1
+  port: 443
+  useHttps: 1
+  gameId: 
   requestTimeout: 30
   showButtonsLog: 1
   showCallbackLog: 1
@@ -676,11 +721,11 @@ MonoBehaviour:
     is_verified: 0
     created_at: 0
   loginTime: 0
-  autoLogin: 1
+  autoLogin: 0
   autoRefreshToken: 1
   refreshBeforeExpire: 2
   username: simonsai
-  password: ECreVwVLK1vS4gdj
+  password: A-=Wk9H28b1V5bhry1zZ
   registerEmail: 
   registerUsername: 
   registerPassword: 
@@ -739,7 +784,7 @@ MonoBehaviour:
     version: 0
   experienceDelta: 0
   goldDelta: 0
-  gameData: 
+  gameData: '{}'
 --- !u!114 &390271473075436921
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -771,7 +816,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerEvent
   sessionId: 
-  eventType: ending1
+  eventType: 
   eventDataJson: "{\n  \"source\": \"game\"\n}"
 --- !u!114 &1993458322055049526
 MonoBehaviour:
@@ -785,7 +830,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e6266713b40fa645aec9176b05fc4af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.Leaderboard
-  autoLoadOnLogin: 1
+  autoLoadOnLogin: 0
   currentBoards:
     boards: []
   currentTopRankings:
