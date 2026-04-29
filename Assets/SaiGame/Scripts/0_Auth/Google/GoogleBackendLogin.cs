@@ -237,7 +237,9 @@ namespace SaiGame.Services
             this.userData = result.user;
             this.loginTime = Time.time;
 
-            ResetSessionState();
+            this.SetTokenToSaiAuth();
+
+            this.ResetSessionState();
 
             OnLoginSuccess?.Invoke(result);
             if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
@@ -274,6 +276,7 @@ namespace SaiGame.Services
             this.refreshToken = refresh;
             this.expiresIn = expires;
             this.userData = user;
+            this.loginTime = string.IsNullOrEmpty(access) ? 0 : Time.time;
         }
 
         public void SetTokenToSaiAuth()
