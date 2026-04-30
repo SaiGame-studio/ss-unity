@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -139,7 +140,7 @@ namespace SaiGame.Services
 
             bool envExists = EnvLoader.EnvFileExists();
             EditorGUILayout.HelpBox(
-                envExists ? ".env file found at project root." : ".env file not found. Create one from .env.example at the project root.",
+                envExists ? ".env file found at project root." : ".env file not found. Create one from env.txt at the SaiGame folder.",
                 envExists ? MessageType.Info : MessageType.Warning);
 
             GUI.enabled = envExists;
@@ -160,6 +161,7 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("Service Actions", EditorStyles.boldLabel);
 
             EditorGUILayout.Space(4);
+            EditorGUILayout.BeginHorizontal();
             GUI.backgroundColor = new Color(1f, 0.65f, 0.2f);
             if (GUILayout.Button("Full Reset", GUILayout.Height(28)))
             {
@@ -213,6 +215,14 @@ namespace SaiGame.Services
             }
             GUI.backgroundColor = Color.white;
 
+            GUI.backgroundColor = new Color(0.4f, 0.85f, 0.55f);
+            if (GUILayout.Button("Create .env", GUILayout.Height(28)))
+            {
+                this.CreateEnvFileFromExample();
+            }
+            GUI.backgroundColor = Color.white;
+            EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.Space(5);
 
             EditorGUILayout.BeginHorizontal();
@@ -250,6 +260,27 @@ namespace SaiGame.Services
                 }
             }
             EditorGUILayout.EndHorizontal();
+        }
+
+        private void CreateEnvFileFromExample()
+        {
+            string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+            string destPath = Path.Combine(projectRoot, ".env");
+            string sourcePath = Path.GetFullPath("Assets/SaiGame/env.txt");
+
+            if (!File.Exists(sourcePath))
+            {
+                EditorUtility.DisplayDialog("env.txt Not Found", $"env.txt was not found at:\n{sourcePath}", "OK");
+                return;
+            }
+
+            if (!File.Exists(destPath))
+            {
+                File.Copy(sourcePath, destPath);
+                EditorUtility.DisplayDialog(".env Created", ".env created at project root from .env.example.", "OK");
+            }
+
+            EditorUtility.OpenWithDefaultApp(destPath);
         }
 
         private bool ResetComponentSerializedFieldsToDefaults(Component targetComponent)

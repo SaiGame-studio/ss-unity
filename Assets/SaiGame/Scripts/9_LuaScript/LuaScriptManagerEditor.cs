@@ -7,6 +7,9 @@ namespace SaiGame.Services
     [CustomEditor(typeof(LuaScriptManager))]
     public class LuaScriptManagerEditor : Editor
     {
+        private const string DEFAULT_CUSTOM_SCRIPT_NAME = "battle_debug_turn";
+        private const string LEGACY_BATTLE_TURN_SCRIPT_NAME = "battle_turn";
+
         private LuaScriptManager luaScriptManager;
         private SerializedProperty battleStartScriptName;
         private SerializedProperty battleTurnScriptName;
@@ -20,6 +23,19 @@ namespace SaiGame.Services
             this.battleTurnScriptName = this.serializedObject.FindProperty("battleTurnScriptName");
             this.battleEndScriptName = this.serializedObject.FindProperty("battleEndScriptName");
             this.scriptFiles = this.serializedObject.FindProperty("scriptFiles");
+            this.MigrateCustomScriptName();
+        }
+
+        private void MigrateCustomScriptName()
+        {
+            if (this.battleTurnScriptName == null || this.battleTurnScriptName.stringValue != LEGACY_BATTLE_TURN_SCRIPT_NAME)
+            {
+                return;
+            }
+
+            this.battleTurnScriptName.stringValue = DEFAULT_CUSTOM_SCRIPT_NAME;
+            this.serializedObject.ApplyModifiedProperties();
+            EditorUtility.SetDirty(this.luaScriptManager);
         }
 
         public override void OnInspectorGUI()
@@ -60,29 +76,6 @@ namespace SaiGame.Services
 
             this.DrawHorizontalSeparator();
 
-            EditorGUILayout.PropertyField(this.battleTurnScriptName, new GUIContent("Battle Turn Script File Name"));
-
-            string battleTurnScriptNameValue = this.NormalizeScriptName(this.battleTurnScriptName.stringValue);
-            bool isValidBattleTurnScriptName = this.IsValidScriptName(battleTurnScriptNameValue);
-            if (!isValidBattleTurnScriptName)
-            {
-                EditorGUILayout.HelpBox("Battle turn script file name must match: ^[a-z][a-z0-9_]*$", MessageType.Warning);
-            }
-
-            this.serializedObject.ApplyModifiedProperties();
-
-            GUI.backgroundColor = new Color(0.35f, 0.8f, 0.95f);
-            using (new EditorGUI.DisabledScope(!isValidBattleTurnScriptName))
-            {
-                if (GUILayout.Button("Create BattleTurn script", GUILayout.Height(30)))
-                {
-                    this.CreateLuaScript(battleTurnScriptNameValue, this.CreateBattleTurnTemplate());
-                }
-            }
-            GUI.backgroundColor = Color.white;
-
-            this.DrawHorizontalSeparator();
-
             EditorGUILayout.PropertyField(this.battleEndScriptName, new GUIContent("Battle End Script File Name"));
 
             string battleEndScriptNameValue = this.NormalizeScriptName(this.battleEndScriptName.stringValue);
@@ -100,6 +93,29 @@ namespace SaiGame.Services
                 if (GUILayout.Button("Create BattleEnd script", GUILayout.Height(30)))
                 {
                     this.CreateLuaScript(battleEndScriptNameValue, this.CreateBattleEndTemplate());
+                }
+            }
+            GUI.backgroundColor = Color.white;
+
+            this.DrawHorizontalSeparator();
+
+            EditorGUILayout.PropertyField(this.battleTurnScriptName, new GUIContent("Custom Script File Name"));
+
+            string battleTurnScriptNameValue = this.NormalizeScriptName(this.battleTurnScriptName.stringValue);
+            bool isValidBattleTurnScriptName = this.IsValidScriptName(battleTurnScriptNameValue);
+            if (!isValidBattleTurnScriptName)
+            {
+                EditorGUILayout.HelpBox("Custom script file name must match: ^[a-z][a-z0-9_]*$", MessageType.Warning);
+            }
+
+            this.serializedObject.ApplyModifiedProperties();
+
+            GUI.backgroundColor = new Color(0.35f, 0.8f, 0.95f);
+            using (new EditorGUI.DisabledScope(!isValidBattleTurnScriptName))
+            {
+                if (GUILayout.Button("Create Custom script", GUILayout.Height(30)))
+                {
+                    this.CreateLuaScript(battleTurnScriptNameValue, this.CreateBattleTurnTemplate());
                 }
             }
             GUI.backgroundColor = Color.white;
@@ -163,25 +179,27 @@ namespace SaiGame.Services
                 this.serializedObject.ApplyModifiedProperties();
 
                 EditorGUILayout.BeginHorizontal();
-                if (hasLocalFile.boolValue)
+
+                // Download: backend has file but local does not
+                if (hasBackendScript.boolValue && !hasLocalFile.boolValue)
                 {
-                    if (this.DrawColoredButton("Create", new Color(0.3f, 0.9f, 0.5f)))
+                    if (this.DrawColoredButton("Download", new Color(0.4f, 0.7f, 1f)))
+                    {
+                        this.DownloadScript(index, this.GetScriptDisplayName(fileName, scriptName));
+                    }
+                }
+
+                // Upload New: local has file but backend does not
+                if (hasLocalFile.boolValue && !hasBackendScript.boolValue)
+                {
+                    if (this.DrawColoredButton("Upload New", new Color(0.3f, 0.9f, 0.5f)))
                     {
                         this.CreateScriptApi(index, this.GetScriptDisplayName(fileName, scriptName));
                     }
                 }
-                else
-                {
-                    using (new EditorGUI.DisabledScope(!hasBackendScript.boolValue))
-                    {
-                        if (this.DrawColoredButton("Download", new Color(0.4f, 0.7f, 1f)))
-                        {
-                            this.DownloadScript(index, this.GetScriptDisplayName(fileName, scriptName));
-                        }
-                    }
-                }
 
-                using (new EditorGUI.DisabledScope(!hasLocalFile.boolValue || !hasBackendScript.boolValue))
+                // Update: both local and backend have files
+                if (hasLocalFile.boolValue && hasBackendScript.boolValue)
                 {
                     if (this.DrawColoredButton("Update", new Color(1f, 0.75f, 0.25f)))
                     {
@@ -380,57 +398,177 @@ namespace SaiGame.Services
                 "-- Example request body:",
                 "-- {",
                 "--   \"payload\": {",
-                "--     \"enemy_entity_id\": \"enemy-definition-uuid\",",
+                "--     \"battle_mode\": \"fast\" | \"normal\" | \"long\",",
                 "--     \"enemy_entity_key\": \"enemy_key\",",
-                "--     \"enemy_pool_key\": \"enemy_pool_key\",",
-                "--     \"battle_data\": {}",
+                "--     \"preset_instance_id\": \"preset-uuid\"",
                 "--   }",
                 "-- }",
-                "-- Provide one enemy selector: enemy_entity_id, enemy_entity_key, or enemy_pool_key.",
                 "",
-                "local enemy = nil",
-                "local err = nil",
+                "-- Deck size limits — shared with player deck validation",
+                "local DECK_CARD_MIN = 25",
+                "local DECK_CARD_MAX = 52",
                 "",
-                "if payload.enemy_entity_id ~= nil and payload.enemy_entity_id ~= \"\" then",
-                "    enemy, err = game.get_entity_def_by_id(payload.enemy_entity_id)",
-                "elseif payload.enemy_entity_key ~= nil and payload.enemy_entity_key ~= \"\" then",
-                "    enemy, err = game.get_entity_def_by_key(payload.enemy_entity_key)",
-                "elseif payload.enemy_pool_key ~= nil and payload.enemy_pool_key ~= \"\" then",
-                "    enemy, err = game.entity_pool_random(payload.enemy_pool_key)",
-                "else",
-                "    output.error = \"enemy_entity_id, enemy_entity_key, or enemy_pool_key is required\"",
-                "    return",
+                "local check_enemy            -- forward declaration",
+                "local verify_player_preset   -- forward declaration",
+                "local validate_payload       -- forward declaration",
+                "local resolve_enemy          -- forward declaration",
+                "local resolve_mode           -- forward declaration",
+                "local build_state            -- forward declaration",
+                "local load_player_the_source -- forward declaration",
+                "local load_enemy_the_source  -- forward declaration",
+                "",
+                "local function main()",
+                "    local err = validate_payload()",
+                "    if err ~= nil then output.error = err ; return end",
+                "",
+                "    local enemy, fetch_err = resolve_enemy()",
+                "    if fetch_err ~= nil then output.error = fetch_err ; return end",
+                "",
+                "    local check_err = check_enemy(enemy)",
+                "    if check_err ~= nil then output.error = check_err ; return end",
+                "",
+                "    local preset_err = verify_player_preset(payload.preset_instance_id)",
+                "    if preset_err ~= nil then output.error = preset_err ; return end",
+                "",
+                "    local player_the_source, player_src_err = load_player_the_source(payload.preset_instance_id)",
+                "    if player_src_err ~= nil then output.error = player_src_err ; return end",
+                "",
+                "    local enemy_the_source = load_enemy_the_source(enemy)",
+                "",
+                "    local selected_mode = resolve_mode(enemy)",
+                "",
+                "    local state = build_state(enemy, selected_mode, player_the_source, enemy_the_source)",
+                "",
+                "    local session_id, create_err = game.battle_session_create(state)",
+                "    if create_err ~= nil then output.error = create_err ; return end",
+                "",
+                "    output.session_id = session_id",
+                "    output.status     = state.status",
+                "    output.turn       = state.turn",
+                "    output.omega      = enemy",
                 "end",
                 "",
-                "if err ~= nil then",
-                "    output.error = err",
-                "    return",
+                "-- ─── Functions ───────────────────────────────────────────────────────────────",
+                "",
+                "validate_payload = function()",
+                "    if payload.battle_mode == nil or payload.battle_mode == \"\" then",
+                "        return \"battle_mode is required (fast, normal, long)\"",
+                "    end",
+                "    if payload.battle_mode ~= \"fast\" and payload.battle_mode ~= \"normal\" and payload.battle_mode ~= \"long\" then",
+                "        return \"battle_mode must be one of: fast, normal, long\"",
+                "    end",
+                "    if payload.enemy_entity_key == nil or payload.enemy_entity_key == \"\" then",
+                "        return \"enemy_entity_key is required\"",
+                "    end",
+                "    if payload.preset_instance_id == nil or payload.preset_instance_id == \"\" then",
+                "        return \"preset_instance_id is required\"",
+                "    end",
+                "    return nil",
                 "end",
                 "",
-                "if enemy == nil then",
-                "    output.error = \"enemy not found\"",
-                "    return",
+                "resolve_enemy = function()",
+                "    local enemy, err = game.get_entity_def_by_key(payload.enemy_entity_key)",
+                "    if err ~= nil then return nil, err end",
+                "    if enemy == nil then return nil, \"enemy not found\" end",
+                "    return enemy, nil",
                 "end",
                 "",
-                "local state = {",
-                "    player_id = ctx.player_id,",
-                "    enemy = enemy,",
-                "    turn = 1,",
-                "    status = \"active\",",
-                "    started_at = ctx.timestamp,",
-                "    data = payload.battle_data or {}",
-                "}",
-                "",
-                "local session_id, create_err = game.battle_session_create(state)",
-                "if create_err ~= nil then",
-                "    output.error = create_err",
-                "    return",
+                "resolve_mode = function(enemy)",
+                "    local selected = payload.battle_mode",
+                "    if enemy.metadata ~= nil and enemy.metadata.battle_modes ~= nil then",
+                "        local supported = false",
+                "        for _, m in ipairs(enemy.metadata.battle_modes) do",
+                "            if m == selected then supported = true ; break end",
+                "        end",
+                "        if not supported then selected = \"normal\" end",
+                "    end",
+                "    return selected",
                 "end",
                 "",
-                "output.session_id = session_id",
-                "output.status = state.status",
-                "output.turn = state.turn",
-                "output.enemy = enemy"
+                "build_state = function(enemy, selected_mode, player_the_source, enemy_the_source)",
+                "    local hp_map = { fast = 4000, normal = 7000, long = 16000 }",
+                "    local hp = hp_map[selected_mode]",
+                "    return {",
+                "        metadata = {",
+                "            alpha_id           = ctx.player_id,",
+                "            preset_instance_id = payload.preset_instance_id,",
+                "            omega              = enemy,",
+                "            battle_mode        = selected_mode,",
+                "            started_at         = ctx.timestamp,",
+                "        },",
+                "        alpha_hp           = hp,",
+                "        alpha_the_source   = player_the_source,",
+                "        alpha_the_void     = {},",
+                "        alpha_hand         = {},  -- max 7 slots",
+                "        alpha_front_line   = {},  -- max 5 slots",
+                "        alpha_back_line    = {},  -- max 5 slots",
+                "        omega_hp           = hp,",
+                "        omega_the_source   = enemy_the_source,",
+                "        omega_the_void     = {},",
+                "        omega_hand         = {},  -- max 7 slots",
+                "        omega_front_line   = {},  -- max 5 slots",
+                "        omega_back_line    = {},  -- max 5 slots",
+                "        turn               = 1,  -- increments when alpha or omega runs out of actions",
+                "        action             = 1,  -- each action is one card played",
+                "        status             = \"active\",",
+                "    }",
+                "end",
+                "",
+                "load_player_the_source = function(preset_instance_id)",
+                "    local slots, err = game.get_preset_slots(preset_instance_id)",
+                "    if err ~= nil then return nil, err end",
+                "    return slots, nil",
+                "end",
+                "",
+                "load_enemy_the_source = function(enemy)",
+                "    local source = {}",
+                "    if enemy.abilities ~= nil then",
+                "        for _, ability in ipairs(enemy.abilities) do",
+                "            local count = ability.card_count or 0",
+                "            for _ = 1, count do",
+                "                source[#source + 1] = ability",
+                "            end",
+                "        end",
+                "    end",
+                "    return source",
+                "end",
+                "",
+                "verify_player_preset = function(preset_instance_id)",
+                "    local preset, err = game.get_preset_by_id(preset_instance_id)",
+                "    if err ~= nil then return err end",
+                "    if preset == nil then return \"preset not found\" end",
+                "",
+                "    local slots, slots_err = game.get_preset_slots(preset_instance_id)",
+                "    if slots_err ~= nil then return slots_err end",
+                "",
+                "    local total = slots ~= nil and #slots or 0",
+                "    if total <= DECK_CARD_MIN then",
+                "        return \"player deck must have more than \" .. DECK_CARD_MIN .. \" cards (has \" .. total .. \")\"",
+                "    end",
+                "    if total >= DECK_CARD_MAX then",
+                "        return \"player deck must have fewer than \" .. DECK_CARD_MAX .. \" cards (has \" .. total .. \")\"",
+                "    end",
+                "    return nil",
+                "end",
+                "",
+                "check_enemy = function(e)",
+                "    if e == nil then return \"enemy not found\" end",
+                "    local total = 0",
+                "    if e.abilities ~= nil then",
+                "        for _, ability in ipairs(e.abilities) do",
+                "            total = total + (ability.card_count or 0)",
+                "        end",
+                "    end",
+                "    if total <= DECK_CARD_MIN then",
+                "        return \"enemy deck must have more than \" .. DECK_CARD_MIN .. \" cards (has \" .. total .. \")\"",
+                "    end",
+                "    if total >= DECK_CARD_MAX then",
+                "        return \"enemy deck must have fewer than \" .. DECK_CARD_MAX .. \" cards (has \" .. total .. \")\"",
+                "    end",
+                "    return nil",
+                "end",
+                "",
+                "main()"
             });
         }
 
@@ -447,80 +585,80 @@ namespace SaiGame.Services
                 "-- {",
                 "--   \"payload\": {",
                 "--     \"session_id\": \"battle-session-uuid\",",
-                "--     \"action\": \"attack\",",
-                "--     \"damage\": 5,",
-                "--     \"enemy_hp\": 20",
+                "--     \"target\": \"alpha\",",
+                "--     \"hp\": -10",
                 "--   }",
                 "-- }",
-                "-- Use action \"flee\" to mark the battle session as fled.",
+                "-- target: \"alpha\" or \"omega\"",
+                "-- hp: positive value heals the target, negative value damages the target",
                 "",
-                "if payload.session_id == nil or payload.session_id == \"\" then",
-                "    output.error = \"session_id is required\"",
-                "    return",
-                "end",
+                "local validate_payload  -- forward declaration",
+                "local load_session      -- forward declaration",
+                "local apply_hp_delta    -- forward declaration",
                 "",
-                "local state, get_err = game.battle_session_get(payload.session_id)",
-                "if get_err ~= nil then",
-                "    output.error = get_err",
-                "    return",
-                "end",
+                "local function main()",
+                "    local err = validate_payload()",
+                "    if err ~= nil then output.error = err ; return end",
                 "",
-                "if state == nil then",
-                "    output.error = \"battle session not found\"",
-                "    return",
-                "end",
+                "    local state, load_err = load_session(payload.session_id)",
+                "    if load_err ~= nil then output.error = load_err ; return end",
                 "",
-                "local action = payload.action or \"attack\"",
-                "if action == \"flee\" then",
-                "    local flee_err = game.battle_session_flee(payload.session_id)",
-                "    if flee_err ~= nil then",
-                "        output.error = flee_err",
-                "        return",
-                "    end",
+                "    local result, apply_err = apply_hp_delta(state, payload.target, payload.hp)",
+                "    if apply_err ~= nil then output.error = apply_err ; return end",
                 "",
-                "    output.status = \"fled\"",
                 "    output.session_id = payload.session_id",
-                "    return",
+                "    output.target     = payload.target",
+                "    output.hp_before  = result.hp_before",
+                "    output.hp_after   = result.hp_after",
+                "    output.hp_delta   = payload.hp",
                 "end",
                 "",
-                "local damage = payload.damage or 1",
-                "if damage < 0 then",
-                "    damage = 0",
-                "end",
+                "-- ─── Functions ───────────────────────────────────────────────────────────────",
                 "",
-                "state.turn = (state.turn or 1) + 1",
-                "state.enemy_hp = math.max(0, (state.enemy_hp or payload.enemy_hp or 1) - damage)",
-                "state.last_action = action",
-                "state.last_damage = damage",
-                "state.updated_at = ctx.timestamp",
-                "",
-                "if state.enemy_hp <= 0 then",
-                "    state.status = \"ended\"",
-                "    local end_data = {",
-                "        winner = \"player\",",
-                "        turn = state.turn,",
-                "        ended_at = ctx.timestamp",
-                "    }",
-                "",
-                "    local end_err = game.battle_session_end(payload.session_id, end_data)",
-                "    if end_err ~= nil then",
-                "        output.error = end_err",
-                "        return",
+                "validate_payload = function()",
+                "    if payload.session_id == nil or payload.session_id == \"\" then",
+                "        return \"session_id is required\"",
                 "    end",
-                "else",
-                "    state.status = \"active\"",
-                "    local update_err = game.battle_session_update(payload.session_id, state)",
-                "    if update_err ~= nil then",
-                "        output.error = update_err",
-                "        return",
+                "    if payload.target ~= \"alpha\" and payload.target ~= \"omega\" then",
+                "        return \"target must be 'alpha' or 'omega'\"",
                 "    end",
+                "    if payload.hp == nil then",
+                "        return \"hp is required\"",
+                "    end",
+                "    return nil",
                 "end",
                 "",
-                "output.session_id = payload.session_id",
-                "output.status = state.status",
-                "output.turn = state.turn",
-                "output.enemy_hp = state.enemy_hp",
-                "output.damage = damage"
+                "load_session = function(session_id)",
+                "    local state, err = game.battle_session_get(session_id)",
+                "    if err ~= nil then return nil, err end",
+                "    if state == nil then return nil, \"battle session not found\" end",
+                "    return state, nil",
+                "end",
+                "",
+                "apply_hp_delta = function(state, target, hp_delta)",
+                "    local current_hp, new_hp",
+                "",
+                "    if target == \"alpha\" then",
+                "        current_hp      = state.alpha_hp or 0",
+                "        new_hp          = current_hp + hp_delta",
+                "        state.alpha_hp  = new_hp",
+                "    elseif target == \"omega\" then",
+                "        current_hp      = state.omega_hp or 0",
+                "        new_hp          = current_hp + hp_delta",
+                "        state.omega_hp  = new_hp",
+                "    end",
+                "",
+                "    state.last_debug_target   = target",
+                "    state.last_debug_hp_delta = hp_delta",
+                "    state.updated_at          = ctx.timestamp",
+                "",
+                "    local err = game.battle_session_update(payload.session_id, state)",
+                "    if err ~= nil then return nil, err end",
+                "",
+                "    return { hp_before = current_hp, hp_after = new_hp }, nil",
+                "end",
+                "",
+                "main()"
             });
         }
 
@@ -536,49 +674,93 @@ namespace SaiGame.Services
                 "-- Example request body:",
                 "-- {",
                 "--   \"payload\": {",
-                "--     \"session_id\": \"battle-session-uuid\",",
-                "--     \"winner\": \"player\",",
-                "--     \"reason\": \"completed\",",
-                "--     \"turn\": 3",
+                "--     \"session_id\": \"battle-session-uuid\"",
                 "--   }",
                 "-- }",
                 "",
-                "if payload.session_id == nil or payload.session_id == \"\" then",
-                "    output.error = \"session_id is required\"",
-                "    return",
+                "local validate_payload -- forward declaration",
+                "local load_session     -- forward declaration",
+                "local determine_winner -- forward declaration",
+                "local end_session      -- forward declaration",
+                "local open_drop_packs  -- forward declaration",
+                "",
+                "local function main()",
+                "    local err = validate_payload()",
+                "    if err ~= nil then output.error = err ; return end",
+                "",
+                "    local state, load_err = load_session()",
+                "    if load_err ~= nil then output.error = load_err ; return end",
+                "",
+                "    local winner, alpha_hp, omega_hp = determine_winner(state)",
+                "",
+                "    local end_err = end_session(state, winner)",
+                "    if end_err ~= nil then output.error = end_err ; return end",
+                "",
+                "    output.session_id = payload.session_id",
+                "    output.status     = \"ended\"",
+                "    output.winner     = winner",
+                "    output.turn       = state.turn",
+                "    output.alpha_hp   = alpha_hp",
+                "    output.omega_hp   = omega_hp",
+                "",
+                "    if winner == \"alpha\" then",
+                "        local drops, drop_err = open_drop_packs(state)",
+                "        if drop_err ~= nil then output.error = drop_err ; return end",
+                "        output.drops = drops",
+                "    end",
                 "end",
                 "",
-                "local state, get_err = game.battle_session_get(payload.session_id)",
-                "if get_err ~= nil then",
-                "    output.error = get_err",
-                "    return",
+                "-- ─── Functions ───────────────────────────────────────────────────────────────",
+                "",
+                "validate_payload = function()",
+                "    if payload.session_id == nil or payload.session_id == \"\" then",
+                "        return \"session_id is required\"",
+                "    end",
+                "    return nil",
                 "end",
                 "",
-                "if state == nil then",
-                "    output.error = \"battle session not found\"",
-                "    return",
+                "load_session = function()",
+                "    local state, err = game.battle_session_get(payload.session_id)",
+                "    if err ~= nil then return nil, err end",
+                "    if state == nil then return nil, \"battle session not found\" end",
+                "    return state, nil",
                 "end",
                 "",
-                "local winner = payload.winner or state.winner or \"player\"",
-                "local end_data = {",
-                "    winner = winner,",
-                "    reason = payload.reason or \"completed\",",
-                "    turn = state.turn or payload.turn or 1,",
-                "    ended_at = ctx.timestamp,",
-                "    state = state",
-                "}",
-                "",
-                "local end_err = game.battle_session_end(payload.session_id, end_data)",
-                "if end_err ~= nil then",
-                "    output.error = end_err",
-                "    return",
+                "determine_winner = function(state)",
+                "    local alpha_hp = state.alpha_hp or 0",
+                "    local omega_hp = state.omega_hp or 0",
+                "    local winner",
+                "    if alpha_hp > omega_hp then",
+                "        winner = \"alpha\"",
+                "    else",
+                "        winner = \"omega\"",
+                "    end",
+                "    return winner, alpha_hp, omega_hp",
                 "end",
                 "",
-                "output.session_id = payload.session_id",
-                "output.status = \"ended\"",
-                "output.winner = winner",
-                "output.reason = end_data.reason",
-                "output.turn = end_data.turn"
+                "end_session = function(state, winner)",
+                "    local end_data = {",
+                "        winner   = winner,",
+                "        reason   = \"completed\",",
+                "        turn     = state.turn or 1,",
+                "        ended_at = ctx.timestamp,",
+                "    }",
+                "    return game.battle_session_end(payload.session_id, end_data)",
+                "end",
+                "",
+                "open_drop_packs = function(state)",
+                "    local enemy = state.metadata and state.metadata.omega",
+                "    if enemy == nil then return {}, nil end",
+                "",
+                "    local pack_ids = enemy.metadata and enemy.metadata.drop_pack_ids",
+                "    if pack_ids == nil or #pack_ids == 0 then return {}, nil end",
+                "",
+                "    local drops, err = game.open_entity_drop_packs(payload.session_id, enemy.id, pack_ids)",
+                "    if err ~= nil then return nil, err end",
+                "    return drops or {}, nil",
+                "end",
+                "",
+                "main()"
             });
         }
 
