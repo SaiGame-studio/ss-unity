@@ -45,11 +45,7 @@ namespace SaiGame.Services
 
         [Header("Game Configuration")]
         [SerializeField] protected string gameId = "";
-        private const string PREF_GAME_ID = "SaiGame_GameId";
         private const string PREF_SERVER_ENDPOINT = "SaiGame_ServerEndpoint";
-
-        // Tracks the last value written to PlayerPrefs so we only save on actual change
-        private string lastSavedGameId = null;
 
         [Header("API Settings")]
         [SerializeField] protected int requestTimeout = 30;
@@ -398,7 +394,6 @@ namespace SaiGame.Services
             this.LoadItemSwap();
             this.LoadBattleSessions();
             this.LoadBattleScript();
-            this.LoadGameIdFromPlayerPrefs();
         }
 
 
@@ -615,83 +610,21 @@ namespace SaiGame.Services
             this.SaveServerEndpointToPlayerPrefs();
         }
 
-        protected virtual void LoadGameIdFromPlayerPrefs()
-        {
-            if (PlayerPrefs.HasKey(PREF_GAME_ID))
-            {
-                this.gameId = this.NormalizeInput(PlayerPrefs.GetString(PREF_GAME_ID));
-                if (this.showDebugLog)
-                    Debug.Log($"Loaded Game ID from PlayerPrefs: {this.gameId}");
-            }
-            else
-            {
-                this.gameId = this.NormalizeInput(this.gameId);
-            }
-
-            this.lastSavedGameId = this.gameId;
-        }
-
-        protected virtual void SaveGameIdToPlayerPrefs()
-        {
-            this.gameId = this.NormalizeInput(this.gameId);
-            this.lastSavedGameId = this.gameId;
-            PlayerPrefs.SetString(PREF_GAME_ID, this.gameId);
-            PlayerPrefs.Save();
-            if (this.showDebugLog)
-                Debug.Log($"Saved Game ID to PlayerPrefs: {this.gameId}");
-        }
-
         public void SetGameId(string newGameId)
         {
             this.gameId = this.NormalizeInput(newGameId);
-            this.SaveGameIdToPlayerPrefs();
         }
 
         protected virtual void OnValidate()
         {
             // serverEndpoint is the source of truth; sync legacy fields from it only.
             this.SyncLegacyServerFieldsFromEndpoint();
-
-            string normalized = this.NormalizeInput(this.gameId);
-            this.gameId = normalized;
-
-            // Auto-save whenever the Game ID value actually changes
-            if (this.lastSavedGameId != normalized)
-            {
-                this.lastSavedGameId = normalized;
-                PlayerPrefs.SetString(PREF_GAME_ID, normalized);
-                PlayerPrefs.Save();
-                if (this.showDebugLog)
-                    Debug.Log($"[SaiServer] Game ID auto-saved to PlayerPrefs: {normalized}");
-            }
-
-        }
-
-        public void ManualSaveGameId()
-        {
-            if (this.showButtonsLog)
-                Debug.Log("<color=#00FF88><b>[SaiServer] ► Save Game ID to PlayerPrefs</b></color>", gameObject);
-            this.SaveGameIdToPlayerPrefs();
+            this.gameId = this.NormalizeInput(this.gameId);
         }
 
         public void ManualClearGameId()
         {
-            if (this.showButtonsLog)
-                Debug.Log("<color=#FF6666><b>[SaiServer] ► Clear PlayerPrefs</b></color>", gameObject);
-            if (PlayerPrefs.HasKey(PREF_GAME_ID))
-            {
-                PlayerPrefs.DeleteKey(PREF_GAME_ID);
-                this.gameId = string.Empty;
-                if (this.showButtonsLog)
-                    Debug.Log("Cleared Game ID from PlayerPrefs");
-            }
-            if (PlayerPrefs.HasKey(PREF_SERVER_ENDPOINT))
-            {
-                PlayerPrefs.DeleteKey(PREF_SERVER_ENDPOINT);
-                if (this.showButtonsLog)
-                    Debug.Log("Cleared Server Endpoint from PlayerPrefs");
-            }
-            PlayerPrefs.Save();
+            this.gameId = string.Empty;
         }
 
         public int ManualFullResetHierarchyComponents()
@@ -730,6 +663,16 @@ namespace SaiGame.Services
             }
 
             return this.TryInvokeParameterlessMethod(component, "ResetValue");
+        }
+
+        public bool ManualInvokeLoadComponents(Component component)
+        {
+            if (component == null)
+            {
+                return false;
+            }
+
+            return this.TryInvokeParameterlessMethod(component, "LoadComponents");
         }
 
         private bool TryInvokeParameterlessMethod(Component component, string methodName)

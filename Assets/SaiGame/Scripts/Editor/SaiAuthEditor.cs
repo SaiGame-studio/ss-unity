@@ -142,17 +142,31 @@ namespace SaiGame.Services
             if (this.showLoginInputs)
             {
                 EditorGUI.indentLevel++;
-                this.DrawInputWithSaveLoad(
-                    serializedObject.FindProperty("username"),
-                    "Username",
-                    saiAuth.SaveUsername,
-                    saiAuth.LoadUsername);
-                this.DrawInputWithSaveLoad(
-                    serializedObject.FindProperty("password"),
-                    "Password",
-                    saiAuth.SavePassword,
-                    saiAuth.LoadPassword);
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("username"), new GUIContent("Username"));
+                this.DrawPasswordPropertyField(serializedObject.FindProperty("password"), "Password");
                 EditorGUI.indentLevel--;
+
+                serializedObject.ApplyModifiedProperties();
+                EditorGUILayout.Space(2);
+                EditorGUILayout.BeginHorizontal();
+                GUI.backgroundColor = Color.green;
+                if (GUILayout.Button("Login", GUILayout.Height(25)))
+                {
+                    saiAuth.Login(
+                        serializedObject.FindProperty("username").stringValue,
+                        serializedObject.FindProperty("password").stringValue,
+                        response => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Login success! User: {response.user.username}, Token expires in: {response.expires_in}s"); },
+                        error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Login failed: {error}"); }
+                    );
+                }
+                GUI.backgroundColor = Color.white;
+                GUI.backgroundColor = new Color(1f, 0.7f, 0.3f);
+                if (GUILayout.Button("Logout", GUILayout.Height(25)))
+                {
+                    saiAuth.Logout();
+                }
+                GUI.backgroundColor = Color.white;
+                EditorGUILayout.EndHorizontal();
             }
 
             EditorGUILayout.Space();
@@ -167,6 +181,21 @@ namespace SaiGame.Services
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("registerUsername"), new GUIContent("Register Username"));
                 this.DrawPasswordPropertyField(serializedObject.FindProperty("registerPassword"), "Register Password");
                 EditorGUI.indentLevel--;
+
+                serializedObject.ApplyModifiedProperties();
+                EditorGUILayout.Space(2);
+                GUI.backgroundColor = new Color(0.4f, 0.7f, 1f);
+                if (GUILayout.Button("Register", GUILayout.Height(25)))
+                {
+                    saiAuth.Register(
+                        serializedObject.FindProperty("registerEmail").stringValue,
+                        serializedObject.FindProperty("registerUsername").stringValue,
+                        serializedObject.FindProperty("registerPassword").stringValue,
+                        response => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Registration success! User: {response.user.username} ({response.user.email}), Active: {response.user.is_active}, Verified: {response.user.is_verified}"); },
+                        error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Registration failed: {error}"); }
+                    );
+                }
+                GUI.backgroundColor = Color.white;
             }
 
             serializedObject.ApplyModifiedProperties();
@@ -180,42 +209,6 @@ namespace SaiGame.Services
             {
                 this.showPasswords = !this.showPasswords;
             }
-
-            EditorGUILayout.Space(5);
-
-            EditorGUILayout.BeginHorizontal();
-            GUI.backgroundColor = new Color(0.4f, 0.7f, 1f);
-            if (GUILayout.Button("Register", GUILayout.Height(25)))
-            {
-                saiAuth.Register(
-                    serializedObject.FindProperty("registerEmail").stringValue,
-                    serializedObject.FindProperty("registerUsername").stringValue,
-                    serializedObject.FindProperty("registerPassword").stringValue,
-                    response => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Registration success! User: {response.user.username} ({response.user.email}), Active: {response.user.is_active}, Verified: {response.user.is_verified}"); },
-                    error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Registration failed: {error}"); }
-                );
-            }
-            GUI.backgroundColor = Color.white;
-
-            GUI.backgroundColor = Color.green;
-            if (GUILayout.Button("Login", GUILayout.Height(25)))
-            {
-                saiAuth.Login(
-                    serializedObject.FindProperty("username").stringValue,
-                    serializedObject.FindProperty("password").stringValue,
-                    response => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Login success! User: {response.user.username}, Token expires in: {response.expires_in}s"); },
-                    error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Login failed: {error}"); }
-                );
-            }
-            GUI.backgroundColor = Color.white;
-
-            GUI.backgroundColor = new Color(1f, 0.7f, 0.3f);
-            if (GUILayout.Button("Logout", GUILayout.Height(25)))
-            {
-                saiAuth.Logout();
-            }
-            GUI.backgroundColor = Color.white;
-            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(5);
 
@@ -253,11 +246,6 @@ namespace SaiGame.Services
                     if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogWarning("[Editor] Not authenticated! Please login first.");
                 }
-            }
-            GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
-            if (GUILayout.Button("Clear PlayerPrefs", GUILayout.Height(25)))
-            {
-                saiAuth.ManualClearCredentials();
             }
             GUI.backgroundColor = Color.white;
 

@@ -450,19 +450,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: autoLogin
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3731728121393147189, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: battleStartScriptName
-      value: battle_start
-      objectReference: {fileID: 0}
-    - target: {fileID: 3731728121393147189, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: scriptFiles.Array.size
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3731728121393147189, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: 'scriptFiles.Array.data[0]'
-      value: battle_start.lua
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_Name
@@ -509,99 +497,7 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: shop
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: gameId
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: itemTag
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: mailbox
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: saiAuth
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: itemMove
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: itemSwap
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: chainQuest
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: dailyQuest
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: itemPreset
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: playerItem
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: leaderboard
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: playerEvent
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: battleScript
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: itemCrafting
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: questHistory
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: gamerProgress
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: itemAddDeduct
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: itemGenerator
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: battleSessions
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: playerContainer
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: questProgressor
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: googleBackendLogin
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: equipmentSlotManager
       value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []

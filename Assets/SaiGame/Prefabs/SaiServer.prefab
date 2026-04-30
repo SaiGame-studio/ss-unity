@@ -44,6 +44,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52c6cde7e9904265a0230f8bb0cc8266, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.LuaScriptManager
+  battleStartScriptName: battle_start
+  battleTurnScriptName: battle_turn
+  battleEndScriptName: battle_end
+  scriptFiles: []
 --- !u!1 &4330135680898373133
 GameObject:
   m_ObjectHideFlags: 0
@@ -724,8 +728,8 @@ MonoBehaviour:
   autoLogin: 0
   autoRefreshToken: 1
   refreshBeforeExpire: 2
-  username: simonsai
-  password: A-=Wk9H28b1V5bhry1zZ
+  username: 
+  password: 
   registerEmail: 
   registerUsername: 
   registerPassword: 
