@@ -11,7 +11,7 @@ namespace SaiGame.Services
         public const string SCRIPT_FOLDER_ASSET_PATH = "Assets/SaiGame/LuaScript/Scripts";
 
         [SerializeField] private string battleStartScriptName = "battle_start";
-        [SerializeField] private string battleTurnScriptName = "battle_turn";
+        [SerializeField] private string battleTurnScriptName = "battle_debug_turn";
         [SerializeField] private string battleEndScriptName = "battle_end";
         [SerializeField] private List<ScriptFileRecord> scriptFiles = new List<ScriptFileRecord>();
 
