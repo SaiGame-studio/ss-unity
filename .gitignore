@@ -74,6 +74,9 @@ crashlytics-build.properties
 .idea
 .vs
 
+# Environment configuration (contains credentials — never commit)
+.env
+
 # OS generated files
 .DS_Store
 .DS_Store?
