@@ -15,5 +15,7 @@ namespace SaiGame.Services
         public PresetSlotData[] slots;
         public string created_at;
         public string updated_at;
+        // Raw metadata JSON string, populated manually after parsing (not serialized by JsonUtility)
+        [NonSerialized] public string metadataJson = string.Empty;
     }
 }

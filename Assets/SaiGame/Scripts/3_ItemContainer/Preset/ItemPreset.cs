@@ -148,6 +148,45 @@ namespace SaiGame.Services
             StartCoroutine(this.CreatePresetCoroutine(mode, identifier, name, onSuccess, onError));
         }
 
+        private static string ExtractOwnMetadataJson(string rawJson, string presetId)
+        {
+            // Find the preset's own "metadata" field, skipping the nested definition metadata
+            string idToken = "\"id\":\"" + presetId + "\"";
+            int idIdx = rawJson.IndexOf(idToken);
+            if (idIdx < 0) return string.Empty;
+
+            // Skip past the "definition" sub-object so we don't capture definition's metadata
+            int searchFrom = idIdx;
+            int defIdx = rawJson.IndexOf("\"definition\":", idIdx);
+            if (defIdx > 0)
+            {
+                int defObjStart = rawJson.IndexOf('{', defIdx + 14);
+                if (defObjStart > 0)
+                {
+                    int depth = 0;
+                    for (int i = defObjStart; i < rawJson.Length; i++)
+                    {
+                        if (rawJson[i] == '{') depth++;
+                        else if (rawJson[i] == '}') { depth--; if (depth == 0) { searchFrom = i + 1; break; } }
+                    }
+                }
+            }
+
+            int metaIdx = rawJson.IndexOf("\"metadata\":", searchFrom);
+            if (metaIdx < 0) return string.Empty;
+
+            int objStart = rawJson.IndexOf('{', metaIdx + 11);
+            if (objStart < 0) return string.Empty;
+
+            int metaDepth = 0;
+            for (int i = objStart; i < rawJson.Length; i++)
+            {
+                if (rawJson[i] == '{') metaDepth++;
+                else if (rawJson[i] == '}') { metaDepth--; if (metaDepth == 0) return rawJson.Substring(objStart, i - objStart + 1); }
+            }
+            return string.Empty;
+        }
+
         private static string EscapeJsonString(string value)
         {
             if (string.IsNullOrEmpty(value)) return string.Empty;
@@ -462,6 +501,12 @@ namespace SaiGame.Services
                         PresetResponse presetResponse = JsonUtility.FromJson<PresetResponse>(response);
                         this.currentPresets = presetResponse;
 
+                        if (presetResponse.containers != null)
+                        {
+                            foreach (PresetData container in presetResponse.containers)
+                                container.metadataJson = ExtractOwnMetadataJson(response, container.id);
+                        }
+
                         if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[ItemPreset] Presets loaded: {presetResponse.containers.Length} presets");
 
@@ -634,6 +679,115 @@ namespace SaiGame.Services
                 {
                     if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ItemPreset] DeletePreset</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemPreset.cs › DeletePresetCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
+            );
+        }
+
+        /// <summary>
+        /// Updates a preset's name and/or metadata.
+        /// Endpoint: PATCH /api/v1/games/{game_id}/presets/{preset_id}
+        /// </summary>
+        public void UpdatePreset(
+            string presetId,
+            string name,
+            string metadataJson,
+            System.Action<PresetData> onSuccess = null,
+            System.Action<string> onError = null)
+        {
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
+                Debug.Log($"<color=#FFAA00><b>[ItemPreset] ► Update Preset {presetId}</b></color>", gameObject);
+
+            if (SaiServer.Instance == null)
+            {
+                onError?.Invoke("SaiServer not found!");
+                return;
+            }
+
+            if (!SaiServer.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(presetId))
+            {
+                onError?.Invoke("preset_id cannot be empty.");
+                return;
+            }
+
+            StartCoroutine(this.UpdatePresetCoroutine(presetId, name, metadataJson, onSuccess, onError));
+        }
+
+        private IEnumerator UpdatePresetCoroutine(
+            string presetId,
+            string name,
+            string metadataJson,
+            System.Action<PresetData> onSuccess,
+            System.Action<string> onError)
+        {
+            string gameId = SaiServer.Instance.GameId;
+            string endpoint = $"/api/v1/games/{gameId}/presets/{presetId}";
+
+            var parts = new System.Collections.Generic.List<string>();
+            if (!string.IsNullOrEmpty(name))
+                parts.Add($"\"name\":\"{EscapeJsonString(name)}\"");
+            if (!string.IsNullOrEmpty(metadataJson))
+                parts.Add($"\"metadata\":{metadataJson}");
+
+            if (parts.Count == 0)
+            {
+                onError?.Invoke("Nothing to update: both name and metadata are empty.");
+                yield break;
+            }
+
+            string jsonData = "{" + string.Join(",", parts) + "}";
+
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                Debug.Log($"[ItemPreset] Updating preset {presetId} | body: {jsonData}");
+
+            yield return SaiServer.Instance.PatchRequest(endpoint, jsonData,
+                response =>
+                {
+                    try
+                    {
+                        PresetData updated = JsonUtility.FromJson<PresetData>(response);
+                        updated.metadataJson = ExtractOwnMetadataJson(response, updated.id);
+
+                        if (this.currentPresets != null && this.currentPresets.containers != null)
+                        {
+                            for (int i = 0; i < this.currentPresets.containers.Length; i++)
+                            {
+                                if (this.currentPresets.containers[i].id == updated.id)
+                                {
+                                    // preserve cached slots since the PATCH response does not include them
+                                    updated.slots = this.currentPresets.containers[i].slots;
+                                    this.currentPresets.containers[i] = updated;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                            Debug.Log($"[ItemPreset] Preset {presetId} updated: name={updated.name}");
+
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[ItemPreset] UpdatePreset</color> → <b><color=#00FF88>onSuccess</color></b> callback | ItemPreset.cs › UpdatePresetCoroutine");
+
+                        onSuccess?.Invoke(updated);
+                    }
+                    catch (System.Exception e)
+                    {
+                        string errorMsg = $"Parse update preset response error: {e.Message}";
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[ItemPreset] UpdatePreset</color> → <b><color=#FF4444>onError</color></b> callback (parse) | ItemPreset.cs › UpdatePresetCoroutine | {errorMsg}");
+                        onError?.Invoke(errorMsg);
+                    }
+                },
+                error =>
+                {
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[ItemPreset] UpdatePreset</color> → <b><color=#FF4444>onError</color></b> callback (network) | ItemPreset.cs › UpdatePresetCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );
