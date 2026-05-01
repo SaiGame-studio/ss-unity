@@ -23,6 +23,10 @@ namespace SaiGame.Services
         private System.Collections.Generic.Dictionary<string, int> presetDropdownIndices = new System.Collections.Generic.Dictionary<string, int>();
         private System.Collections.Generic.Dictionary<string, int> presetSlotIndices = new System.Collections.Generic.Dictionary<string, int>();
         private System.Collections.Generic.Dictionary<string, bool> presetSlotFoldouts = new System.Collections.Generic.Dictionary<string, bool>();
+        private System.Collections.Generic.Dictionary<string, bool> presetSlotsSectionFoldouts = new System.Collections.Generic.Dictionary<string, bool>();
+        private System.Collections.Generic.Dictionary<string, bool> presetUpdateFoldouts = new System.Collections.Generic.Dictionary<string, bool>();
+        private System.Collections.Generic.Dictionary<string, string> presetUpdateNameInputs = new System.Collections.Generic.Dictionary<string, string>();
+        private System.Collections.Generic.Dictionary<string, string> presetUpdateMetadataInputs = new System.Collections.Generic.Dictionary<string, string>();
 
         private void OnEnable()
         {
@@ -293,10 +297,66 @@ namespace SaiGame.Services
             }
         }
 
+        private string BeautifyJson(string json)
+        {
+            try
+            {
+                int indent = 0;
+                bool inString = false;
+                var sb = new System.Text.StringBuilder();
+                for (int i = 0; i < json.Length; i++)
+                {
+                    char c = json[i];
+                    if (c == '"' && (i == 0 || json[i - 1] != '\\'))
+                        inString = !inString;
+
+                    if (!inString)
+                    {
+                        if (c == '{' || c == '[')
+                        {
+                            sb.Append(c);
+                            sb.Append('\n');
+                            indent++;
+                            sb.Append(new string(' ', indent * 2));
+                            continue;
+                        }
+                        if (c == '}' || c == ']')
+                        {
+                            sb.Append('\n');
+                            indent--;
+                            sb.Append(new string(' ', indent * 2));
+                            sb.Append(c);
+                            continue;
+                        }
+                        if (c == ',')
+                        {
+                            sb.Append(c);
+                            sb.Append('\n');
+                            sb.Append(new string(' ', indent * 2));
+                            continue;
+                        }
+                        if (c == ':')
+                        {
+                            sb.Append(c);
+                            sb.Append(' ');
+                            continue;
+                        }
+                        if (c == ' ' || c == '\n' || c == '\r' || c == '\t')
+                            continue;
+                    }
+                    sb.Append(c);
+                }
+                return sb.ToString();
+            }
+            catch
+            {
+                return json;
+            }
+        }
+
         private void DrawPresetSummary(PresetData preset)
         {
-            string presetId = string.IsNullOrEmpty(preset.id) ? "unknown" : preset.id;
-            if (!this.presetFoldouts.TryGetValue(presetId, out bool isExpanded))
+            string presetId = string.IsNullOrEmpty(preset.id) ? "unknown" : preset.id;            if (!this.presetFoldouts.TryGetValue(presetId, out bool isExpanded))
             {
                 isExpanded = false;
                 this.presetFoldouts[presetId] = isExpanded;
@@ -434,13 +494,163 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space(6);
 
+            // === UPDATE SECTION ===
+            if (!this.presetUpdateFoldouts.ContainsKey(presetId))
+                this.presetUpdateFoldouts[presetId] = false;
+            if (!this.presetUpdateNameInputs.ContainsKey(presetId))
+                this.presetUpdateNameInputs[presetId] = preset.name ?? string.Empty;
+            // Sync metadata from server data whenever the foldout is closed (safe since user can't type when closed)
+            bool updateFoldoutIsOpen = this.presetUpdateFoldouts.TryGetValue(presetId, out bool _metaIsOpen) && _metaIsOpen;
+            if (!updateFoldoutIsOpen && !string.IsNullOrEmpty(preset.metadataJson))
+                this.presetUpdateMetadataInputs[presetId] = this.BeautifyJson(preset.metadataJson);
+            else if (!this.presetUpdateMetadataInputs.ContainsKey(presetId))
+                this.presetUpdateMetadataInputs[presetId] = string.Empty;
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            this.presetUpdateFoldouts[presetId] = EditorGUILayout.Foldout(
+                this.presetUpdateFoldouts[presetId],
+                "✏️ UPDATE",
+                true,
+                new GUIStyle(EditorStyles.foldout) { fontSize = 11, fontStyle = FontStyle.Bold });
+
+            if (this.presetUpdateFoldouts[presetId])
+            {
+                EditorGUILayout.Space(2);
+
+                this.presetUpdateNameInputs[presetId] = EditorGUILayout.TextField(
+                    new GUIContent("preset name", "New display name for this preset (leave empty to keep current)"),
+                    this.presetUpdateNameInputs[presetId]);
+
+                EditorGUILayout.LabelField(new GUIContent("metadata json", "Metadata object in JSON format, e.g. {\"icon\":\"water\"}"));
+
+                EditorGUILayout.BeginHorizontal();
+                this.presetUpdateMetadataInputs[presetId] = EditorGUILayout.TextArea(
+                    this.presetUpdateMetadataInputs[presetId],
+                    GUILayout.MinHeight(48));
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Beautify JSON", GUILayout.Height(22)))
+                {
+                    string raw = this.presetUpdateMetadataInputs[presetId];
+                    if (!string.IsNullOrWhiteSpace(raw))
+                        this.presetUpdateMetadataInputs[presetId] = this.BeautifyJson(raw);
+                }
+
+                GUI.backgroundColor = new Color(1f, 0.7f, 0.2f);
+                if (GUILayout.Button("Update Metadata", GUILayout.Height(22)))
+                {
+                    string updateName = this.presetUpdateNameInputs[presetId];
+                    string updateMeta = this.presetUpdateMetadataInputs[presetId];
+                    this.itemPreset.UpdatePreset(preset.id, updateName, updateMeta,
+                        onSuccess: updated =>
+                        {
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
+                                Debug.Log($"[Editor] Preset {preset.id} updated: name={updated.name}");
+                            Repaint();
+                        },
+                        onError: err =>
+                        {
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
+                                Debug.LogError($"[Editor] Update preset failed: {err}");
+                        }
+                    );
+                }
+                GUI.backgroundColor = Color.white;
+                EditorGUILayout.EndHorizontal();
+            }
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.Space(6);
+
+            // === ADD ITEM TO SLOT ===
+            GUIStyle addHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
+            addHeaderStyle.fontSize = 11;
+            addHeaderStyle.normal.textColor = new Color(0.4f, 1f, 0.6f);
+            EditorGUILayout.LabelField("➕ ADD ITEM TO SLOT", addHeaderStyle);
+
+            PlayerItem playerItem = FindFirstObjectByType<PlayerItem>();
+            if (playerItem == null || playerItem.CurrentInventory == null || playerItem.CurrentInventory.items == null || playerItem.CurrentInventory.items.Length == 0)
+            {
+                EditorGUILayout.HelpBox("No PlayerItem or Inventory data found. Click 'Sync Player Inventory' under Utility Actions first.", MessageType.Warning);
+            }
+            else
+            {
+                var items = playerItem.CurrentInventory.items;
+                string[] options = new string[items.Length];
+                for (int i = 0; i < items.Length; i++)
+                {
+                    string name = items[i].definition != null && !string.IsNullOrEmpty(items[i].definition.name)
+                        ? items[i].definition.name
+                        : "Unknown";
+                    options[i] = $"{name} (x{items[i].quantity}) - {items[i].id}";
+                }
+
+                if (!this.presetDropdownIndices.ContainsKey(presetId))
+                    this.presetDropdownIndices[presetId] = 0;
+
+                if (!this.presetSlotIndices.ContainsKey(presetId))
+                    this.presetSlotIndices[presetId] = 0;
+
+                int selectedIndex = this.presetDropdownIndices[presetId];
+                if (selectedIndex >= items.Length) selectedIndex = 0;
+
+                this.presetSlotIndices[presetId] = EditorGUILayout.IntField("Target Slot Index:", this.presetSlotIndices[presetId]);
+
+                EditorGUILayout.BeginHorizontal();
+                this.presetDropdownIndices[presetId] = EditorGUILayout.Popup(selectedIndex, options);
+
+                GUI.backgroundColor = new Color(0.3f, 0.9f, 0.5f);
+                if (GUILayout.Button("Add", GUILayout.Width(60), GUILayout.Height(22)))
+                {
+                    string selectedInventoryId = items[this.presetDropdownIndices[presetId]].id;
+                    int selectedSlotIndex = this.presetSlotIndices[presetId];
+                    this.itemPreset.AddItemToPreset(preset.id, selectedSlotIndex, selectedInventoryId,
+                        onSuccess: p =>
+                        {
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
+                                Debug.Log($"[Editor] Item {selectedInventoryId} added to preset {preset.id} at slot {selectedSlotIndex}");
+
+                            if (this.itemPreset.CurrentPresets != null && this.itemPreset.CurrentPresets.containers != null)
+                            {
+                                for (int j = 0; j < this.itemPreset.CurrentPresets.containers.Length; j++)
+                                {
+                                    if (this.itemPreset.CurrentPresets.containers[j].id == p.id)
+                                    {
+                                        this.itemPreset.CurrentPresets.containers[j] = p;
+                                        break;
+                                    }
+                                }
+                            }
+                            Repaint();
+                        },
+                        onError: err =>
+                        {
+                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
+                                Debug.LogError($"[Editor] Failed to add item: {err}");
+                        }
+                    );
+                }
+                GUI.backgroundColor = Color.white;
+                EditorGUILayout.EndHorizontal();
+            }
+
+            EditorGUILayout.Space(6);
+
             // === SLOTS SECTION ===
+            if (!this.presetSlotsSectionFoldouts.ContainsKey(presetId))
+                this.presetSlotsSectionFoldouts[presetId] = false;
+
             GUIStyle slotsHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
             slotsHeaderStyle.fontSize = 11;
             slotsHeaderStyle.normal.textColor = new Color(0.7f, 0.9f, 1f);
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField($"🎰 PRESET SLOTS ({slotCount}/{preset.max_slots})", slotsHeaderStyle);
+            this.presetSlotsSectionFoldouts[presetId] = EditorGUILayout.Foldout(
+                this.presetSlotsSectionFoldouts[presetId],
+                $"🎰 PRESET SLOTS ({slotCount}/{preset.max_slots})",
+                true,
+                new GUIStyle(EditorStyles.foldout) { fontSize = 11, fontStyle = FontStyle.Bold });
             GUI.backgroundColor = new Color(0.3f, 0.8f, 1f);
             if (GUILayout.Button("🔄 Get Preset Slots", GUILayout.Width(140)))
             {
@@ -448,6 +658,9 @@ namespace SaiGame.Services
             }
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
+
+            if (this.presetSlotsSectionFoldouts[presetId])
+            {
 
             EditorGUILayout.Space(3);
 
@@ -553,79 +766,7 @@ namespace SaiGame.Services
                 EditorGUILayout.HelpBox("No items in this preset.", MessageType.None);
             }
 
-            EditorGUILayout.Space(6);
-
-            // === ADD ITEM TO SLOT ===
-            GUIStyle addHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
-            addHeaderStyle.fontSize = 11;
-            addHeaderStyle.normal.textColor = new Color(0.4f, 1f, 0.6f);
-            EditorGUILayout.LabelField("➕ ADD ITEM TO SLOT", addHeaderStyle);
-
-            PlayerItem playerItem = FindFirstObjectByType<PlayerItem>();
-            if (playerItem == null || playerItem.CurrentInventory == null || playerItem.CurrentInventory.items == null || playerItem.CurrentInventory.items.Length == 0)
-            {
-                EditorGUILayout.HelpBox("No PlayerItem or Inventory data found. Click 'Sync Player Inventory' under Utility Actions first.", MessageType.Warning);
-            }
-            else
-            {
-                var items = playerItem.CurrentInventory.items;
-                string[] options = new string[items.Length];
-                for (int i = 0; i < items.Length; i++)
-                {
-                    string name = items[i].definition != null && !string.IsNullOrEmpty(items[i].definition.name)
-                        ? items[i].definition.name
-                        : "Unknown";
-                    options[i] = $"{name} (x{items[i].quantity}) - {items[i].id}";
-                }
-
-                if (!this.presetDropdownIndices.ContainsKey(presetId))
-                    this.presetDropdownIndices[presetId] = 0;
-
-                if (!this.presetSlotIndices.ContainsKey(presetId))
-                    this.presetSlotIndices[presetId] = 0;
-
-                int selectedIndex = this.presetDropdownIndices[presetId];
-                if (selectedIndex >= items.Length) selectedIndex = 0;
-
-                this.presetSlotIndices[presetId] = EditorGUILayout.IntField("Target Slot Index:", this.presetSlotIndices[presetId]);
-
-                EditorGUILayout.BeginHorizontal();
-                this.presetDropdownIndices[presetId] = EditorGUILayout.Popup(selectedIndex, options);
-
-                GUI.backgroundColor = new Color(0.3f, 0.9f, 0.5f);
-                if (GUILayout.Button("Add", GUILayout.Width(60), GUILayout.Height(22)))
-                {
-                    string selectedInventoryId = items[this.presetDropdownIndices[presetId]].id;
-                    int selectedSlotIndex = this.presetSlotIndices[presetId];
-                    this.itemPreset.AddItemToPreset(preset.id, selectedSlotIndex, selectedInventoryId,
-                        onSuccess: p =>
-                        {
-                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
-                                Debug.Log($"[Editor] Item {selectedInventoryId} added to preset {preset.id} at slot {selectedSlotIndex}");
-
-                            if (this.itemPreset.CurrentPresets != null && this.itemPreset.CurrentPresets.containers != null)
-                            {
-                                for (int j = 0; j < this.itemPreset.CurrentPresets.containers.Length; j++)
-                                {
-                                    if (this.itemPreset.CurrentPresets.containers[j].id == p.id)
-                                    {
-                                        this.itemPreset.CurrentPresets.containers[j] = p;
-                                        break;
-                                    }
-                                }
-                            }
-                            Repaint();
-                        },
-                        onError: err =>
-                        {
-                            if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
-                                Debug.LogError($"[Editor] Failed to add item: {err}");
-                        }
-                    );
-                }
-                GUI.backgroundColor = Color.white;
-                EditorGUILayout.EndHorizontal();
-            }
+            } // end presetSlotsSectionFoldouts
 
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space(4);
