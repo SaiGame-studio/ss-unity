@@ -98,6 +98,28 @@ namespace SaiGame.Services
             this.UpdateScript(scriptFile, onSuccess, onError);
         }
 
+        public void UpdateScriptFlagsAtIndex(int index, Action<string> onSuccess = null, Action<string> onError = null)
+        {
+            ScriptFileRecord scriptFile = this.GetScriptFileAtIndex(index, onError);
+            if (scriptFile == null)
+            {
+                return;
+            }
+
+            if (!this.CanSendScriptRequest(scriptFile, false, onError))
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(scriptFile.ScriptId))
+            {
+                onError?.Invoke("Script Id is required for update.");
+                return;
+            }
+
+            this.StartCoroutine(this.UpdateScriptFlagsCoroutine(scriptFile, onSuccess, onError));
+        }
+
         public void DeleteScriptAtIndex(int index, Action<string> onSuccess = null, Action<string> onError = null)
         {
             ScriptFileRecord scriptFile = this.GetScriptFileAtIndex(index, onError);
@@ -359,7 +381,24 @@ namespace SaiGame.Services
             {
                 description = scriptFile.Description,
                 script_body = scriptBody,
-                is_active = scriptFile.IsActive
+                is_active = scriptFile.IsActive,
+                is_library = scriptFile.IsLibrary
+            };
+
+            string endpoint = $"/api/v1/games/{SaiServer.Instance.GameId}/scripts/{scriptFile.ScriptId}";
+            string jsonBody = JsonUtility.ToJson(request);
+
+            yield return SaiServer.Instance.PatchRequest(endpoint, jsonBody,
+                response => this.HandleScriptResponse(response, scriptFile, onSuccess, onError),
+                onError);
+        }
+
+        private IEnumerator UpdateScriptFlagsCoroutine(ScriptFileRecord scriptFile, Action<string> onSuccess, Action<string> onError)
+        {
+            FlagsRequest request = new FlagsRequest
+            {
+                is_active = scriptFile.IsActive,
+                is_library = scriptFile.IsLibrary
             };
 
             string endpoint = $"/api/v1/games/{SaiServer.Instance.GameId}/scripts/{scriptFile.ScriptId}";
@@ -465,6 +504,7 @@ namespace SaiGame.Services
             [SerializeField] private string description = "";
             [SerializeField] private string backendScriptBody = "";
             [SerializeField] private bool isActive = true;
+            [SerializeField] private bool isLibrary = false;
             [SerializeField] private bool hasLocalFile = false;
             [SerializeField] private bool hasBackendScript = false;
 
@@ -479,6 +519,8 @@ namespace SaiGame.Services
             public string BackendScriptBody => this.backendScriptBody;
 
             public bool IsActive => this.isActive;
+
+            public bool IsLibrary => this.isLibrary;
 
             public bool HasLocalFile => this.hasLocalFile;
 
@@ -513,6 +555,7 @@ namespace SaiGame.Services
                 this.description = backendScript.description;
                 this.backendScriptBody = backendScript.script_body;
                 this.isActive = backendScript.is_active;
+                this.isLibrary = backendScript.is_library;
                 this.hasBackendScript = true;
             }
 
@@ -544,6 +587,14 @@ namespace SaiGame.Services
             public string description;
             public string script_body;
             public bool is_active;
+            public bool is_library;
+        }
+
+        [Serializable]
+        private class FlagsRequest
+        {
+            public bool is_active;
+            public bool is_library;
         }
 
         [Serializable]
@@ -569,6 +620,7 @@ namespace SaiGame.Services
             public string script_body;
             public int version;
             public bool is_active;
+            public bool is_library;
             public string created_by;
             public string created_at;
             public string updated_at;

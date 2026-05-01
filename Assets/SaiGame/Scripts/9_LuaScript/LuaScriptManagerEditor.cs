@@ -160,6 +160,7 @@ namespace SaiGame.Services
                 SerializedProperty scriptId = scriptFile.FindPropertyRelative("scriptId");
                 SerializedProperty description = scriptFile.FindPropertyRelative("description");
                 SerializedProperty isActive = scriptFile.FindPropertyRelative("isActive");
+                SerializedProperty isLibrary = scriptFile.FindPropertyRelative("isLibrary");
                 SerializedProperty hasLocalFile = scriptFile.FindPropertyRelative("hasLocalFile");
                 SerializedProperty hasBackendScript = scriptFile.FindPropertyRelative("hasBackendScript");
 
@@ -168,13 +169,52 @@ namespace SaiGame.Services
                 {
                     EditorGUILayout.PropertyField(scriptName, new GUIContent("Script Name"));
                     EditorGUILayout.PropertyField(fileName, new GUIContent("File Name"));
-                    EditorGUILayout.PropertyField(hasLocalFile, new GUIContent("Has Local File"));
-                    EditorGUILayout.PropertyField(hasBackendScript, new GUIContent("Has Backend Script"));
                 }
 
                 EditorGUILayout.PropertyField(scriptId, new GUIContent("Script Id"));
                 EditorGUILayout.PropertyField(description, new GUIContent("Description"));
-                EditorGUILayout.PropertyField(isActive, new GUIContent("Is Active"));
+
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    float savedLabelWidth = EditorGUIUtility.labelWidth;
+                    EditorGUIUtility.labelWidth = 110f;
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.PropertyField(hasLocalFile, new GUIContent("Has Local File"));
+                    EditorGUILayout.PropertyField(hasBackendScript, new GUIContent("Has Backend Script"));
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUIUtility.labelWidth = savedLabelWidth;
+                }
+
+                {
+                    float savedLabelWidth = EditorGUIUtility.labelWidth;
+                    EditorGUIUtility.labelWidth = 110f;
+                    EditorGUILayout.BeginHorizontal();
+
+                    using (new EditorGUI.DisabledScope(!hasBackendScript.boolValue))
+                    {
+                        EditorGUI.BeginChangeCheck();
+                        EditorGUILayout.PropertyField(isActive, new GUIContent("Is Active"));
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            this.serializedObject.ApplyModifiedProperties();
+                            this.UpdateScriptFlagsApi(index, this.GetScriptDisplayName(fileName, scriptName));
+                        }
+                    }
+
+                    using (new EditorGUI.DisabledScope(!hasBackendScript.boolValue))
+                    {
+                        EditorGUI.BeginChangeCheck();
+                        EditorGUILayout.PropertyField(isLibrary, new GUIContent("Is Library"));
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            this.serializedObject.ApplyModifiedProperties();
+                            this.UpdateScriptFlagsApi(index, this.GetScriptDisplayName(fileName, scriptName));
+                        }
+                    }
+
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUIUtility.labelWidth = savedLabelWidth;
+                }
 
                 this.serializedObject.ApplyModifiedProperties();
 
@@ -261,6 +301,14 @@ namespace SaiGame.Services
                 index,
                 response => this.HandleScriptApiSuccess("Update Script", fileName),
                 error => this.HandleScriptApiError("Update Script", error));
+        }
+
+        private void UpdateScriptFlagsApi(int index, string fileName)
+        {
+            this.luaScriptManager.UpdateScriptFlagsAtIndex(
+                index,
+                response => this.HandleScriptApiSuccess("Update Script Flags", fileName),
+                error => this.HandleScriptApiError("Update Script Flags", error));
         }
 
         private void DeleteScriptApi(int index, string fileName)
