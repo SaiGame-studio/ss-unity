@@ -453,6 +453,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3731728121393147189, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: customScriptName
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3731728121393147189, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: battleTurnScriptName
       value: battle_debug_turn
       objectReference: {fileID: 0}

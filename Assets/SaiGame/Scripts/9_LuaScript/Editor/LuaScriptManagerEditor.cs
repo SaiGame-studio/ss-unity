@@ -7,12 +7,13 @@ namespace SaiGame.Services
     [CustomEditor(typeof(LuaScriptManager))]
     public class LuaScriptManagerEditor : Editor
     {
-        private const string DEFAULT_CUSTOM_SCRIPT_NAME = "battle_debug_turn";
+        private const string DEFAULT_CUSTOM_SCRIPT_NAME = "";
         private const string LEGACY_BATTLE_TURN_SCRIPT_NAME = "battle_turn";
+        private const string LEGACY_BATTLE_DEBUG_TURN_SCRIPT_NAME = "battle_debug_turn";
 
         private LuaScriptManager luaScriptManager;
         private SerializedProperty battleStartScriptName;
-        private SerializedProperty battleTurnScriptName;
+        private SerializedProperty customScriptName;
         private SerializedProperty battleEndScriptName;
         private SerializedProperty scriptFiles;
 
@@ -20,7 +21,7 @@ namespace SaiGame.Services
         {
             this.luaScriptManager = (LuaScriptManager)this.target;
             this.battleStartScriptName = this.serializedObject.FindProperty("battleStartScriptName");
-            this.battleTurnScriptName = this.serializedObject.FindProperty("battleTurnScriptName");
+            this.customScriptName = this.serializedObject.FindProperty("customScriptName");
             this.battleEndScriptName = this.serializedObject.FindProperty("battleEndScriptName");
             this.scriptFiles = this.serializedObject.FindProperty("scriptFiles");
             this.MigrateCustomScriptName();
@@ -28,12 +29,19 @@ namespace SaiGame.Services
 
         private void MigrateCustomScriptName()
         {
-            if (this.battleTurnScriptName == null || this.battleTurnScriptName.stringValue != LEGACY_BATTLE_TURN_SCRIPT_NAME)
+            if (this.customScriptName == null)
             {
                 return;
             }
 
-            this.battleTurnScriptName.stringValue = DEFAULT_CUSTOM_SCRIPT_NAME;
+            string current = this.customScriptName.stringValue;
+            bool isLegacy = current == LEGACY_BATTLE_TURN_SCRIPT_NAME || current == LEGACY_BATTLE_DEBUG_TURN_SCRIPT_NAME;
+            if (!isLegacy)
+            {
+                return;
+            }
+
+            this.customScriptName.stringValue = DEFAULT_CUSTOM_SCRIPT_NAME;
             this.serializedObject.ApplyModifiedProperties();
             EditorUtility.SetDirty(this.luaScriptManager);
         }
@@ -99,11 +107,11 @@ namespace SaiGame.Services
 
             this.DrawHorizontalSeparator();
 
-            EditorGUILayout.PropertyField(this.battleTurnScriptName, new GUIContent("Custom Script File Name"));
+            EditorGUILayout.PropertyField(this.customScriptName, new GUIContent("Custom Script File Name"));
 
-            string battleTurnScriptNameValue = this.NormalizeScriptName(this.battleTurnScriptName.stringValue);
-            bool isValidBattleTurnScriptName = this.IsValidScriptName(battleTurnScriptNameValue);
-            if (!isValidBattleTurnScriptName)
+            string customScriptNameValue = this.NormalizeScriptName(this.customScriptName.stringValue);
+            bool isValidCustomScriptName = this.IsValidScriptName(customScriptNameValue);
+            if (!isValidCustomScriptName)
             {
                 EditorGUILayout.HelpBox("Custom script file name must match: ^[a-z][a-z0-9_]*$", MessageType.Warning);
             }
@@ -111,11 +119,11 @@ namespace SaiGame.Services
             this.serializedObject.ApplyModifiedProperties();
 
             GUI.backgroundColor = new Color(0.35f, 0.8f, 0.95f);
-            using (new EditorGUI.DisabledScope(!isValidBattleTurnScriptName))
+            using (new EditorGUI.DisabledScope(!isValidCustomScriptName))
             {
                 if (GUILayout.Button("Create Custom script", GUILayout.Height(30)))
                 {
-                    this.CreateLuaScript(battleTurnScriptNameValue, this.CreateBattleTurnTemplate());
+                    this.CreateLuaScript(customScriptNameValue, this.CreateCustomScriptTemplate());
                 }
             }
             GUI.backgroundColor = Color.white;
@@ -620,90 +628,14 @@ namespace SaiGame.Services
             });
         }
 
-        private string CreateBattleTurnTemplate()
+        private string CreateCustomScriptTemplate()
         {
             return string.Join("\n", new[]
             {
-                "-- Usage: create or update this file as a backend Lua script, then run it through the script API.",
-                "-- Endpoint: POST /api/v1/games/{game_id}/scripts/{script_name}/run",
-                "-- Headers:",
-                "--   Authorization: Bearer {access_token}",
-                "--   Content-Type: application/json",
-                "-- Example request body:",
-                "-- {",
-                "--   \"payload\": {",
-                "--     \"session_id\": \"battle-session-uuid\",",
-                "--     \"target\": \"alpha\",",
-                "--     \"hp\": -10",
-                "--   }",
-                "-- }",
-                "-- target: \"alpha\" or \"omega\"",
-                "-- hp: positive value heals the target, negative value damages the target",
-                "",
-                "local validate_payload  -- forward declaration",
-                "local load_session      -- forward declaration",
-                "local apply_hp_delta    -- forward declaration",
+                "-- This is a custom Lua script that runs on the backend server.",
+                "-- You can write anything you want in this file — any Lua code, game APIs, or custom logic.",
                 "",
                 "local function main()",
-                "    local err = validate_payload()",
-                "    if err ~= nil then output.error = err ; return end",
-                "",
-                "    local state, load_err = load_session(payload.session_id)",
-                "    if load_err ~= nil then output.error = load_err ; return end",
-                "",
-                "    local result, apply_err = apply_hp_delta(state, payload.target, payload.hp)",
-                "    if apply_err ~= nil then output.error = apply_err ; return end",
-                "",
-                "    output.session_id = payload.session_id",
-                "    output.target     = payload.target",
-                "    output.hp_before  = result.hp_before",
-                "    output.hp_after   = result.hp_after",
-                "    output.hp_delta   = payload.hp",
-                "end",
-                "",
-                "-- ─── Functions ───────────────────────────────────────────────────────────────",
-                "",
-                "validate_payload = function()",
-                "    if payload.session_id == nil or payload.session_id == \"\" then",
-                "        return \"session_id is required\"",
-                "    end",
-                "    if payload.target ~= \"alpha\" and payload.target ~= \"omega\" then",
-                "        return \"target must be 'alpha' or 'omega'\"",
-                "    end",
-                "    if payload.hp == nil then",
-                "        return \"hp is required\"",
-                "    end",
-                "    return nil",
-                "end",
-                "",
-                "load_session = function(session_id)",
-                "    local state, err = game.battle_session_get(session_id)",
-                "    if err ~= nil then return nil, err end",
-                "    if state == nil then return nil, \"battle session not found\" end",
-                "    return state, nil",
-                "end",
-                "",
-                "apply_hp_delta = function(state, target, hp_delta)",
-                "    local current_hp, new_hp",
-                "",
-                "    if target == \"alpha\" then",
-                "        current_hp      = state.alpha_hp or 0",
-                "        new_hp          = current_hp + hp_delta",
-                "        state.alpha_hp  = new_hp",
-                "    elseif target == \"omega\" then",
-                "        current_hp      = state.omega_hp or 0",
-                "        new_hp          = current_hp + hp_delta",
-                "        state.omega_hp  = new_hp",
-                "    end",
-                "",
-                "    state.last_debug_target   = target",
-                "    state.last_debug_hp_delta = hp_delta",
-                "    state.updated_at          = ctx.timestamp",
-                "",
-                "    local err = game.battle_session_update(payload.session_id, state)",
-                "    if err ~= nil then return nil, err end",
-                "",
-                "    return { hp_before = current_hp, hp_after = new_hp }, nil",
                 "end",
                 "",
                 "main()"
