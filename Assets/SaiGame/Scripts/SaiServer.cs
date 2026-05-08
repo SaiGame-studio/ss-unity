@@ -10,7 +10,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.40a";
+        public const string PACKAGE_VERSION = "0.2.40c";
         public const string PACKAGE_NAME = "Sai Server";
 
         [SerializeField] protected SaiAuth saiAuth;
@@ -96,9 +96,11 @@ namespace SaiGame.Services
 
         public UserData CurrentUser => saiAuth?.CurrentUser;
 
-        public GamerProgress GamerProgress => gamerProgress;
+        public GamerProgress GamerProgress => this.gamerProgress;
 
-        public PlayerItem PlayerItem => playerItem;
+        public Mailbox Mailbox => this.mailbox;
+
+        public PlayerItem PlayerItem => this.playerItem;
 
         public PlayerEvent PlayerEvent => playerEvent;
 
