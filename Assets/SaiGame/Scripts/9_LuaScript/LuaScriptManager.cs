@@ -390,7 +390,11 @@ namespace SaiGame.Services
             string jsonBody = JsonUtility.ToJson(request);
 
             yield return SaiServer.Instance.PatchRequest(endpoint, jsonBody,
-                response => this.HandleScriptResponse(response, scriptFile, onSuccess, onError),
+                response =>
+                {
+                    scriptFile.SetBackendScriptBody(scriptBody);
+                    this.HandleScriptResponse(response, scriptFile, onSuccess, onError);
+                },
                 onError);
         }
 
@@ -565,6 +569,11 @@ namespace SaiGame.Services
                 this.scriptId = string.Empty;
                 this.backendScriptBody = string.Empty;
                 this.hasBackendScript = false;
+            }
+
+            public void SetBackendScriptBody(string body)
+            {
+                this.backendScriptBody = body;
             }
 
             public void SetScriptId(string scriptId)

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace SaiGame.Services
         private SerializedProperty customScriptName;
         private SerializedProperty battleEndScriptName;
         private SerializedProperty scriptFiles;
+        private readonly Dictionary<string, bool> scriptFoldouts = new Dictionary<string, bool>();
 
         private void OnEnable()
         {
@@ -171,107 +173,190 @@ namespace SaiGame.Services
                 SerializedProperty isLibrary = scriptFile.FindPropertyRelative("isLibrary");
                 SerializedProperty hasLocalFile = scriptFile.FindPropertyRelative("hasLocalFile");
                 SerializedProperty hasBackendScript = scriptFile.FindPropertyRelative("hasBackendScript");
+                SerializedProperty backendScriptBody = scriptFile.FindPropertyRelative("backendScriptBody");
+
+                string displayName = this.GetScriptDisplayName(fileName, scriptName);
+                if (!this.scriptFoldouts.ContainsKey(displayName))
+                {
+                    this.scriptFoldouts[displayName] = false;
+                }
+
+                LocalModifiedState modifiedState = this.GetLocalModifiedState(
+                    hasLocalFile.boolValue,
+                    hasBackendScript.boolValue,
+                    fileName.stringValue,
+                    backendScriptBody.stringValue);
 
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                using (new EditorGUI.DisabledScope(true))
-                {
-                    EditorGUILayout.PropertyField(scriptName, new GUIContent("Script Name"));
-                    EditorGUILayout.PropertyField(fileName, new GUIContent("File Name"));
-                }
 
-                EditorGUILayout.PropertyField(scriptId, new GUIContent("Script Id"));
-                EditorGUILayout.PropertyField(description, new GUIContent("Description"));
-
-                using (new EditorGUI.DisabledScope(true))
-                {
-                    float savedLabelWidth = EditorGUIUtility.labelWidth;
-                    EditorGUIUtility.labelWidth = 110f;
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.PropertyField(hasLocalFile, new GUIContent("Has Local File"));
-                    EditorGUILayout.PropertyField(hasBackendScript, new GUIContent("Has Backend Script"));
-                    EditorGUILayout.EndHorizontal();
-                    EditorGUIUtility.labelWidth = savedLabelWidth;
-                }
-
-                {
-                    float savedLabelWidth = EditorGUIUtility.labelWidth;
-                    EditorGUIUtility.labelWidth = 110f;
-                    EditorGUILayout.BeginHorizontal();
-
-                    using (new EditorGUI.DisabledScope(!hasBackendScript.boolValue))
-                    {
-                        EditorGUI.BeginChangeCheck();
-                        EditorGUILayout.PropertyField(isActive, new GUIContent("Is Active"));
-                        if (EditorGUI.EndChangeCheck())
-                        {
-                            this.serializedObject.ApplyModifiedProperties();
-                            this.UpdateScriptFlagsApi(index, this.GetScriptDisplayName(fileName, scriptName));
-                        }
-                    }
-
-                    using (new EditorGUI.DisabledScope(!hasBackendScript.boolValue))
-                    {
-                        EditorGUI.BeginChangeCheck();
-                        EditorGUILayout.PropertyField(isLibrary, new GUIContent("Is Library"));
-                        if (EditorGUI.EndChangeCheck())
-                        {
-                            this.serializedObject.ApplyModifiedProperties();
-                            this.UpdateScriptFlagsApi(index, this.GetScriptDisplayName(fileName, scriptName));
-                        }
-                    }
-
-                    EditorGUILayout.EndHorizontal();
-                    EditorGUIUtility.labelWidth = savedLabelWidth;
-                }
-
-                this.serializedObject.ApplyModifiedProperties();
-
+                // Header row: foldout label (left) + indicator + action buttons (right)
                 EditorGUILayout.BeginHorizontal();
+                Vector2 foldoutLabelSize = EditorStyles.foldoutHeader.CalcSize(new GUIContent(displayName));
+                float foldoutWidth = foldoutLabelSize.x + 18f;
+                Rect foldoutRect = GUILayoutUtility.GetRect(foldoutWidth, 20f, GUILayout.Width(foldoutWidth));
+                this.scriptFoldouts[displayName] = EditorGUI.Foldout(
+                    foldoutRect, this.scriptFoldouts[displayName], displayName, true, EditorStyles.foldoutHeader);
+
+                this.DrawModifiedIndicator(modifiedState);
+                GUILayout.FlexibleSpace();
 
                 // Download: backend has file but local does not
                 if (hasBackendScript.boolValue && !hasLocalFile.boolValue)
                 {
-                    if (this.DrawColoredButton("Download", new Color(0.4f, 0.7f, 1f)))
+                    if (this.DrawColoredButton("Download", new Color(0.4f, 0.7f, 1f), GUILayout.Width(90)))
                     {
-                        this.DownloadScript(index, this.GetScriptDisplayName(fileName, scriptName));
+                        this.DownloadScript(index, displayName);
                     }
                 }
 
                 // Upload New: local has file but backend does not
                 if (hasLocalFile.boolValue && !hasBackendScript.boolValue)
                 {
-                    if (this.DrawColoredButton("Upload New", new Color(0.3f, 0.9f, 0.5f)))
+                    if (this.DrawColoredButton("Upload New", new Color(0.3f, 0.9f, 0.5f), GUILayout.Width(90)))
                     {
-                        this.CreateScriptApi(index, this.GetScriptDisplayName(fileName, scriptName));
+                        this.CreateScriptApi(index, displayName);
                     }
                 }
 
                 // Update: both local and backend have files
                 if (hasLocalFile.boolValue && hasBackendScript.boolValue)
                 {
-                    if (this.DrawColoredButton("Update", new Color(1f, 0.75f, 0.25f)))
+                    if (this.DrawColoredButton("Update", new Color(1f, 0.75f, 0.25f), GUILayout.Width(90)))
                     {
-                        this.UpdateScriptApi(index, this.GetScriptDisplayName(fileName, scriptName));
+                        this.UpdateScriptApi(index, displayName);
                     }
                 }
 
-                using (new EditorGUI.DisabledScope(!hasBackendScript.boolValue))
-                {
-                    if (this.DrawColoredButton("Delete", new Color(1f, 0.35f, 0.35f)))
-                    {
-                        this.DeleteScriptApi(index, this.GetScriptDisplayName(fileName, scriptName));
-                    }
-                }
                 EditorGUILayout.EndHorizontal();
+
+                // Expanded content
+                if (this.scriptFoldouts[displayName])
+                {
+                    EditorGUI.indentLevel++;
+
+                    using (new EditorGUI.DisabledScope(true))
+                    {
+                        EditorGUILayout.PropertyField(scriptName, new GUIContent("Script Name"));
+                        EditorGUILayout.PropertyField(fileName, new GUIContent("File Name"));
+                    }
+
+                    EditorGUILayout.PropertyField(scriptId, new GUIContent("Script Id"));
+                    EditorGUILayout.PropertyField(description, new GUIContent("Description"));
+
+                    using (new EditorGUI.DisabledScope(true))
+                    {
+                        float savedLabelWidth = EditorGUIUtility.labelWidth;
+                        EditorGUIUtility.labelWidth = 110f;
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.PropertyField(hasLocalFile, new GUIContent("Has Local File"));
+                        EditorGUILayout.PropertyField(hasBackendScript, new GUIContent("Has Backend Script"));
+                        EditorGUILayout.EndHorizontal();
+                        EditorGUIUtility.labelWidth = savedLabelWidth;
+                    }
+
+                    {
+                        float savedLabelWidth = EditorGUIUtility.labelWidth;
+                        EditorGUIUtility.labelWidth = 110f;
+                        EditorGUILayout.BeginHorizontal();
+
+                        using (new EditorGUI.DisabledScope(!hasBackendScript.boolValue))
+                        {
+                            EditorGUI.BeginChangeCheck();
+                            EditorGUILayout.PropertyField(isActive, new GUIContent("Is Active"));
+                            if (EditorGUI.EndChangeCheck())
+                            {
+                                this.serializedObject.ApplyModifiedProperties();
+                                this.UpdateScriptFlagsApi(index, displayName);
+                            }
+                        }
+
+                        using (new EditorGUI.DisabledScope(!hasBackendScript.boolValue))
+                        {
+                            EditorGUI.BeginChangeCheck();
+                            EditorGUILayout.PropertyField(isLibrary, new GUIContent("Is Library"));
+                            if (EditorGUI.EndChangeCheck())
+                            {
+                                this.serializedObject.ApplyModifiedProperties();
+                                this.UpdateScriptFlagsApi(index, displayName);
+                            }
+                        }
+
+                        EditorGUILayout.EndHorizontal();
+                        EditorGUIUtility.labelWidth = savedLabelWidth;
+                    }
+
+                    this.serializedObject.ApplyModifiedProperties();
+
+                    // Delete button — only visible when expanded
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.FlexibleSpace();
+                    using (new EditorGUI.DisabledScope(!hasBackendScript.boolValue))
+                    {
+                        if (this.DrawColoredButton("Delete", new Color(1f, 0.35f, 0.35f), GUILayout.Width(90)))
+                        {
+                            this.DeleteScriptApi(index, displayName);
+                        }
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    EditorGUI.indentLevel--;
+                }
+
                 EditorGUILayout.EndVertical();
             }
         }
 
-        private bool DrawColoredButton(string label, Color color)
+        private enum LocalModifiedState
+        {
+            NotApplicable,
+            Synced,
+            Modified,
+        }
+
+        private LocalModifiedState GetLocalModifiedState(bool hasLocalFile, bool hasBackendScript, string fileNameValue, string backendBody)
+        {
+            if (!hasLocalFile || !hasBackendScript)
+            {
+                return LocalModifiedState.NotApplicable;
+            }
+
+            string fullPath = Path.GetFullPath($"{LuaScriptManager.SCRIPT_FOLDER_ASSET_PATH}/{fileNameValue}");
+            if (!File.Exists(fullPath))
+            {
+                return LocalModifiedState.NotApplicable;
+            }
+
+            string localBody = File.ReadAllText(fullPath);
+            string normalizedLocal = localBody.Replace("\r\n", "\n").TrimEnd();
+            string normalizedBackend = backendBody.Replace("\r\n", "\n").TrimEnd();
+            return normalizedLocal == normalizedBackend ? LocalModifiedState.Synced : LocalModifiedState.Modified;
+        }
+
+        private void DrawModifiedIndicator(LocalModifiedState state)
+        {
+            switch (state)
+            {
+                case LocalModifiedState.Modified:
+                    GUIStyle style = new GUIStyle(EditorStyles.miniLabel);
+                    style.normal.textColor = new Color(1f, 0.75f, 0.1f);
+                    GUILayout.Label("● modified", style);
+                    break;
+                case LocalModifiedState.Synced:
+                    GUIStyle syncedStyle = new GUIStyle(EditorStyles.miniLabel);
+                    syncedStyle.normal.textColor = new Color(0.3f, 0.9f, 0.4f);
+                    GUILayout.Label("● synced", syncedStyle);
+                    break;
+            }
+        }
+
+        private bool DrawColoredButton(string label, Color color, params GUILayoutOption[] extraOptions)
         {
             Color previousColor = GUI.backgroundColor;
             GUI.backgroundColor = color;
-            bool clicked = GUILayout.Button(label, GUILayout.Height(24));
+            GUILayoutOption[] options = new GUILayoutOption[extraOptions.Length + 1];
+            options[0] = GUILayout.Height(24);
+            System.Array.Copy(extraOptions, 0, options, 1, extraOptions.Length);
+            bool clicked = GUILayout.Button(label, options);
             GUI.backgroundColor = previousColor;
             return clicked;
         }
