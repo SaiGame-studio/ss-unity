@@ -25,9 +25,11 @@ namespace SaiGame.Services
         [Header("Current Daily Quest Data")]
         [SerializeField] protected AssignAheadResponse currentAssignAheadResponse;
         [SerializeField] protected TodayQuestResponse currentTodayQuestResponse;
+        [SerializeField] protected DailyQuestPoolsResponse currentPoolsResponse;
 
         public AssignAheadResponse CurrentAssignAheadResponse => this.currentAssignAheadResponse;
         public TodayQuestResponse CurrentTodayQuestResponse => this.currentTodayQuestResponse;
+        public DailyQuestPoolsResponse CurrentPoolsResponse => this.currentPoolsResponse;
         public bool HasDays => this.currentAssignAheadResponse != null
                                && this.currentAssignAheadResponse.days != null
                                && this.currentAssignAheadResponse.days.Length > 0;
@@ -200,6 +202,7 @@ namespace SaiGame.Services
         {
             this.currentAssignAheadResponse = null;
             this.currentTodayQuestResponse = null;
+            this.currentPoolsResponse = null;
         }
 
         // ── Get Pools ──────────────────────────────────────────────────────────────────────────
@@ -243,6 +246,7 @@ namespace SaiGame.Services
                     try
                     {
                         DailyQuestPoolsResponse poolsResponse = JsonUtility.FromJson<DailyQuestPoolsResponse>(response);
+                        this.currentPoolsResponse = poolsResponse;
 
                         if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[DailyQuest] Pools loaded: {poolsResponse.pools?.Length ?? 0} pools");
