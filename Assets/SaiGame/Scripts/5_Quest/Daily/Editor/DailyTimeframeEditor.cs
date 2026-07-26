@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 
@@ -33,15 +34,20 @@ namespace SaiGame.Services
             this.timeframePreset = serializedObject.FindProperty("timeframePreset");
             this.startDate = serializedObject.FindProperty("startDate");
             this.endDate = serializedObject.FindProperty("endDate");
-            this.ApplyPresetDates((DailyTimeframe.TimeframePreset)this.timeframePreset.enumValueIndex);
-            this.RegisterDailyQuest();
+            serializedObject.Update();
+            if (string.IsNullOrEmpty(this.startDate.stringValue) || string.IsNullOrEmpty(this.endDate.stringValue))
+            {
+                this.ApplyPresetDates((DailyTimeframe.TimeframePreset)this.timeframePreset.enumValueIndex);
+                serializedObject.ApplyModifiedProperties();
+            }
+            this.dailyTimeframe.OnGetPoolsSuccess += this.HandlePoolsLoaded;
             this.RefreshPoolsFromDailyQuest();
         }
 
         private void OnDisable()
         {
-            if (this.dailyQuest != null)
-                this.dailyQuest.OnGetPoolsSuccess -= this.HandlePoolsLoaded;
+            if (this.dailyTimeframe != null)
+                this.dailyTimeframe.OnGetPoolsSuccess -= this.HandlePoolsLoaded;
         }
 
         public override void OnInspectorGUI()
@@ -50,16 +56,13 @@ namespace SaiGame.Services
 
             this.RegisterDailyQuest();
             this.RefreshPoolsFromDailyQuest();
+            this.SyncPoolSelection();
             this.DrawPoolKeyRow();
 
-            DailyTimeframe.TimeframePreset oldPreset = (DailyTimeframe.TimeframePreset)this.timeframePreset.enumValueIndex;
-            EditorGUILayout.PropertyField(this.timeframePreset, new GUIContent("Timeframe", "Select a date preset for the request"));
-            DailyTimeframe.TimeframePreset newPreset = (DailyTimeframe.TimeframePreset)this.timeframePreset.enumValueIndex;
-            if (oldPreset != newPreset)
-                this.ApplyPresetDates(newPreset);
+            this.DrawTimeframePresetButtons();
 
-            EditorGUILayout.PropertyField(this.startDate, new GUIContent("Start Date", "Inclusive date in YYYY-MM-DD format"));
-            EditorGUILayout.PropertyField(this.endDate, new GUIContent("End Date", "Inclusive date in YYYY-MM-DD format"));
+            this.DrawDatePicker(this.startDate, "Start Date", "Inclusive start date");
+            this.DrawDatePicker(this.endDate, "End Date", "Inclusive end date");
 
             EditorGUILayout.Space(4);
             bool canLoad = !this.isLoading && !string.IsNullOrEmpty(this.poolKey.stringValue) &&
@@ -107,22 +110,74 @@ namespace SaiGame.Services
             this.endDate.stringValue = end.ToString("yyyy-MM-dd");
         }
 
+        private void DrawTimeframePresetButtons()
+        {
+            DailyTimeframe.TimeframePreset selectedPreset = (DailyTimeframe.TimeframePreset)this.timeframePreset.enumValueIndex;
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(new GUIContent("Timeframe", "Select a date preset for the request"));
+
+            this.DrawTimeframePresetButton(DailyTimeframe.TimeframePreset.ThisWeek, "This Week", selectedPreset);
+            this.DrawTimeframePresetButton(DailyTimeframe.TimeframePreset.ThisMonth, "This Month", selectedPreset);
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawTimeframePresetButton(
+            DailyTimeframe.TimeframePreset preset,
+            string label,
+            DailyTimeframe.TimeframePreset selectedPreset)
+        {
+            Color previousColor = GUI.backgroundColor;
+            GUI.backgroundColor = selectedPreset == preset ? new Color(0.25f, 0.85f, 1f) : Color.white;
+            if (GUILayout.Button(label, GUILayout.Height(22)))
+            {
+                this.timeframePreset.enumValueIndex = (int)preset;
+                this.ApplyPresetDates(preset);
+            }
+            GUI.backgroundColor = previousColor;
+        }
+
+        private void DrawDatePicker(SerializedProperty dateProperty, string label, string tooltip)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(new GUIContent(label, tooltip));
+            string value = string.IsNullOrEmpty(dateProperty.stringValue) ? "Select date" : dateProperty.stringValue;
+            if (GUILayout.Button(value, EditorStyles.popup))
+            {
+                DateTime selectedDate = this.ParseDate(dateProperty.stringValue);
+                PopupWindow.Show(
+                    GUILayoutUtility.GetLastRect(),
+                    new DatePickerPopup(selectedDate, date =>
+                    {
+                        serializedObject.Update();
+                        dateProperty.stringValue = date.ToString("yyyy-MM-dd");
+                        serializedObject.ApplyModifiedProperties();
+                        Repaint();
+                    }));
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private DateTime ParseDate(string value)
+        {
+            if (DateTime.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate))
+                return parsedDate;
+
+            return DateTime.Today;
+        }
+
         private void RegisterDailyQuest()
         {
             DailyQuest currentDailyQuest = this.dailyTimeframe.DailyQuestSource;
             if (this.dailyQuest == currentDailyQuest) return;
 
-            if (this.dailyQuest != null)
-                this.dailyQuest.OnGetPoolsSuccess -= this.HandlePoolsLoaded;
-
             this.dailyQuest = currentDailyQuest;
-            if (this.dailyQuest != null)
-                this.dailyQuest.OnGetPoolsSuccess += this.HandlePoolsLoaded;
         }
 
         private void RefreshPoolsFromDailyQuest()
         {
-            DailyQuestPoolsResponse response = this.dailyQuest?.CurrentPoolsResponse;
+            this.dailyTimeframe.CopyPoolsFromDailyQuest();
+            DailyQuestPoolsResponse response = this.dailyTimeframe.CurrentPoolsResponse;
             if (response != null && this.poolsResponse != response)
                 this.HandlePoolsLoaded(response);
         }
@@ -130,7 +185,7 @@ namespace SaiGame.Services
         private void HandlePoolsLoaded(DailyQuestPoolsResponse response)
         {
             this.poolsResponse = response;
-            this.loadedPools = response.pools ?? new DailyQuestPoolData[0];
+            this.loadedPools = response?.pools ?? new DailyQuestPoolData[0];
             this.poolDisplayOptions = new string[this.loadedPools.Length];
             for (int index = 0; index < this.loadedPools.Length; index++)
             {
@@ -139,6 +194,28 @@ namespace SaiGame.Services
             }
 
             this.selectedPoolIndex = -1;
+            EditorApplication.delayCall += this.RefreshPoolDropdown;
+        }
+
+        private void RefreshPoolDropdown()
+        {
+            if (this == null || this.dailyTimeframe == null) return;
+
+            serializedObject.Update();
+            this.SyncPoolSelection();
+            serializedObject.ApplyModifiedProperties();
+            EditorUtility.SetDirty(this.dailyTimeframe);
+            Repaint();
+        }
+
+        private void SyncPoolSelection()
+        {
+            if (this.loadedPools.Length == 0) return;
+
+            if (this.selectedPoolIndex >= 0 && this.selectedPoolIndex < this.loadedPools.Length &&
+                this.poolKey.stringValue == this.loadedPools[this.selectedPoolIndex].pool_key)
+                return;
+
             for (int index = 0; index < this.loadedPools.Length; index++)
             {
                 if (this.loadedPools[index].pool_key == this.poolKey.stringValue)
@@ -148,7 +225,7 @@ namespace SaiGame.Services
                 }
             }
 
-            if (this.selectedPoolIndex < 0 && this.loadedPools.Length > 0)
+            if (this.selectedPoolIndex < 0)
             {
                 this.SelectDailyQuestPoolById();
                 if (this.selectedPoolIndex < 0)
@@ -157,8 +234,6 @@ namespace SaiGame.Services
                     this.poolKey.stringValue = this.loadedPools[0].pool_key;
                 }
             }
-
-            Repaint();
         }
 
         private void SelectDailyQuestPoolById()
@@ -214,7 +289,7 @@ namespace SaiGame.Services
         private void LoadPoolsFromDailyQuest()
         {
             this.isLoadingPools = true;
-            this.dailyQuest.GetPools(
+            this.dailyTimeframe.LoadPools(
                 onSuccess: response =>
                 {
                     this.isLoadingPools = false;
@@ -450,6 +525,94 @@ namespace SaiGame.Services
             Rect rect = EditorGUILayout.GetControlRect(false, 1);
             EditorGUI.DrawRect(rect, new Color(0.3f, 0.3f, 0.3f, 0.6f));
             EditorGUILayout.Space(2);
+        }
+
+        private sealed class DatePickerPopup : PopupWindowContent
+        {
+            private readonly Action<DateTime> onDateSelected;
+            private DateTime displayedMonth;
+            private readonly DateTime selectedDate;
+
+            public DatePickerPopup(DateTime selectedDate, Action<DateTime> onDateSelected)
+            {
+                this.selectedDate = selectedDate.Date;
+                this.displayedMonth = new DateTime(selectedDate.Year, selectedDate.Month, 1);
+                this.onDateSelected = onDateSelected;
+            }
+
+            public override Vector2 GetWindowSize()
+            {
+                return new Vector2(260, 240);
+            }
+
+            public override void OnGUI(Rect rect)
+            {
+                this.DrawMonthNavigation();
+                this.DrawWeekdayHeaders();
+                this.DrawDays();
+            }
+
+            private void DrawMonthNavigation()
+            {
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("‹", GUILayout.Width(28)))
+                    this.displayedMonth = this.displayedMonth.AddMonths(-1);
+
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(this.displayedMonth.ToString("MMMM yyyy", CultureInfo.InvariantCulture), EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+
+                if (GUILayout.Button("›", GUILayout.Width(28)))
+                    this.displayedMonth = this.displayedMonth.AddMonths(1);
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.Space(4);
+            }
+
+            private void DrawWeekdayHeaders()
+            {
+                string[] weekdays = { "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su" };
+                EditorGUILayout.BeginHorizontal();
+                foreach (string weekday in weekdays)
+                    GUILayout.Label(weekday, EditorStyles.miniLabel, GUILayout.Width(32));
+                EditorGUILayout.EndHorizontal();
+            }
+
+            private void DrawDays()
+            {
+                DateTime firstDay = this.displayedMonth;
+                int startOffset = ((int)firstDay.DayOfWeek + 6) % 7;
+                int daysInMonth = DateTime.DaysInMonth(firstDay.Year, firstDay.Month);
+                int dayNumber = 1 - startOffset;
+
+                for (int row = 0; row < 6; row++)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    for (int column = 0; column < 7; column++, dayNumber++)
+                    {
+                        if (dayNumber < 1 || dayNumber > daysInMonth)
+                        {
+                            GUILayout.Label(string.Empty, GUILayout.Width(32), GUILayout.Height(24));
+                            continue;
+                        }
+
+                        DateTime day = new DateTime(firstDay.Year, firstDay.Month, dayNumber);
+                        Color previousColor = GUI.backgroundColor;
+                        if (day == this.selectedDate)
+                            GUI.backgroundColor = new Color(0.25f, 0.85f, 1f);
+                        else if (day == DateTime.Today)
+                            GUI.backgroundColor = new Color(1f, 0.84f, 0.2f);
+
+                        if (GUILayout.Button(dayNumber.ToString(), GUILayout.Width(32), GUILayout.Height(24)))
+                        {
+                            this.onDateSelected?.Invoke(day);
+                            editorWindow.Close();
+                        }
+
+                        GUI.backgroundColor = previousColor;
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
         }
     }
 }

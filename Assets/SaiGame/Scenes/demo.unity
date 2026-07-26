@@ -138,14 +138,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.DailyTimeframe
   poolKey: 
   timeframePreset: 0
-  startDate: 
-  endDate: 
+  startDate: 2026-07-20
+  endDate: 2026-07-26
   currentResponse:
     pool_id: 
     days_ahead: 0
     start_date: 
     end_date: 
     days: []
+  currentPoolsResponse:
+    pools: []
+    limit: 0
+    offset: 0
+    total: 0
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0

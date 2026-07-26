@@ -15,6 +15,8 @@ namespace SaiGame.Services
 
         public event Action<DailyTimeframeResponse> OnGetTimeframeSuccess;
         public event Action<string> OnGetTimeframeFailure;
+        public event Action<DailyQuestPoolsResponse> OnGetPoolsSuccess;
+        public event Action<string> OnGetPoolsFailure;
 
         [Header("Daily Timeframe Settings")]
         [SerializeField] private string poolKey = "";
@@ -24,9 +26,59 @@ namespace SaiGame.Services
 
         [Header("Current Daily Timeframe Data")]
         [SerializeField] private DailyTimeframeResponse currentResponse;
+        [SerializeField] private DailyQuestPoolsResponse currentPoolsResponse;
 
         public DailyTimeframeResponse CurrentResponse => this.currentResponse;
+        public DailyQuestPoolsResponse CurrentPoolsResponse => this.currentPoolsResponse;
         public DailyQuest DailyQuestSource => SaiServer.Instance?.DailyQuest;
+
+        protected override void ResetValue()
+        {
+            base.ResetValue();
+            this.SetThisWeekDateRange();
+        }
+
+        protected override void LoadComponents()
+        {
+            base.LoadComponents();
+            if (string.IsNullOrEmpty(this.startDate) || string.IsNullOrEmpty(this.endDate))
+                this.SetThisWeekDateRange();
+        }
+
+        public void CopyPoolsFromDailyQuest()
+        {
+            DailyQuestPoolsResponse sourceResponse = this.DailyQuestSource?.CurrentPoolsResponse;
+            if (sourceResponse != null)
+                this.currentPoolsResponse = sourceResponse;
+        }
+
+        public void LoadPools(
+            Action<DailyQuestPoolsResponse> onSuccess = null,
+            Action<string> onError = null)
+        {
+            DailyQuest source = this.DailyQuestSource;
+            if (source == null)
+            {
+                onError?.Invoke("DailyQuest service was not found on SaiServer.");
+                return;
+            }
+
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
+                Debug.Log("<color=#00FFFF><b>[DailyTimeframe] ► Load Pools via DailyQuest</b></color>", gameObject);
+
+            source.GetPools(
+                response =>
+                {
+                    this.currentPoolsResponse = response;
+                    this.OnGetPoolsSuccess?.Invoke(response);
+                    onSuccess?.Invoke(response);
+                },
+                error =>
+                {
+                    this.OnGetPoolsFailure?.Invoke(error);
+                    onError?.Invoke(error);
+                });
+        }
 
         public void GetTimeframe(
             string requestedPoolKey = null,
@@ -132,6 +184,15 @@ namespace SaiGame.Services
         {
             this.startDate = start;
             this.endDate = end;
+        }
+
+        private void SetThisWeekDateRange()
+        {
+            DateTime today = DateTime.Today;
+            int daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
+            DateTime start = today.AddDays(-daysFromMonday);
+            this.startDate = start.ToString("yyyy-MM-dd");
+            this.endDate = start.AddDays(6).ToString("yyyy-MM-dd");
         }
     }
 }
