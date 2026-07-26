@@ -119,6 +119,38 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &305525780 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4330135680898373133, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &305525786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 305525780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c7f5c3d6d6f4e6b9f9a1a4d2c3e5b71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.DailyTimeframe
+  poolKey: 
+  timeframePreset: 0
+  startDate: 2026-07-20
+  endDate: 2026-07-26
+  currentResponse:
+    pool_id: 
+    days_ahead: 0
+    start_date: 
+    end_date: 
+    days: []
+  currentPoolsResponse:
+    pools: []
+    limit: 0
+    offset: 0
+    total: 0
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -484,10 +516,29 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: port
+      value: 82
+      objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: useHttps
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: domainOption
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: serverEndpoint
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4330135680898373133, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 305525786}
   m_SourcePrefab: {fileID: 100100000, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

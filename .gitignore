@@ -76,6 +76,11 @@ crashlytics-build.properties
 
 # Environment configuration (contains credentials — never commit)
 .env
+.env.pro
+.env.local
+.env.qa
+.env.dev
+.env.stg
 
 # Lua scripts (source-controlled separately)
 /[Aa]ssets/SaiGame/LuaScript/Scripts/*.lua

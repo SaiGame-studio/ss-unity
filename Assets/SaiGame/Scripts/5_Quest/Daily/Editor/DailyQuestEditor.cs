@@ -55,7 +55,7 @@ namespace SaiGame.Services
 
         private void HandlePoolsLoaded(DailyQuestPoolsResponse response)
         {
-            this.loadedPools = response.pools ?? new DailyQuestPoolData[0];
+            this.loadedPools = response?.pools ?? new DailyQuestPoolData[0];
 
             this.poolDisplayOptions = new string[this.loadedPools.Length];
             for (int i = 0; i < this.loadedPools.Length; i++)
@@ -64,15 +64,23 @@ namespace SaiGame.Services
                 this.poolDisplayOptions[i] = $"{p.display_name}  ({p.pool_key})";
             }
 
-            this.SyncDropdownSelectionFromProperty();
+            this.selectedPoolIndex = -1;
+            EditorApplication.delayCall += this.RefreshPoolDropdown;
+        }
 
+        private void RefreshPoolDropdown()
+        {
+            if (this == null || this.dailyQuest == null) return;
+
+            serializedObject.Update();
+            this.SyncDropdownSelectionFromProperty();
             if (this.selectedPoolIndex < 0 && this.loadedPools.Length > 0)
             {
                 this.selectedPoolIndex = 0;
                 this.dqPoolId.stringValue = this.loadedPools[0].id;
-                serializedObject.ApplyModifiedProperties();
             }
-
+            serializedObject.ApplyModifiedProperties();
+            EditorUtility.SetDirty(this.dailyQuest);
             Repaint();
         }
 
@@ -929,25 +937,7 @@ namespace SaiGame.Services
                 onSuccess: response =>
                 {
                     this.isLoadingPools = false;
-                    this.loadedPools = response.pools ?? new DailyQuestPoolData[0];
-
-                    this.poolDisplayOptions = new string[this.loadedPools.Length];
-                    for (int i = 0; i < this.loadedPools.Length; i++)
-                    {
-                        DailyQuestPoolData p = this.loadedPools[i];
-                        this.poolDisplayOptions[i] = $"{p.display_name}  ({p.pool_key})";
-                    }
-
-                    this.SyncDropdownSelectionFromProperty();
-
-                    if (this.selectedPoolIndex < 0 && this.loadedPools.Length > 0)
-                    {
-                        this.selectedPoolIndex = 0;
-                        this.dqPoolId.stringValue = this.loadedPools[0].id;
-                        serializedObject.ApplyModifiedProperties();
-                    }
-
-                    Debug.Log($"[DailyQuestEditor] Loaded {this.loadedPools.Length} pools");
+                    Debug.Log($"[DailyQuestEditor] Loaded {response.pools?.Length ?? 0} pools");
                     Repaint();
                 },
                 onError: error =>
