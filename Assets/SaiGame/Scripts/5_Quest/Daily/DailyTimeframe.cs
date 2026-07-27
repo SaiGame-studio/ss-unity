@@ -41,7 +41,8 @@ namespace SaiGame.Services
         protected override void LoadComponents()
         {
             base.LoadComponents();
-            if (string.IsNullOrEmpty(this.startDate) || string.IsNullOrEmpty(this.endDate))
+            if (this.timeframePreset == TimeframePreset.ThisWeek ||
+                string.IsNullOrEmpty(this.startDate) || string.IsNullOrEmpty(this.endDate))
                 this.SetThisWeekDateRange();
         }
 

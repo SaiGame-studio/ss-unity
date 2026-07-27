@@ -443,8 +443,8 @@ namespace SaiGame.Services
                 statusStyle.fontSize = 10;
                 statusStyle.fontStyle = FontStyle.Bold;
                 statusStyle.alignment = TextAnchor.MiddleRight;
-                statusStyle.normal.textColor = QuestStatusIcons.GetColor(entry.status);
-                GUILayout.Label(string.Format("{0} {1}", QuestStatusIcons.GetIcon(entry.status), entry.status.ToLower()), statusStyle, GUILayout.Width(110));
+                statusStyle.normal.textColor = DailyQuestStatusVisuals.GetColor(entry.status);
+                GUILayout.Label(string.Format("{0} {1}", DailyQuestStatusVisuals.GetIcon(entry.status), entry.status.ToLower()), statusStyle, GUILayout.Width(110));
             }
             EditorGUILayout.EndHorizontal();
 

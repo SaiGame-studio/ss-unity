@@ -514,8 +514,8 @@ namespace SaiGame.Services
                 statusBadge.fontSize = 10;
                 statusBadge.fontStyle = FontStyle.Bold;
                 statusBadge.alignment = TextAnchor.MiddleRight;
-                statusBadge.normal.textColor = QuestStatusIcons.GetColor(entry.status);
-                GUILayout.Label($"{QuestStatusIcons.GetIcon(entry.status)} {entry.status.ToLower()}", statusBadge, GUILayout.ExpandWidth(false));
+                statusBadge.normal.textColor = DailyQuestStatusVisuals.GetColor(entry.status);
+                GUILayout.Label($"{DailyQuestStatusVisuals.GetIcon(entry.status)} {entry.status.ToLower()}", statusBadge, GUILayout.ExpandWidth(false));
             }
             EditorGUILayout.EndHorizontal();
 
@@ -1136,8 +1136,8 @@ namespace SaiGame.Services
             GUIStyle richStyle = new GUIStyle(EditorStyles.label) { richText = true };
             richStyle.fontSize = 10;
 
-            string statusColor = QuestStatusIcons.GetHex(p.status);
-            string statusIcon = QuestStatusIcons.GetIcon(p.status);
+            string statusColor = DailyQuestStatusVisuals.GetHex(p.status);
+            string statusIcon = DailyQuestStatusVisuals.GetIcon(p.status);
             EditorGUILayout.LabelField($"Status: <color={statusColor}><b>{statusIcon} {p.status}</b></color>  |  Version: <b>{p.version}</b>", richStyle);
 
             GUIStyle idStyle = new GUIStyle(EditorStyles.label);
