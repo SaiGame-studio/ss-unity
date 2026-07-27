@@ -284,17 +284,17 @@ namespace SaiGame.Services
                     GUI.backgroundColor = this.isStarting ? Color.gray : new Color(1f, 0.85f, 0f);
                     EditorGUI.BeginDisabledGroup(this.isStarting || !canLoad);
                     if (GUILayout.Button(this.isStarting ? "Starting..." : "Start Quest", GUILayout.Height(30)))
-                        this.StartSelectedQuest(selected.questDefinitionId);
+                        this.StartSelectedQuest(selected);
                     EditorGUI.EndDisabledGroup();
                     GUI.backgroundColor = this.isChecking ? Color.gray : new Color(0.2f, 0.85f, 0.85f);
                     EditorGUI.BeginDisabledGroup(this.isChecking || !canLoad);
                     if (GUILayout.Button(this.isChecking ? "..." : "Check", GUILayout.Height(30)))
-                        this.CheckSelectedQuest(selected.questDefinitionId);
+                        this.CheckSelectedQuest(selected);
                     EditorGUI.EndDisabledGroup();
                     GUI.backgroundColor = this.isClaiming ? Color.gray : new Color(0.4f, 1f, 0.4f);
                     EditorGUI.BeginDisabledGroup(this.isClaiming || !canLoad);
                     if (GUILayout.Button(this.isClaiming ? "..." : "Claim", GUILayout.Height(30)))
-                        this.ClaimSelectedQuest(selected.questDefinitionId);
+                        this.ClaimSelectedQuest(selected);
                     EditorGUI.EndDisabledGroup();
                     GUI.backgroundColor = Color.white;
                     EditorGUILayout.EndHorizontal();
@@ -692,8 +692,9 @@ namespace SaiGame.Services
             );
         }
 
-        private void ClaimSelectedQuest(string questDefinitionId)
+        private void ClaimSelectedQuest(QuestPickerEntry entry)
         {
+            string questDefinitionId = entry?.questDefinitionId;
             if (SaiServer.Instance == null)
             {
                 Debug.LogError("[QuestProgressorEditor] SaiServer not found!");
@@ -709,8 +710,8 @@ namespace SaiGame.Services
             this.isClaiming = true;
             Repaint();
 
-            this.questProgressor.ClaimQuest(
-                questDefinitionId: questDefinitionId,
+            this.questProgressor.ClaimQuestFromPicker(
+                entry: entry,
                 onSuccess: response =>
                 {
                     this.isClaiming = false;
@@ -728,8 +729,9 @@ namespace SaiGame.Services
             );
         }
 
-        private void CheckSelectedQuest(string questDefinitionId)
+        private void CheckSelectedQuest(QuestPickerEntry entry)
         {
+            string questDefinitionId = entry?.questDefinitionId;
             if (SaiServer.Instance == null)
             {
                 Debug.LogError("[QuestProgressorEditor] SaiServer not found!");
@@ -745,8 +747,8 @@ namespace SaiGame.Services
             this.isChecking = true;
             Repaint();
 
-            this.questProgressor.CheckQuest(
-                questDefinitionId: questDefinitionId,
+            this.questProgressor.CheckQuestFromPicker(
+                entry: entry,
                 onSuccess: response =>
                 {
                     this.isChecking = false;
@@ -890,8 +892,9 @@ namespace SaiGame.Services
             }
         }
 
-        private void StartSelectedQuest(string questDefinitionId)
+        private void StartSelectedQuest(QuestPickerEntry entry)
         {
+            string questDefinitionId = entry?.questDefinitionId;
             if (SaiServer.Instance == null)
             {
                 Debug.LogError("[QuestProgressorEditor] SaiServer not found!");
@@ -907,8 +910,8 @@ namespace SaiGame.Services
             this.isStarting = true;
             Repaint();
 
-            this.questProgressor.StartQuest(
-                questDefinitionId: questDefinitionId,
+            this.questProgressor.StartQuestFromPicker(
+                entry: entry,
                 onSuccess: response =>
                 {
                     this.isStarting = false;

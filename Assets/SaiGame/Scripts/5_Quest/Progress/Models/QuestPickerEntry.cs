@@ -10,6 +10,7 @@ namespace SaiGame.Services
     public class QuestPickerEntry
     {
         public string questDefinitionId;
+        public string dailyQuestAssignmentId;
         public string displayName;
         public string sourceLabel; // e.g. "Chain 358"
     }
