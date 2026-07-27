@@ -514,8 +514,8 @@ namespace SaiGame.Services
                 statusBadge.fontSize = 10;
                 statusBadge.fontStyle = FontStyle.Bold;
                 statusBadge.alignment = TextAnchor.MiddleRight;
-                statusBadge.normal.textColor = QuestStatusIcons.GetColor(entry.status);
-                GUILayout.Label($"{QuestStatusIcons.GetIcon(entry.status)} {entry.status.ToLower()}", statusBadge, GUILayout.ExpandWidth(false));
+                statusBadge.normal.textColor = DailyQuestStatusVisuals.GetColor(entry.status);
+                GUILayout.Label($"{DailyQuestStatusVisuals.GetIcon(entry.status)} {entry.status.ToLower()}", statusBadge, GUILayout.ExpandWidth(false));
             }
             EditorGUILayout.EndHorizontal();
 
@@ -607,32 +607,33 @@ namespace SaiGame.Services
                 this.DrawEntryRewards(entry.rewards);
 
             // Action buttons
-            if (withActions && !string.IsNullOrEmpty(questDefId))
+            string assignmentId = entry.assignment?.id;
+            if (withActions && !string.IsNullOrEmpty(questDefId) && !string.IsNullOrEmpty(assignmentId))
             {
                 EditorGUILayout.Space(6);
                 EditorGUILayout.BeginHorizontal();
 
-                bool isStarting = this.startingQuestId == questDefId;
-                bool isChecking = this.checkingQuestId == questDefId;
-                bool isClaiming = this.claimingQuestId == questDefId;
+                bool isStarting = this.startingQuestId == assignmentId;
+                bool isChecking = this.checkingQuestId == assignmentId;
+                bool isClaiming = this.claimingQuestId == assignmentId;
                 bool anyBusy = isStarting || isChecking || isClaiming;
 
                 GUI.backgroundColor = isStarting ? Color.gray : new Color(1f, 0.82f, 0.2f);
                 EditorGUI.BeginDisabledGroup(anyBusy);
                 if (GUILayout.Button(isStarting ? "▶ Starting..." : "▶ Start", GUILayout.Height(28)))
-                    this.RunStartQuest(questDefId);
+                    this.RunStartQuest(assignmentId, questDefId);
                 EditorGUI.EndDisabledGroup();
 
                 GUI.backgroundColor = isChecking ? Color.gray : new Color(0.4f, 0.8f, 1f);
                 EditorGUI.BeginDisabledGroup(anyBusy);
                 if (GUILayout.Button(isChecking ? "🔄 Checking..." : "🔄 Check", GUILayout.Height(28)))
-                    this.RunCheckQuest(questDefId);
+                    this.RunCheckQuest(assignmentId, questDefId);
                 EditorGUI.EndDisabledGroup();
 
                 GUI.backgroundColor = isClaiming ? Color.gray : new Color(0.4f, 1f, 0.6f);
                 EditorGUI.BeginDisabledGroup(anyBusy);
                 if (GUILayout.Button(isClaiming ? "✓ Claiming..." : "✓ Claim", GUILayout.Height(28)))
-                    this.RunClaimQuest(questDefId);
+                    this.RunClaimQuest(assignmentId, questDefId);
                 EditorGUI.EndDisabledGroup();
 
                 GUI.backgroundColor = Color.white;
@@ -795,7 +796,7 @@ namespace SaiGame.Services
             );
         }
 
-        private void RunStartQuest(string questDefinitionId)
+        private void RunStartQuest(string assignmentId, string questDefinitionId)
         {
             if (SaiServer.Instance == null || SaiServer.Instance.QuestProgressor == null)
             {
@@ -803,11 +804,11 @@ namespace SaiGame.Services
                 return;
             }
 
-            this.startingQuestId = questDefinitionId;
+            this.startingQuestId = assignmentId;
             Repaint();
 
-            SaiServer.Instance.QuestProgressor.StartQuest(
-                questDefinitionId: questDefinitionId,
+            SaiServer.Instance.QuestProgressor.StartDailyQuestAssignment(
+                assignmentId: assignmentId,
                 onSuccess: response =>
                 {
                     this.startingQuestId = null;
@@ -824,7 +825,7 @@ namespace SaiGame.Services
             );
         }
 
-        private void RunCheckQuest(string questDefinitionId)
+        private void RunCheckQuest(string assignmentId, string questDefinitionId)
         {
             if (SaiServer.Instance == null || SaiServer.Instance.QuestProgressor == null)
             {
@@ -832,11 +833,11 @@ namespace SaiGame.Services
                 return;
             }
 
-            this.checkingQuestId = questDefinitionId;
+            this.checkingQuestId = assignmentId;
             Repaint();
 
-            SaiServer.Instance.QuestProgressor.CheckQuest(
-                questDefinitionId: questDefinitionId,
+            SaiServer.Instance.QuestProgressor.CheckDailyQuestAssignment(
+                assignmentId: assignmentId,
                 onSuccess: response =>
                 {
                     this.checkingQuestId = null;
@@ -853,7 +854,7 @@ namespace SaiGame.Services
             );
         }
 
-        private void RunClaimQuest(string questDefinitionId)
+        private void RunClaimQuest(string assignmentId, string questDefinitionId)
         {
             if (SaiServer.Instance == null || SaiServer.Instance.QuestProgressor == null)
             {
@@ -861,11 +862,11 @@ namespace SaiGame.Services
                 return;
             }
 
-            this.claimingQuestId = questDefinitionId;
+            this.claimingQuestId = assignmentId;
             Repaint();
 
-            SaiServer.Instance.QuestProgressor.ClaimQuest(
-                questDefinitionId: questDefinitionId,
+            SaiServer.Instance.QuestProgressor.ClaimDailyQuestAssignment(
+                assignmentId: assignmentId,
                 onSuccess: response =>
                 {
                     this.claimingQuestId = null;
@@ -1135,8 +1136,8 @@ namespace SaiGame.Services
             GUIStyle richStyle = new GUIStyle(EditorStyles.label) { richText = true };
             richStyle.fontSize = 10;
 
-            string statusColor = QuestStatusIcons.GetHex(p.status);
-            string statusIcon = QuestStatusIcons.GetIcon(p.status);
+            string statusColor = DailyQuestStatusVisuals.GetHex(p.status);
+            string statusIcon = DailyQuestStatusVisuals.GetIcon(p.status);
             EditorGUILayout.LabelField($"Status: <color={statusColor}><b>{statusIcon} {p.status}</b></color>  |  Version: <b>{p.version}</b>", richStyle);
 
             GUIStyle idStyle = new GUIStyle(EditorStyles.label);

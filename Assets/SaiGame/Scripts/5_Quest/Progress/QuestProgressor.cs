@@ -147,6 +147,7 @@ namespace SaiGame.Services
                 entries.Add(new QuestPickerEntry
                 {
                     questDefinitionId = entry.quest.id,
+                    dailyQuestAssignmentId = entry.assignment?.id,
                     displayName = entry.quest.name,
                     sourceLabel = poolLabel
                 });
@@ -185,17 +186,34 @@ namespace SaiGame.Services
                 return;
             }
 
-            StartCoroutine(this.StartQuestCoroutine(questDefinitionId, onSuccess, onError));
+            string endpoint = $"/api/v1/games/{SaiServer.Instance.GameId}/quests/{questDefinitionId}/start";
+            StartCoroutine(this.StartQuestCoroutine(endpoint, onSuccess, onError));
+        }
+
+        /// <summary>
+        /// Starts the daily quest represented by one assignment window.
+        /// Endpoint: POST /api/v1/games/{gameId}/daily-quest-assignments/{assignmentId}/start
+        /// </summary>
+        public void StartDailyQuestAssignment(string assignmentId, Action<StartQuestResponse> onSuccess = null, Action<string> onError = null)
+        {
+            if (!this.ValidateDailyQuestAssignmentRequest(assignmentId, onError)) return;
+            string endpoint = $"/api/v1/games/{SaiServer.Instance.GameId}/daily-quest-assignments/{assignmentId}/start";
+            StartCoroutine(this.StartQuestCoroutine(endpoint, onSuccess, onError));
+        }
+
+        public void StartQuestFromPicker(QuestPickerEntry entry, Action<StartQuestResponse> onSuccess = null, Action<string> onError = null)
+        {
+            if (!string.IsNullOrEmpty(entry?.dailyQuestAssignmentId))
+                this.StartDailyQuestAssignment(entry.dailyQuestAssignmentId, onSuccess, onError);
+            else
+                this.StartQuest(entry?.questDefinitionId, onSuccess, onError);
         }
 
         private IEnumerator StartQuestCoroutine(
-            string questDefinitionId,
+            string endpoint,
             System.Action<StartQuestResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiServer.Instance.GameId;
-            string endpoint = $"/api/v1/games/{gameId}/quests/{questDefinitionId}/start";
-
             yield return SaiServer.Instance.PostRequest(endpoint, "{}",
                 response =>
                 {
@@ -263,17 +281,34 @@ namespace SaiGame.Services
                 return;
             }
 
-            StartCoroutine(this.CheckQuestCoroutine(questDefinitionId, onSuccess, onError));
+            string endpoint = $"/api/v1/games/{SaiServer.Instance.GameId}/quests/{questDefinitionId}/check";
+            StartCoroutine(this.CheckQuestCoroutine(endpoint, onSuccess, onError));
+        }
+
+        /// <summary>
+        /// Checks progress for the daily quest represented by one assignment window.
+        /// Endpoint: POST /api/v1/games/{gameId}/daily-quest-assignments/{assignmentId}/check
+        /// </summary>
+        public void CheckDailyQuestAssignment(string assignmentId, Action<CheckQuestResponse> onSuccess = null, Action<string> onError = null)
+        {
+            if (!this.ValidateDailyQuestAssignmentRequest(assignmentId, onError)) return;
+            string endpoint = $"/api/v1/games/{SaiServer.Instance.GameId}/daily-quest-assignments/{assignmentId}/check";
+            StartCoroutine(this.CheckQuestCoroutine(endpoint, onSuccess, onError));
+        }
+
+        public void CheckQuestFromPicker(QuestPickerEntry entry, Action<CheckQuestResponse> onSuccess = null, Action<string> onError = null)
+        {
+            if (!string.IsNullOrEmpty(entry?.dailyQuestAssignmentId))
+                this.CheckDailyQuestAssignment(entry.dailyQuestAssignmentId, onSuccess, onError);
+            else
+                this.CheckQuest(entry?.questDefinitionId, onSuccess, onError);
         }
 
         private IEnumerator CheckQuestCoroutine(
-            string questDefinitionId,
+            string endpoint,
             System.Action<CheckQuestResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiServer.Instance.GameId;
-            string endpoint = $"/api/v1/games/{gameId}/quests/{questDefinitionId}/check";
-
             yield return SaiServer.Instance.PostRequest(endpoint, "{}",
                 response =>
                 {
@@ -350,17 +385,34 @@ namespace SaiGame.Services
                 return;
             }
 
-            StartCoroutine(this.ClaimQuestCoroutine(questDefinitionId, onSuccess, onError));
+            string endpoint = $"/api/v1/games/{SaiServer.Instance.GameId}/quests/{questDefinitionId}/claim";
+            StartCoroutine(this.ClaimQuestCoroutine(endpoint, onSuccess, onError));
+        }
+
+        /// <summary>
+        /// Claims rewards for the daily quest represented by one assignment window.
+        /// Endpoint: POST /api/v1/games/{gameId}/daily-quest-assignments/{assignmentId}/claim
+        /// </summary>
+        public void ClaimDailyQuestAssignment(string assignmentId, Action<ClaimQuestResponse> onSuccess = null, Action<string> onError = null)
+        {
+            if (!this.ValidateDailyQuestAssignmentRequest(assignmentId, onError)) return;
+            string endpoint = $"/api/v1/games/{SaiServer.Instance.GameId}/daily-quest-assignments/{assignmentId}/claim";
+            StartCoroutine(this.ClaimQuestCoroutine(endpoint, onSuccess, onError));
+        }
+
+        public void ClaimQuestFromPicker(QuestPickerEntry entry, Action<ClaimQuestResponse> onSuccess = null, Action<string> onError = null)
+        {
+            if (!string.IsNullOrEmpty(entry?.dailyQuestAssignmentId))
+                this.ClaimDailyQuestAssignment(entry.dailyQuestAssignmentId, onSuccess, onError);
+            else
+                this.ClaimQuest(entry?.questDefinitionId, onSuccess, onError);
         }
 
         private IEnumerator ClaimQuestCoroutine(
-            string questDefinitionId,
+            string endpoint,
             System.Action<ClaimQuestResponse> onSuccess,
             System.Action<string> onError)
         {
-            string gameId = SaiServer.Instance.GameId;
-            string endpoint = $"/api/v1/games/{gameId}/quests/{questDefinitionId}/claim";
-
             yield return SaiServer.Instance.PostRequest(endpoint, "{}",
                 response =>
                 {
@@ -402,6 +454,26 @@ namespace SaiGame.Services
         /// Finds the value of a JSON object key and returns the entire {…} block as a string.
         /// Returns null if the key is not found or the value is not an object.
         /// </summary>
+        private bool ValidateDailyQuestAssignmentRequest(string assignmentId, Action<string> onError)
+        {
+            if (SaiServer.Instance == null)
+            {
+                onError?.Invoke("SaiServer not found!");
+                return false;
+            }
+            if (!SaiServer.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return false;
+            }
+            if (string.IsNullOrEmpty(assignmentId))
+            {
+                onError?.Invoke("assignmentId cannot be empty.");
+                return false;
+            }
+            return true;
+        }
+
         private string ExtractJsonObject(string json, string key)
         {
             string searchKey = "\"" + key + "\"";
