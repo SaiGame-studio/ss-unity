@@ -61,6 +61,16 @@ namespace SaiGame.Services
                 if (svc != null) svc.ManualSaveServerEndpoint();
             }
 
+            EditorGUILayout.Space(5);
+            EditorGUILayout.LabelField("Server Time", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("serverTime"), new GUIContent("Server Time"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("serverTimestamp"), new GUIContent("Unix Timestamp"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("serverTimezone"), new GUIContent("Timezone"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("serverTimeError"), new GUIContent("Last Error"));
+            }
+
             // Service References foldout
             EditorGUILayout.Space(2);
             this.showServiceReferences = EditorGUILayout.Foldout(this.showServiceReferences, "Service References", true);
