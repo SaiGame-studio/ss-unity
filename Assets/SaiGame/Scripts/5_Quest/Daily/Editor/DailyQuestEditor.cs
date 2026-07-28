@@ -591,6 +591,7 @@ namespace SaiGame.Services
                 this.DrawDimIdRow("Pool", a.pool_id, dimStyle);
                 this.DrawDimIdRow("User", a.user_id, dimStyle);
                 if (!string.IsNullOrEmpty(a.assigned_date)) EditorGUILayout.LabelField($"Assigned: {a.assigned_date}", dimStyle);
+                if (!string.IsNullOrEmpty(a.available_at)) EditorGUILayout.LabelField($"Available: {a.available_at}", dimStyle);
                 if (!string.IsNullOrEmpty(a.created_at)) EditorGUILayout.LabelField($"Created: {a.created_at}", dimStyle);
 
                 GUIStyle expireStyle = new GUIStyle(EditorStyles.label) { richText = true };

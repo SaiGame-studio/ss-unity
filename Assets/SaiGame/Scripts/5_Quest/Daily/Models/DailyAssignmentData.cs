@@ -15,6 +15,7 @@ namespace SaiGame.Services
         public string pool_id;
         public string quest_definition_id;
         public string assigned_date;
+        public string available_at;
         public string expires_at;
         public string created_at;
     }

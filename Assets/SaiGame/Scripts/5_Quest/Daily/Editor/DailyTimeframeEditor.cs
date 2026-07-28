@@ -486,6 +486,7 @@ namespace SaiGame.Services
                 assignmentStyle.fontSize = 9;
                 assignmentStyle.normal.textColor = new Color(0.55f, 0.55f, 0.55f);
                 EditorGUILayout.LabelField(string.Format("Assigned: {0}", entry.assignment.assigned_date), assignmentStyle);
+                EditorGUILayout.LabelField(string.Format("Available: {0}", entry.assignment.available_at), assignmentStyle);
                 EditorGUILayout.LabelField(string.Format("Expires: {0}", entry.assignment.expires_at), assignmentStyle);
             }
 
