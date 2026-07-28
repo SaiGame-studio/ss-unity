@@ -10,17 +10,13 @@ namespace SaiGame.Services
     {
         private QuestHistory questClaims;
         private SerializedProperty claimsLimit;
-        private SerializedProperty claimsOffset;
+        private SerializedProperty claimsProgressId;
+        private SerializedProperty claimsAfter;
 
         private bool showClaimsList = true;
-        private bool showCheckStatus = true;
-        private bool showQuestDetail = false;
         private bool showQuestHistory = false;
 
         private bool isLoading = false;
-        private bool isCheckingStatus = false;
-        private string checkStatusQuestDefId = "";
-        private string checkStatusError = "";
 
         // Per-claim collapse state (keyed by claim id)
         private readonly Dictionary<string, bool> expandedClaims = new Dictionary<string, bool>();
@@ -29,14 +25,13 @@ namespace SaiGame.Services
         {
             this.questClaims = (QuestHistory)target;
             this.claimsLimit = serializedObject.FindProperty("claimsLimit");
-            this.claimsOffset = serializedObject.FindProperty("claimsOffset");
+            this.claimsProgressId = serializedObject.FindProperty("claimsProgressId");
+            this.claimsAfter = serializedObject.FindProperty("claimsAfter");
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            GUIStyle rich = new GUIStyle(EditorStyles.label) { richText = true };
 
             bool canAct = Application.isPlaying
                           && SaiServer.Instance != null
@@ -47,59 +42,6 @@ namespace SaiGame.Services
             // ════════════════════════════════════════════════════════════════
             EditorGUILayout.Space(6);
             GUIStyle sectionFoldout = new GUIStyle(EditorStyles.foldout) { fontSize = 12, fontStyle = FontStyle.Bold };
-            this.showQuestDetail = EditorGUILayout.Foldout(this.showQuestDetail, "Quest Detail", true, sectionFoldout);
-            if (this.showQuestDetail)
-            {
-                EditorGUILayout.LabelField(
-                    "<color=#888888>Look up progress + definition for a single Quest Definition ID.</color>",
-                    new GUIStyle(EditorStyles.miniLabel) { richText = true });
-                EditorGUILayout.Space(2);
-
-                // Input
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Quest Def ID", GUILayout.Width(82f));
-                this.checkStatusQuestDefId = EditorGUILayout.TextField(this.checkStatusQuestDefId);
-                EditorGUILayout.EndHorizontal();
-
-                // Action buttons
-                EditorGUILayout.BeginHorizontal();
-                bool hasId = !string.IsNullOrWhiteSpace(this.checkStatusQuestDefId);
-                GUI.backgroundColor = (canAct && hasId && !this.isCheckingStatus)
-                    ? new Color(0.4f, 0.8f, 1f) : Color.gray;
-                EditorGUI.BeginDisabledGroup(!canAct || !hasId || this.isCheckingStatus);
-                if (GUILayout.Button(this.isCheckingStatus ? "Checking..." : "Check Status", GUILayout.Height(26)))
-                    this.RunCheckStatus();
-                EditorGUI.EndDisabledGroup();
-                GUI.backgroundColor = Color.white;
-
-                if (GUILayout.Button("Clear", GUILayout.Height(26), GUILayout.Width(52)))
-                {
-                    this.checkStatusError = "";
-                    if (this.questClaims != null) this.questClaims.CurrentQuestStatusResponse = null;
-                    Repaint();
-                }
-                EditorGUILayout.EndHorizontal();
-
-                if (!canAct)
-                    EditorGUILayout.HelpBox(
-                        Application.isPlaying ? "Not authenticated. Please login first." : "Enter Play Mode and log in.",
-                        MessageType.Info);
-
-                if (!string.IsNullOrEmpty(this.checkStatusError))
-                    EditorGUILayout.HelpBox(this.checkStatusError, MessageType.Error);
-
-                // Result
-                QuestDefinitionStatusResponse result = this.questClaims?.CurrentQuestStatusResponse;
-                if (result != null)
-                {
-                    EditorGUILayout.Space(4);
-                    this.showCheckStatus = EditorGUILayout.Foldout(this.showCheckStatus, "Result", true);
-                    if (this.showCheckStatus)
-                        this.DrawCheckStatusResult(result, rich,
-                            new GUIStyle(EditorStyles.miniLabel) { richText = true });
-                }
-            }
-
             // ════════════════════════════════════════════════════════════════
             //  SECTION 2 — QUEST History
             // ════════════════════════════════════════════════════════════════
@@ -111,7 +53,7 @@ namespace SaiGame.Services
             if (this.showQuestHistory)
             {
                 EditorGUILayout.LabelField(
-                    "<color=#888888>Fetch and browse the paginated list of all claimed quests for this user.</color>",
+                    "<color=#888888>Fetch claimed quests by instance ID with cursor pagination.</color>",
                     new GUIStyle(EditorStyles.miniLabel) { richText = true });
                 EditorGUILayout.Space(2);
 
@@ -119,10 +61,17 @@ namespace SaiGame.Services
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Limit", GUILayout.Width(38f));
                 this.claimsLimit.intValue = EditorGUILayout.IntField(this.claimsLimit.intValue, GUILayout.Width(60f));
-                GUILayout.Space(16f);
-                EditorGUILayout.LabelField("Offset", GUILayout.Width(44f));
-                this.claimsOffset.intValue = EditorGUILayout.IntField(this.claimsOffset.intValue, GUILayout.Width(60f));
                 GUILayout.FlexibleSpace();
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Quest instance ID", GUILayout.Width(108f));
+                this.claimsProgressId.stringValue = EditorGUILayout.TextField(this.claimsProgressId.stringValue);
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("After claim ID", GUILayout.Width(108f));
+                this.claimsAfter.stringValue = EditorGUILayout.TextField(this.claimsAfter.stringValue);
                 EditorGUILayout.EndHorizontal();
 
                 // Action buttons
@@ -133,6 +82,17 @@ namespace SaiGame.Services
                     this.LoadClaims();
                 EditorGUI.EndDisabledGroup();
                 GUI.backgroundColor = Color.white;
+
+                QuestClaimsResponse currentClaims = this.questClaims.CurrentClaimsResponse;
+                bool canLoadMore = canAct
+                    && !this.isLoading
+                    && currentClaims != null
+                    && currentClaims.has_more
+                    && !string.IsNullOrWhiteSpace(currentClaims.next_after);
+                EditorGUI.BeginDisabledGroup(!canLoadMore);
+                if (GUILayout.Button(this.isLoading ? "Loading..." : "Load More", GUILayout.Height(26)))
+                    this.LoadMoreClaims();
+                EditorGUI.EndDisabledGroup();
 
                 GUI.backgroundColor = new Color(1f, 0.35f, 0.35f);
                 if (GUILayout.Button("Clear Claims", GUILayout.Height(26), GUILayout.Width(90f)))
@@ -425,28 +385,6 @@ namespace SaiGame.Services
             }
         }
 
-        private void RunCheckStatus()
-        {
-            this.checkStatusError = "";
-            this.isCheckingStatus = true;
-            Repaint();
-
-            this.questClaims.GetQuestStatus(
-                this.checkStatusQuestDefId.Trim(),
-                onSuccess: _ =>
-                {
-                    this.isCheckingStatus = false;
-                    Repaint();
-                },
-                onError: err =>
-                {
-                    this.isCheckingStatus = false;
-                    this.checkStatusError = err;
-                    Repaint();
-                }
-            );
-        }
-
         private void DrawClaimsSummaryCard(QuestClaimsResponse response)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -459,9 +397,9 @@ namespace SaiGame.Services
             GUIStyle richStyle = new GUIStyle(EditorStyles.label) { richText = true };
             richStyle.fontSize = 11;
             EditorGUILayout.LabelField(
-                $"Total: <color=#00FF88><b>{response.total}</b></color>  |  " +
                 $"Loaded: <color=#66CCFF><b>{response.claims.Length}</b></color>  |  " +
-                $"Limit: <b>{response.limit}</b>  |  Offset: <b>{response.offset}</b>",
+                $"Limit: <b>{response.limit}</b>  |  " +
+                $"Has more: <b>{response.has_more}</b>  |  Next after: <b>{response.next_after ?? "none"}</b>",
                 richStyle);
 
             EditorGUILayout.EndVertical();
@@ -704,13 +642,34 @@ namespace SaiGame.Services
                 onSuccess: response =>
                 {
                     this.isLoading = false;
-                    Debug.Log($"[QuestClaimsEditor] Loaded {response.claims.Length} claims (total: {response.total})");
+                    Debug.Log($"[QuestClaimsEditor] Loaded {response.claims.Length} claims (has more: {response.has_more})");
                     Repaint();
                 },
                 onError: error =>
                 {
                     this.isLoading = false;
                     Debug.LogError($"[QuestClaimsEditor] Failed to load claims: {error}");
+                    Repaint();
+                }
+            );
+        }
+
+        private void LoadMoreClaims()
+        {
+            this.isLoading = true;
+            Repaint();
+
+            this.questClaims.LoadMoreClaims(
+                onSuccess: response =>
+                {
+                    this.isLoading = false;
+                    Debug.Log($"[QuestClaimsEditor] Loaded more claims (total cached: {response.claims.Length})");
+                    Repaint();
+                },
+                onError: error =>
+                {
+                    this.isLoading = false;
+                    Debug.LogError($"[QuestClaimsEditor] Failed to load more claims: {error}");
                     Repaint();
                 }
             );
