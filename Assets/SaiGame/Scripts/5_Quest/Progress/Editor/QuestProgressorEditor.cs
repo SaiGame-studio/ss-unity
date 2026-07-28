@@ -274,6 +274,7 @@ namespace SaiGame.Services
                         if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = a.id;
                         EditorGUILayout.EndHorizontal();
                         EditorGUILayout.LabelField("Assigned", a.assigned_date, richStyle);
+                        EditorGUILayout.LabelField("Available", a.available_at, richStyle);
                         EditorGUILayout.LabelField("Expires",  $"<color=#FF8888>{a.expires_at}</color>", richStyle);
                         EditorGUILayout.EndVertical();
                     }
