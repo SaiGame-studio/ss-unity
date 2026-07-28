@@ -20,7 +20,8 @@ namespace SaiGame.Services
 
         [Header("Pagination Settings")]
         [SerializeField] protected int claimsLimit = 50;
-        [SerializeField] protected int claimsOffset = 0;
+        [SerializeField] protected string claimsProgressId = "";
+        [SerializeField] protected string claimsAfter = "";
 
         [Header("Cached Response")]
         [SerializeField] protected QuestClaimsResponse currentClaimsResponse;
@@ -83,12 +84,13 @@ namespace SaiGame.Services
         // ── Public API ─────────────────────────────────────────────────────────
 
         /// <summary>
-        /// Fetches the paginated list of quest claims for the current user.
-        /// Endpoint: GET /api/v1/games/{gameId}/quest-claims?limit={limit}&offset={offset}
+        /// Fetches a cursor-paginated list of quest claims for the current user.
+        /// Endpoint: GET /api/v1/games/{gameId}/quest-claims?limit={limit}&progress_id={progressId}&after={after}
         /// </summary>
         public void GetClaims(
             int? limit = null,
-            int? offset = null,
+            string progressId = null,
+            string after = null,
             Action<QuestClaimsResponse> onSuccess = null,
             Action<string> onError = null)
         {
@@ -108,19 +110,46 @@ namespace SaiGame.Services
             }
 
             int actualLimit = limit ?? this.claimsLimit;
-            int actualOffset = offset ?? this.claimsOffset;
+            string actualProgressId = progressId ?? this.claimsProgressId;
+            string actualAfter = after ?? this.claimsAfter;
 
-            StartCoroutine(this.GetClaimsCoroutine(actualLimit, actualOffset, onSuccess, onError));
+            StartCoroutine(this.GetClaimsCoroutine(actualLimit, actualProgressId, actualAfter, false, onSuccess, onError));
+        }
+
+        /// <summary>Loads the next claim page using the cached next_after cursor.</summary>
+        public void LoadMoreClaims(
+            Action<QuestClaimsResponse> onSuccess = null,
+            Action<string> onError = null)
+        {
+            if (this.currentClaimsResponse == null || !this.currentClaimsResponse.has_more || string.IsNullOrWhiteSpace(this.currentClaimsResponse.next_after))
+            {
+                onError?.Invoke("No more quest claims are available.");
+                return;
+            }
+
+            StartCoroutine(this.GetClaimsCoroutine(
+                this.claimsLimit,
+                this.claimsProgressId,
+                this.currentClaimsResponse.next_after,
+                true,
+                onSuccess,
+                onError));
         }
 
         private IEnumerator GetClaimsCoroutine(
             int limit,
-            int offset,
+            string progressId,
+            string after,
+            bool append,
             Action<QuestClaimsResponse> onSuccess,
             Action<string> onError)
         {
             string gameId = SaiServer.Instance.GameId;
-            string endpoint = $"/api/v1/games/{gameId}/quest-claims?limit={limit}&offset={offset}";
+            string endpoint = $"/api/v1/games/{gameId}/quest-claims?limit={limit}";
+            if (!string.IsNullOrWhiteSpace(progressId))
+                endpoint += $"&progress_id={Uri.EscapeDataString(progressId)}";
+            if (!string.IsNullOrWhiteSpace(after))
+                endpoint += $"&after={Uri.EscapeDataString(after)}";
 
             yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
@@ -128,15 +157,18 @@ namespace SaiGame.Services
                     try
                     {
                         QuestClaimsResponse claimsResponse = JsonUtility.FromJson<QuestClaimsResponse>(response);
-                        this.currentClaimsResponse = claimsResponse;
+                        QuestClaimsResponse cachedResponse = append
+                            ? this.AppendClaimsResponse(claimsResponse)
+                            : claimsResponse;
+                        this.currentClaimsResponse = cachedResponse;
 
                         if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
-                            Debug.Log($"[QuestClaims] Claims loaded: {claimsResponse.claims.Length} claims, total: {claimsResponse.total}");
+                            Debug.Log($"[QuestClaims] Claims loaded: {claimsResponse.claims.Length} claims, cached: {cachedResponse.claims.Length}, has more: {cachedResponse.has_more}");
 
-                        this.OnGetClaimsSuccess?.Invoke(claimsResponse);
+                        this.OnGetClaimsSuccess?.Invoke(cachedResponse);
                         if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                             Debug.Log("<color=#66CCFF>[QuestClaims] GetClaims</color> → <b><color=#00FF88>onSuccess</color></b> callback | QuestClaims.cs › GetClaimsCoroutine");
-                        onSuccess?.Invoke(claimsResponse);
+                        onSuccess?.Invoke(cachedResponse);
                     }
                     catch (Exception e)
                     {
@@ -155,6 +187,18 @@ namespace SaiGame.Services
                     onError?.Invoke(error);
                 }
             );
+        }
+
+        private QuestClaimsResponse AppendClaimsResponse(QuestClaimsResponse nextPage)
+        {
+            var mergedClaims = new List<QuestClaimRecord>();
+            if (this.currentClaimsResponse?.claims != null)
+                mergedClaims.AddRange(this.currentClaimsResponse.claims);
+            if (nextPage.claims != null)
+                mergedClaims.AddRange(nextPage.claims);
+
+            nextPage.claims = mergedClaims.ToArray();
+            return nextPage;
         }
 
         /// <summary>
@@ -263,8 +307,8 @@ namespace SaiGame.Services
             {
                 claims = new QuestClaimRecord[0],
                 limit = this.claimsLimit,
-                offset = 0,
-                total = 0
+                has_more = false,
+                next_after = null
             };
         }
 
@@ -303,10 +347,12 @@ namespace SaiGame.Services
         // ── Inspector-exposed setters ──────────────────────────────────────────
 
         public void SetClaimsLimit(int limit) => this.claimsLimit = limit;
-        public void SetClaimsOffset(int offset) => this.claimsOffset = offset;
+        public void SetClaimsProgressId(string progressId) => this.claimsProgressId = progressId;
+        public void SetClaimsAfter(string after) => this.claimsAfter = after;
 
         public int GetClaimsLimit() => this.claimsLimit;
-        public int GetClaimsOffset() => this.claimsOffset;
+        public string GetClaimsProgressId() => this.claimsProgressId;
+        public string GetClaimsAfter() => this.claimsAfter;
 
         /// <summary>
         /// Extracts the first string value for a top-level or nested JSON key.
