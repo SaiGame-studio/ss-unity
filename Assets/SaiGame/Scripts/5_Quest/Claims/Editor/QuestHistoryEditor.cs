@@ -45,9 +45,6 @@ namespace SaiGame.Services
             // ════════════════════════════════════════════════════════════════
             //  SECTION 2 — QUEST History
             // ════════════════════════════════════════════════════════════════
-            EditorGUILayout.Space(10);
-            Rect divider = EditorGUILayout.GetControlRect(false, 1f);
-            EditorGUI.DrawRect(divider, new Color(0.35f, 0.35f, 0.35f, 1f));
             EditorGUILayout.Space(6);
             this.showQuestHistory = EditorGUILayout.Foldout(this.showQuestHistory, "Quests History", true, sectionFoldout);
             if (this.showQuestHistory)
