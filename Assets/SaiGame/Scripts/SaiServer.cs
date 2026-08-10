@@ -10,7 +10,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.46";
+        public const string PACKAGE_VERSION = "0.2.47";
         public const string PACKAGE_NAME = "Sai Server";
 
         [SerializeField] protected SaiAuth saiAuth;
@@ -56,6 +56,8 @@ namespace SaiGame.Services
         [SerializeField] protected long serverTimestamp;
         [SerializeField] protected string serverTimezone = "";
         [SerializeField] protected string serverTimeError = "";
+        [NonSerialized] private DateTime serverTimeAtSync;
+        [NonSerialized] private float serverTimeSyncRealtime;
 
         [SerializeField] protected bool showButtonsLog = true;
         [SerializeField] protected bool showCallbackLog = true;
@@ -152,6 +154,12 @@ namespace SaiGame.Services
         public GoogleBackendLogin GoogleBackendLogin => this.googleBackendLogin;
 
         public string GameId => this.NormalizeInput(this.gameId);
+
+        public bool HasServerTime => this.serverTimestamp > 0;
+
+        public DateTime CurrentServerTime => !this.HasServerTime
+            ? DateTime.MinValue
+            : this.serverTimeAtSync.AddSeconds(Time.realtimeSinceStartup - this.serverTimeSyncRealtime);
 
         [Serializable]
         private class ServerTimeResponse
@@ -462,6 +470,8 @@ namespace SaiGame.Services
                         this.serverTime = serverTimeResponse.server_time ?? string.Empty;
                         this.serverTimestamp = serverTimeResponse.timestamp;
                         this.serverTimezone = serverTimeResponse.timezone ?? string.Empty;
+                        this.serverTimeAtSync = this.ParseServerTime(serverTimeResponse.server_time, serverTimeResponse.timestamp);
+                        this.serverTimeSyncRealtime = Time.realtimeSinceStartup;
                         this.serverTimeError = string.Empty;
                     }
                     catch (Exception exception)
@@ -476,6 +486,14 @@ namespace SaiGame.Services
                     Debug.LogWarning($"[SaiServer] Server time request failed: {error}", gameObject);
                 }
             );
+        }
+
+        private DateTime ParseServerTime(string value, long timestamp)
+        {
+            if (DateTimeOffset.TryParse(value, out DateTimeOffset parsedServerTime))
+                return parsedServerTime.UtcDateTime;
+
+            return DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime;
         }
 
 

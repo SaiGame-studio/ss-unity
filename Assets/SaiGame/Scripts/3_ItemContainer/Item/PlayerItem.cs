@@ -190,6 +190,73 @@ namespace SaiGame.Services
             StartCoroutine(this.GetItemsCoroutine(actualLimit, actualOffset, actualCategory, onSuccess, onError));
         }
 
+        /// <summary>
+        /// Fetches one item definition by ID.
+        /// Endpoint: GET /api/v1/games/{gameId}/items/{itemDefinitionId}
+        /// </summary>
+        public void GetItemDefinition(
+            string itemDefinitionId,
+            Action<ItemDefinitionData> onSuccess = null,
+            Action<string> onError = null)
+        {
+            if (SaiServer.Instance == null)
+            {
+                onError?.Invoke("SaiServer not found!");
+                return;
+            }
+
+            if (!SaiServer.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(itemDefinitionId))
+            {
+                onError?.Invoke("itemDefinitionId cannot be empty.");
+                return;
+            }
+
+            StartCoroutine(this.GetItemDefinitionCoroutine(itemDefinitionId, onSuccess, onError));
+        }
+
+        private IEnumerator GetItemDefinitionCoroutine(
+            string itemDefinitionId,
+            Action<ItemDefinitionData> onSuccess,
+            Action<string> onError)
+        {
+            string endpoint = $"/api/v1/games/{SaiServer.Instance.GameId}/items/{itemDefinitionId}";
+
+            yield return SaiServer.Instance.GetRequest(
+                endpoint,
+                response =>
+                {
+                    try
+                    {
+                        string sanitized = InventoryJsonHelper.StringifyObjectFields(response);
+                        ItemDefinitionResponse wrappedResponse = JsonUtility.FromJson<ItemDefinitionResponse>(sanitized);
+                        ItemDefinitionData itemDefinition = wrappedResponse?.item_definition
+                            ?? wrappedResponse?.item
+                            ?? wrappedResponse?.data
+                            ?? JsonUtility.FromJson<ItemDefinitionData>(sanitized);
+
+                        if (itemDefinition == null || string.IsNullOrEmpty(itemDefinition.id))
+                        {
+                            onError?.Invoke("Parse item definition response error: Item definition was missing from the response.");
+                            return;
+                        }
+
+                        onSuccess?.Invoke(itemDefinition);
+                    }
+                    catch (Exception exception)
+                    {
+                        onError?.Invoke($"Parse item definition response error: {exception.Message}");
+                    }
+                },
+                error => onError?.Invoke(error)
+            );
+        }
+
         private IEnumerator GetItemsCoroutine(
             int limit,
             int offset,
