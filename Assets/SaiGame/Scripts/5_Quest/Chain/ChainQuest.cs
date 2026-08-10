@@ -22,8 +22,10 @@ namespace SaiGame.Services
         [SerializeField] protected ChainQuestResponse currentChainResponse;
         [SerializeField] protected int chainLimit = 50;
         [SerializeField] protected int chainOffset = 0;
+        [SerializeField] protected string chainId = "";
 
         public ChainQuestResponse CurrentChainResponse => this.currentChainResponse;
+        public string ChainId => this.chainId;
         public bool HasChains => this.currentChainResponse != null
                                  && this.currentChainResponse.chains != null
                                  && this.currentChainResponse.chains.Length > 0;
@@ -116,6 +118,12 @@ namespace SaiGame.Services
                 return;
             }
 
+            if (!string.IsNullOrWhiteSpace(this.chainId))
+            {
+                StartCoroutine(this.GetChainByIdCoroutine(this.chainId.Trim(), onSuccess, onError));
+                return;
+            }
+
             int actualLimit = limit ?? this.chainLimit;
             int actualOffset = offset ?? this.chainOffset;
 
@@ -161,6 +169,52 @@ namespace SaiGame.Services
                     this.OnGetChainsFailure?.Invoke(error);
                     if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[ChainQuest] GetChains</color> → <b><color=#FF4444>onError</color></b> callback (network) | SaiChainQuest.cs › GetChainsCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
+            );
+        }
+
+        private IEnumerator GetChainByIdCoroutine(
+            string requestedChainId,
+            System.Action<ChainQuestResponse> onSuccess,
+            System.Action<string> onError)
+        {
+            string gameId = SaiServer.Instance.GameId;
+            string endpoint = $"/api/v1/games/{gameId}/quest-chains/{requestedChainId}";
+
+            yield return SaiServer.Instance.GetRequest(endpoint,
+                response =>
+                {
+                    try
+                    {
+                        ChainQuestDetailResponse detailResponse = JsonUtility.FromJson<ChainQuestDetailResponse>(response);
+                        if (detailResponse?.chain == null)
+                            throw new System.Exception("Response does not contain a chain.");
+
+                        this.currentChainResponse = new ChainQuestResponse
+                        {
+                            chains = new[] { detailResponse.chain },
+                            limit = 1,
+                            offset = 0,
+                            total = 1
+                        };
+
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                            Debug.Log($"[ChainQuest] Chain loaded by ID: {detailResponse.chain.id}");
+
+                        this.OnGetChainsSuccess?.Invoke(this.currentChainResponse);
+                        onSuccess?.Invoke(this.currentChainResponse);
+                    }
+                    catch (System.Exception exception)
+                    {
+                        string errorMessage = $"Parse get chain by ID response error: {exception.Message}";
+                        this.OnGetChainsFailure?.Invoke(errorMessage);
+                        onError?.Invoke(errorMessage);
+                    }
+                },
+                error =>
+                {
+                    this.OnGetChainsFailure?.Invoke(error);
                     onError?.Invoke(error);
                 }
             );
@@ -261,6 +315,7 @@ namespace SaiGame.Services
 
         public void SetChainLimit(int limit) => this.chainLimit = limit;
         public void SetChainOffset(int offset) => this.chainOffset = offset;
+        public void SetChainId(string value) => this.chainId = value ?? "";
 
         public int GetChainLimit() => this.chainLimit;
         public int GetChainOffset() => this.chainOffset;

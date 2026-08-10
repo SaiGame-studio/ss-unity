@@ -62,6 +62,7 @@ GameObject:
   - component: {fileID: 1892399005449690324}
   - component: {fileID: 2399963655362431771}
   - component: {fileID: 5323172006139148077}
+  - component: {fileID: 6222148836628058343}
   m_Layer: 0
   m_Name: Quest
   m_TagString: Untagged
@@ -237,12 +238,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.QuestHistory
   claimsLimit: 50
-  claimsOffset: 0
+  claimsProgressId: 
+  claimsAfter: 
   currentClaimsResponse:
     claims: []
     limit: 0
-    offset: 0
-    total: 0
+    has_more: 0
+    next_after: 
   currentQuestStatusResponse:
     progress:
       id: 
@@ -301,6 +303,25 @@ MonoBehaviour:
     limit: 0
     offset: 0
     total: 0
+--- !u!114 &6222148836628058343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4330135680898373133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f4d3d87f7b4f3d8b129c87143ccd66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.BattlePass
+  currentBattlePassResponse:
+    pools: []
+    limit: 0
+    offset: 0
+    total: 0
+  battlePassLimit: 50
+  battlePassOffset: 0
 --- !u!1 &5318073927917700422
 GameObject:
   m_ObjectHideFlags: 0
@@ -730,6 +751,7 @@ MonoBehaviour:
   equipmentSlotManager: {fileID: 2893519870010327973}
   shop: {fileID: 7399820738238440333}
   chainQuest: {fileID: 4308186167237759036}
+  battlePass: {fileID: 0}
   questProgressor: {fileID: 1733594213501630859}
   questHistory: {fileID: 2399963655362431771}
   dailyQuest: {fileID: 1892399005449690324}
@@ -745,6 +767,10 @@ MonoBehaviour:
   useHttps: 0
   gameId: 
   requestTimeout: 30
+  serverTime: 
+  serverTimestamp: 0
+  serverTimezone: 
+  serverTimeError: 
   showButtonsLog: 1
   showCallbackLog: 1
   showDebugLog: 1

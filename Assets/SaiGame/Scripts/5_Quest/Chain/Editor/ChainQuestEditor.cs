@@ -12,6 +12,7 @@ namespace SaiGame.Services
         private SerializedProperty autoLoadOnLogin;
         private SerializedProperty chainLimit;
         private SerializedProperty chainOffset;
+        private SerializedProperty chainId;
 
         private bool showCurrentChains = true;
         private bool showChainList = true;
@@ -44,6 +45,7 @@ namespace SaiGame.Services
             this.autoLoadOnLogin = serializedObject.FindProperty("autoLoadOnLogin");
             this.chainLimit = serializedObject.FindProperty("chainLimit");
             this.chainOffset = serializedObject.FindProperty("chainOffset");
+            this.chainId = serializedObject.FindProperty("chainId");
         }
 
         public override void OnInspectorGUI()
@@ -60,6 +62,7 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("Pagination Settings", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(this.chainLimit, new GUIContent("Chain Limit", "Number of chains to load per request"));
             EditorGUILayout.PropertyField(this.chainOffset, new GUIContent("Chain Offset", "Offset for pagination"));
+            EditorGUILayout.PropertyField(this.chainId, new GUIContent("Chain ID", "When set, Get Chains loads only this chain"));
 
             EditorGUILayout.Space();
 

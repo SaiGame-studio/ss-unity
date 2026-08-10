@@ -27,6 +27,7 @@ namespace SaiGame.Services
         [SerializeField] protected EquipmentSlot equipmentSlotManager;
         [SerializeField] protected Shop shop;
         [SerializeField] protected ChainQuest chainQuest;
+        [SerializeField] protected BattlePass battlePass;
         [SerializeField] protected QuestProgressor questProgressor;
         [SerializeField] protected QuestHistory questHistory;
         [SerializeField] protected DailyQuest dailyQuest;
@@ -125,6 +126,8 @@ namespace SaiGame.Services
         public EquipmentSlot EquipmentSlotManager => this.equipmentSlotManager;
 
         public ChainQuest ChainQuest => this.chainQuest;
+
+        public BattlePass BattlePass => this.battlePass;
 
         public QuestProgressor QuestProgressor => this.questProgressor;
 
@@ -404,6 +407,7 @@ namespace SaiGame.Services
             this.LoadEquipmentSlotManager();
             this.LoadShop();
             this.LoadChainQuest();
+            this.LoadBattlePass();
             this.LoadQuestProgressor();
             this.LoadQuestHistory();
             this.LoadDailyQuest();
@@ -593,6 +597,14 @@ namespace SaiGame.Services
             this.chainQuest = GetComponentInChildren<ChainQuest>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadChainQuest", gameObject);
+        }
+
+        protected virtual void LoadBattlePass()
+        {
+            if (this.battlePass != null) return;
+            this.battlePass = GetComponentInChildren<BattlePass>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadBattlePass", gameObject);
         }
 
         protected virtual void LoadQuestProgressor()
