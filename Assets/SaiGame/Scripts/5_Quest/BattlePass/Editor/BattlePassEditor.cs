@@ -198,9 +198,7 @@ namespace SaiGame.Services
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(label, EditorStyles.miniLabel, GUILayout.Width(145));
             EditorGUILayout.SelectableLabel(value, EditorStyles.miniLabel, GUILayout.Height(EditorGUIUtility.singleLineHeight));
-            GUIContent copyIcon = EditorGUIUtility.IconContent("d_TreeEditor.Duplicate");
-            copyIcon.tooltip = "Copy identifier";
-            if (GUILayout.Button(copyIcon, GUILayout.Width(28)))
+            if (GUILayout.Button("Copy", GUILayout.Width(50)))
                 GUIUtility.systemCopyBuffer = value;
             EditorGUILayout.EndHorizontal();
         }
