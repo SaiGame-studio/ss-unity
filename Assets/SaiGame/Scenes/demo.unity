@@ -432,6 +432,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1809673455 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6222148836628058343, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 8872317261903600714}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f4d3d87f7b4f3d8b129c87143ccd66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.BattlePass
 --- !u!1001 &8872317261903600714
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -492,6 +503,10 @@ PrefabInstance:
       propertyPath: useHttps
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: battlePass
+      value: 
+      objectReference: {fileID: 1809673455}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: domainOption
       value: 1

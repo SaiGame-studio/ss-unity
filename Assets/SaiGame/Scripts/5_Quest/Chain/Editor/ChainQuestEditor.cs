@@ -327,12 +327,20 @@ namespace SaiGame.Services
             foldoutStyle.onActive.textColor = titleColor;
 
             EditorGUILayout.BeginHorizontal();
-            this.expandedMembers[memberKey] = EditorGUILayout.Foldout(this.expandedMembers[memberKey], $"◆ {questName}", true, foldoutStyle);
+            GUIContent foldoutContent = new GUIContent($"◆ {questName}");
+            Rect foldoutRect = GUILayoutUtility.GetRect(foldoutContent, foldoutStyle, GUILayout.ExpandWidth(false));
+            this.expandedMembers[memberKey] = EditorGUI.Foldout(
+                foldoutRect,
+                this.expandedMembers[memberKey],
+                foldoutContent,
+                true,
+                foldoutStyle);
 
             // Prominent status pill — prefers member.status from API, falls back to cached check.
             string memberStatus = !string.IsNullOrEmpty(member.status)
                 ? member.status
                 : this.GetCachedMemberStatus(member.quest_definition_id);
+            GUILayout.FlexibleSpace();
             if (!string.IsNullOrEmpty(memberStatus))
                 this.DrawStatusPill(memberStatus);
 
@@ -343,7 +351,7 @@ namespace SaiGame.Services
                 badgeStyle.fontStyle = FontStyle.Bold;
                 badgeStyle.alignment = TextAnchor.MiddleRight;
                 badgeStyle.normal.textColor = member.definition.is_active ? new Color(0.3f, 1f, 0.5f) : new Color(0.6f, 0.6f, 0.6f);
-                EditorGUILayout.LabelField(member.definition.is_active ? "ACTIVE" : "INACTIVE", badgeStyle, GUILayout.MinWidth(70));
+                EditorGUILayout.LabelField(member.definition.is_active ? "ACTIVE" : "INACTIVE", badgeStyle, GUILayout.Width(90));
             }
             EditorGUILayout.EndHorizontal();
 
