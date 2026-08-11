@@ -109,7 +109,8 @@ namespace SaiGame.Services
             {
                 this.DrawDetailRow("Schedule type", "Recurring");
                 this.DrawDetailRow("Cycle start time (UTC)", session.cycle_start_at);
-                this.DrawDetailRow("Repeats every", $"{session.repeat_every_months} month(s)");
+                this.DrawDetailRow("Repeat type", string.IsNullOrEmpty(session.repeat_type) ? "Not available" : session.repeat_type);
+                this.DrawDetailRow("Repeat amount", session.repeat_amount.ToString());
                 return;
             }
 

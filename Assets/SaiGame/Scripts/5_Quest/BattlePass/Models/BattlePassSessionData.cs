@@ -9,6 +9,7 @@ namespace SaiGame.Services
         public string session_start_at;
         public string session_end_at;
         public string cycle_start_at;
-        public int repeat_every_months;
+        public string repeat_type;
+        public int repeat_amount;
     }
 }
