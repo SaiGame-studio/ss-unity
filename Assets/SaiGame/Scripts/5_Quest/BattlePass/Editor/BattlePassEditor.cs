@@ -105,11 +105,20 @@ namespace SaiGame.Services
                 return;
             }
 
-            if (session.repeatable)
+            if (session.schedule_mode == "interval")
             {
                 this.DrawDetailRow("Schedule type", "Recurring");
                 this.DrawDetailRow("Cycle start time (UTC)", session.cycle_start_at);
-                this.DrawDetailRow("Repeats every", $"{session.repeat_every_months} month(s)");
+                this.DrawDetailRow("Repeat type", string.IsNullOrEmpty(session.repeat_type) ? "Not available" : session.repeat_type);
+                this.DrawDetailRow("Repeat amount", session.repeat_amount.ToString());
+                return;
+            }
+
+            if (session.schedule_mode == "annual")
+            {
+                this.DrawDetailRow("Schedule type", "Annual window");
+                this.DrawDetailRow("Annual start time (UTC)", session.session_start_at);
+                this.DrawDetailRow("Annual end time (UTC)", session.session_end_at);
                 return;
             }
 
