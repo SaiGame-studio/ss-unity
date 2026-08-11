@@ -5,7 +5,7 @@ namespace SaiGame.Services
     [Serializable]
     public class BattlePassSessionData
     {
-        public bool repeatable;
+        public string schedule_mode;
         public string session_start_at;
         public string session_end_at;
         public string cycle_start_at;
