@@ -105,11 +105,27 @@ namespace SaiGame.Services
                 return;
             }
 
-            this.DrawDetailRow("Schedule type", session.repeatable ? "Recurring" : "One-time");
-            this.DrawDetailRow("Cycle start time (UTC)", session.cycle_start_at);
-
-            if (session.repeatable)
-                this.DrawDetailRow("Repeats every (months)", session.repeat_every_months.ToString());
+            switch (session.schedule_mode)
+            {
+                case "fixed":
+                    this.DrawDetailRow("Schedule type", "Fixed");
+                    this.DrawDetailRow("Session start time (UTC)", session.session_start_at);
+                    this.DrawDetailRow("Session end time (UTC)", session.session_end_at);
+                    break;
+                case "annual":
+                    this.DrawDetailRow("Schedule type", "Annual");
+                    this.DrawDetailRow("Session start time (UTC)", session.session_start_at);
+                    this.DrawDetailRow("Session end time (UTC)", session.session_end_at);
+                    break;
+                case "interval":
+                    this.DrawDetailRow("Schedule type", "Interval");
+                    this.DrawDetailRow("Cycle start time (UTC)", session.cycle_start_at);
+                    this.DrawDetailRow("Repeats every", $"{session.repeat_amount} {session.repeat_type}");
+                    break;
+                default:
+                    EditorGUILayout.HelpBox("The battle pass response contains an unsupported session schedule.", MessageType.Warning);
+                    break;
+            }
         }
 
         private void DrawChains(BattlePassChainsResponse response)
