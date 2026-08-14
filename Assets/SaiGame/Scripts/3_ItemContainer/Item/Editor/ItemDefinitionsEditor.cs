@@ -36,13 +36,28 @@ namespace SaiGame.Services
                 if (definition == null)
                     continue;
 
-                string label = string.IsNullOrEmpty(definition.item_code)
-                    ? "(No Item Code)"
-                    : definition.item_code;
+                string label = string.IsNullOrEmpty(definition.name)
+                    ? definition.item_code
+                    : $"{definition.name}  [{definition.category}]";
+                if (string.IsNullOrEmpty(label))
+                    label = "(Unnamed Item Definition)";
                 string foldoutKey = string.IsNullOrEmpty(definition.id) ? i.ToString() : definition.id;
                 this.definitionFoldouts.TryGetValue(foldoutKey, out bool isExpanded);
 
-                isExpanded = EditorGUILayout.Foldout(isExpanded, label, true);
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout)
+                {
+                    fontStyle = FontStyle.Bold,
+                };
+                Color rarityColor = GetRarityColor(definition.rarity);
+                foldoutStyle.normal.textColor = rarityColor;
+                foldoutStyle.onNormal.textColor = rarityColor;
+                foldoutStyle.focused.textColor = rarityColor;
+                foldoutStyle.onFocused.textColor = rarityColor;
+                foldoutStyle.active.textColor = rarityColor;
+                foldoutStyle.onActive.textColor = rarityColor;
+
+                isExpanded = EditorGUILayout.Foldout(isExpanded, label, true, foldoutStyle);
                 this.definitionFoldouts[foldoutKey] = isExpanded;
                 if (isExpanded)
                 {
@@ -50,6 +65,7 @@ namespace SaiGame.Services
                     this.DrawDefinitionProperties(definition);
                     EditorGUI.indentLevel--;
                 }
+                EditorGUILayout.EndVertical();
             }
 
             this.serializedObject.ApplyModifiedProperties();
@@ -89,9 +105,126 @@ namespace SaiGame.Services
 
         private void DrawDefinitionProperties(ItemDefinitionData definition)
         {
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.TextArea(JsonUtility.ToJson(definition, true));
-            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.Space(3);
+            EditorGUILayout.LabelField("Definition", EditorStyles.boldLabel);
+            DrawIdField("ID", definition.id);
+            DrawIdField("Game ID", definition.game_id);
+            EditorGUILayout.LabelField("Item Code", definition.item_code);
+            EditorGUILayout.LabelField("Name", definition.name);
+            EditorGUILayout.LabelField("Category", definition.category);
+            EditorGUILayout.LabelField("Rarity", definition.rarity);
+            EditorGUILayout.LabelField("Stackable", $"{definition.is_stackable}  (max stack {definition.max_stack_size})");
+            EditorGUILayout.LabelField("Max Owned Quantity", definition.max_owned_quantity.ToString());
+            EditorGUILayout.LabelField("Grid Size", $"{definition.grid_width} × {definition.grid_height}");
+            EditorGUILayout.LabelField("Client Writable", definition.client_writable.ToString());
+            EditorGUILayout.LabelField("Allow Client Qty", definition.allow_client_update_qty.ToString());
+
+            DrawJsonField("Base Stats", definition.base_stats);
+            DrawJsonField("Metadata", definition.metadata);
+        }
+
+        private static void DrawIdField(string label, string value)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(label, value ?? string.Empty);
+            if (GUILayout.Button("Copy", GUILayout.Width(50)))
+                GUIUtility.systemCopyBuffer = value ?? string.Empty;
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private static void DrawJsonField(string label, string json)
+        {
+            if (string.IsNullOrEmpty(json))
+                return;
+
+            string formattedJson = PrettyJson(json);
+            EditorGUILayout.Space(3);
+            EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+            EditorGUILayout.SelectableLabel(
+                formattedJson,
+                EditorStyles.textArea,
+                GUILayout.MinHeight(EditorStyles.textArea.lineHeight * (CountLines(formattedJson) + 1)));
+        }
+
+        private static Color GetRarityColor(string rarity)
+        {
+            switch (rarity?.ToLowerInvariant())
+            {
+                case "common": return new Color(0.8f, 0.8f, 0.8f);
+                case "uncommon": return new Color(0.35f, 0.9f, 0.45f);
+                case "rare": return new Color(0.35f, 0.65f, 1f);
+                case "epic": return new Color(0.75f, 0.4f, 1f);
+                case "legendary": return new Color(1f, 0.7f, 0.2f);
+                default: return EditorStyles.foldout.normal.textColor;
+            }
+        }
+
+        private static int CountLines(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return 1;
+
+            int count = 1;
+            foreach (char character in value)
+                if (character == '\n') count++;
+            return count;
+        }
+
+        private static string PrettyJson(string json)
+        {
+            if (string.IsNullOrEmpty(json))
+                return "{}";
+
+            var builder = new System.Text.StringBuilder();
+            int indent = 0;
+            bool inString = false;
+
+            foreach (char character in json)
+            {
+                if (character == '"' && (builder.Length == 0 || builder[builder.Length - 1] != '\\'))
+                    inString = !inString;
+
+                if (inString)
+                {
+                    builder.Append(character);
+                    continue;
+                }
+
+                switch (character)
+                {
+                    case '{':
+                    case '[':
+                        builder.Append(character);
+                        builder.Append('\n');
+                        indent++;
+                        builder.Append(new string(' ', indent * 2));
+                        break;
+                    case '}':
+                    case ']':
+                        builder.Append('\n');
+                        indent--;
+                        builder.Append(new string(' ', indent * 2));
+                        builder.Append(character);
+                        break;
+                    case ',':
+                        builder.Append(character);
+                        builder.Append('\n');
+                        builder.Append(new string(' ', indent * 2));
+                        break;
+                    case ':':
+                        builder.Append(": ");
+                        break;
+                    case ' ':
+                    case '\t':
+                    case '\n':
+                    case '\r':
+                        break;
+                    default:
+                        builder.Append(character);
+                        break;
+                }
+            }
+
+            return builder.ToString();
         }
     }
 }
