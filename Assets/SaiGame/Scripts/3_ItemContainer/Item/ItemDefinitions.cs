@@ -13,11 +13,22 @@ namespace SaiGame.Services
         [SerializeField] private string fetchItemId = "";
         [SerializeField] private string fetchItemCode = "";
 
-        [SerializeField] private List<ItemDefinitionData> itemDefinitions = new List<ItemDefinitionData>();
+        [NonSerialized] private List<ItemDefinitionData> itemDefinitions = new List<ItemDefinitionData>();
 
         public IReadOnlyList<ItemDefinitionData> Definitions => this.itemDefinitions;
         public string FetchItemId => this.fetchItemId;
         public string FetchItemCode => this.fetchItemCode;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            this.Clear();
+        }
+
+        protected virtual void OnDisable()
+        {
+            this.Clear();
+        }
 
         [Serializable]
         private class ItemDefinitionsListResponse
@@ -118,7 +129,7 @@ namespace SaiGame.Services
             if (cachedDefinition != null)
             {
                 if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
-                    Debug.Log("[ItemDefinitions] <b>Cache hit</b> | FetchByCode", gameObject);
+                    Debug.Log("<color=#66CCFF>[ItemDefinitions]</color> → <b><color=#00FF88>cache hit</color></b> | FetchByCode", gameObject);
 
                 onSuccess?.Invoke(cachedDefinition);
                 return;

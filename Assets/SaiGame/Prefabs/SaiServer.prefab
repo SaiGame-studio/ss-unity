@@ -2393,9 +2393,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1c1c04777c34a9c8b310a20e44fc6ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemDefinitions
-  fetchItemId: 
+  fetchItemId: 9825db7d-92aa-46ff-a1cb-34279a5393c1
   fetchItemCode: GOLD
-  itemDefinitions: []
 --- !u!114 &8395767071459126564
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -6,13 +7,14 @@ namespace SaiGame.Services
     [CustomEditor(typeof(ItemDefinitions))]
     public class ItemDefinitionsEditor : Editor
     {
+        private readonly Dictionary<string, bool> definitionFoldouts = new Dictionary<string, bool>();
+
         public override void OnInspectorGUI()
         {
             this.serializedObject.Update();
             ItemDefinitions service = (ItemDefinitions)this.target;
             SerializedProperty fetchItemId = this.serializedObject.FindProperty("fetchItemId");
             SerializedProperty fetchItemCode = this.serializedObject.FindProperty("fetchItemCode");
-            SerializedProperty itemDefinitions = this.serializedObject.FindProperty("itemDefinitions");
 
             EditorGUILayout.LabelField("Fetch Item Definition", EditorStyles.boldLabel);
             this.DrawFetchRow("Item ID", fetchItemId, () =>
@@ -27,17 +29,22 @@ namespace SaiGame.Services
             });
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField($"Item Definitions ({itemDefinitions.arraySize})", EditorStyles.boldLabel);
-            for (int i = 0; i < itemDefinitions.arraySize; i++)
+            EditorGUILayout.LabelField($"Item Definitions ({service.Definitions.Count})", EditorStyles.boldLabel);
+            for (int i = 0; i < service.Definitions.Count; i++)
             {
-                SerializedProperty definition = itemDefinitions.GetArrayElementAtIndex(i);
-                SerializedProperty itemCode = definition.FindPropertyRelative("item_code");
-                string label = itemCode == null || string.IsNullOrEmpty(itemCode.stringValue)
-                    ? "(No Item Code)"
-                    : itemCode.stringValue;
+                ItemDefinitionData definition = service.Definitions[i];
+                if (definition == null)
+                    continue;
 
-                definition.isExpanded = EditorGUILayout.Foldout(definition.isExpanded, label, true);
-                if (definition.isExpanded)
+                string label = string.IsNullOrEmpty(definition.item_code)
+                    ? "(No Item Code)"
+                    : definition.item_code;
+                string foldoutKey = string.IsNullOrEmpty(definition.id) ? i.ToString() : definition.id;
+                this.definitionFoldouts.TryGetValue(foldoutKey, out bool isExpanded);
+
+                isExpanded = EditorGUILayout.Foldout(isExpanded, label, true);
+                this.definitionFoldouts[foldoutKey] = isExpanded;
+                if (isExpanded)
                 {
                     EditorGUI.indentLevel++;
                     this.DrawDefinitionProperties(definition);
@@ -80,22 +87,11 @@ namespace SaiGame.Services
             this.Repaint();
         }
 
-        private void DrawDefinitionProperties(SerializedProperty definition)
+        private void DrawDefinitionProperties(ItemDefinitionData definition)
         {
-            string[] propertyNames =
-            {
-                "id", "studio_id", "game_id", "item_code", "name", "category", "rarity",
-                "base_stats", "metadata", "is_stackable", "max_stack_size", "max_owned_quantity", "grid_width",
-                "grid_height", "client_writable", "allow_client_update_qty", "created_by",
-                "updated_by", "created_at", "updated_at"
-            };
-
-            foreach (string propertyName in propertyNames)
-            {
-                SerializedProperty property = definition.FindPropertyRelative(propertyName);
-                if (property != null)
-                    EditorGUILayout.PropertyField(property);
-            }
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.TextArea(JsonUtility.ToJson(definition, true));
+            EditorGUI.EndDisabledGroup();
         }
     }
 }
