@@ -560,7 +560,7 @@ namespace SaiGame.Services
         protected virtual void LoadItemDefinitions()
         {
             if (this.itemDefinitions != null) return;
-            this.itemDefinitions = GetComponent<ItemDefinitions>();
+            this.itemDefinitions = GetComponentInChildren<ItemDefinitions>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadItemDefinitions", gameObject);
         }
