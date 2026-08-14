@@ -5,6 +5,7 @@ using UnityEngine;
 namespace SaiGame.Services
 {
     [DefaultExecutionOrder(-99)]
+    [RequireComponent(typeof(ItemsCached))]
     public class PlayerItem : SaiBehaviour
     {
         // Events for other classes to listen to
@@ -18,12 +19,16 @@ namespace SaiGame.Services
         [Header("Current Inventory Data")]
         [SerializeField] protected InventoryResponse currentInventory;
 
+        [Header("Cached Item Definitions")]
+        [SerializeField] protected ItemsCached itemsCached;
+
         [Header("Query Parameters")]
         [SerializeField] protected int itemLimit = 50;
         [SerializeField] protected int itemOffset = 0;
         [SerializeField] protected string categoryFilter = "";
 
         public InventoryResponse CurrentInventory => this.currentInventory;
+        public ItemsCached ItemsCached => this.itemsCached;
         public bool HasItems => this.currentInventory != null
                                 && this.currentInventory.items != null
                                 && this.currentInventory.items.Length > 0;
@@ -40,9 +45,20 @@ namespace SaiGame.Services
         protected override void LoadComponents()
         {
             base.LoadComponents();
+            this.LoadItemsCached();
             this.RegisterLoginListener();
             this.RegisterLogoutListener();
             this.InitializeCategories();
+        }
+
+        protected virtual void LoadItemsCached()
+        {
+            if (this.itemsCached != null)
+                return;
+
+            this.itemsCached = GetComponent<ItemsCached>();
+            if (this.itemsCached == null)
+                Debug.LogWarning("[PlayerItem] ItemsCached component was not found.", gameObject);
         }
 
         /// <summary>
@@ -246,6 +262,7 @@ namespace SaiGame.Services
                             return;
                         }
 
+                        this.itemsCached?.Cache(itemDefinition);
                         onSuccess?.Invoke(itemDefinition);
                     }
                     catch (Exception exception)
@@ -282,6 +299,7 @@ namespace SaiGame.Services
 
                         InventoryResponse inventoryResponse = JsonUtility.FromJson<InventoryResponse>(sanitized);
                         this.currentInventory = inventoryResponse;
+                        this.CacheItemDefinitions(inventoryResponse);
 
                         if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[ItemContainer] Inventory loaded: {inventoryResponse.items.Length} items, total: {inventoryResponse.total}");
@@ -425,6 +443,16 @@ namespace SaiGame.Services
                 offset = 0,
                 total = 0
             };
+            this.itemsCached?.Clear();
+        }
+
+        private void CacheItemDefinitions(InventoryResponse inventoryResponse)
+        {
+            if (inventoryResponse?.items == null)
+                return;
+
+            foreach (InventoryItemData item in inventoryResponse.items)
+                this.itemsCached?.Cache(item?.definition);
         }
 
         // ── Convenience query helpers ──────────────────────────────────────────

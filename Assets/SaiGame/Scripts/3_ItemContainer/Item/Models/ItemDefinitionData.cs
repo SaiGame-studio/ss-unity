@@ -12,7 +12,6 @@ namespace SaiGame.Services
     public class ItemDefinitionData
     {
         public string id;
-        public string studio_id;
         public string game_id;
         public string item_code;
         public string name;

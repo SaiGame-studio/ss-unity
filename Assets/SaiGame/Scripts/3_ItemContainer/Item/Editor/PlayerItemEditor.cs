@@ -15,6 +15,7 @@ namespace SaiGame.Services
         private SerializedProperty itemLimit;
         private SerializedProperty itemOffset;
         private SerializedProperty categoryFilter;
+        private SerializedProperty itemsCached;
 
         private bool showCurrentInventory = true;
         private bool showItemList = false;
@@ -46,6 +47,7 @@ namespace SaiGame.Services
             this.itemLimit = serializedObject.FindProperty("itemLimit");
             this.itemOffset = serializedObject.FindProperty("itemOffset");
             this.categoryFilter = serializedObject.FindProperty("categoryFilter");
+            this.itemsCached = serializedObject.FindProperty("itemsCached");
 
             // Restore dropdown from PlayerPrefs cache (no network call needed)
             if (cachedCategories == null)
@@ -98,6 +100,10 @@ namespace SaiGame.Services
         {
             serializedObject.Update();
 
+            EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(
+                this.itemsCached,
+                new GUIContent("Cached Item Definitions", "Component that stores item definitions returned by item APIs."));
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Item Container Configuration", EditorStyles.boldLabel);
             EditorGUILayout.Space();

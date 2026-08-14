@@ -333,6 +333,7 @@ GameObject:
   - component: {fileID: 750887673584618928}
   - component: {fileID: 7399820738238440333}
   - component: {fileID: 8153881721212893719}
+  - component: {fileID: 9012489415046225091}
   - component: {fileID: 4042283287993455742}
   - component: {fileID: 8359460651495667961}
   - component: {fileID: 2893519870010327973}
@@ -411,9 +412,23 @@ MonoBehaviour:
     limit: 0
     offset: 0
     total: 0
+  itemsCached: {fileID: 9012489415046225091}
   itemLimit: 50
   itemOffset: 0
   categoryFilter: 
+--- !u!114 &9012489415046225091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5318073927917700422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1c1c04777c34a9c8b310a20e44fc6ba, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemsCached
+  itemDefinitions: []
 --- !u!114 &4042283287993455742
 MonoBehaviour:
   m_ObjectHideFlags: 0
