@@ -2393,7 +2393,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1c1c04777c34a9c8b310a20e44fc6ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemDefinitions
-  fetchItemId: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+  fetchItemId: 109de900-1c35-456d-b939-0c746ed43268
   fetchItemCode: GOLD
   itemDefinitions:
   - id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
@@ -2415,6 +2415,45 @@ MonoBehaviour:
     updated_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
     created_at: 2026-04-30T11:46:08.877924Z
     updated_at: 2026-08-03T20:06:59.337807Z
+  - id: 019fcd67-eec0-7728-9016-d585d6a3d4c7
+    game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+    item_code: greater_vessel
+    name: Greater Vessel
+    category: currency
+    rarity: common
+    base_stats: '{}'
+    metadata: '{}'
+    is_stackable: 1
+    max_stack_size: 999999
+    max_owned_quantity: 999999
+    grid_width: 1
+    grid_height: 1
+    client_writable: 0
+    allow_client_update_qty: 0
+    created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+    updated_by: 
+    created_at: 2026-08-04T15:32:48.448929Z
+    updated_at: 2026-08-04T15:32:48.448929Z
+  - id: 109de900-1c35-456d-b939-0c746ed43268
+    game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+    item_code: GOLD
+    name: Gold
+    category: currency
+    rarity: common
+    base_stats: '{}'
+    metadata: '{"currency_code":"GOLD","description":"Standard in-game currency.
+      Earned from quests, gacha, and in-app purchases.","icon":"gold_coin","is_default_currency":true}'
+    is_stackable: 1
+    max_stack_size: 999999999
+    max_owned_quantity: 0
+    grid_width: 1
+    grid_height: 1
+    client_writable: 0
+    allow_client_update_qty: 0
+    created_by: 
+    updated_by: 
+    created_at: 2026-04-25T16:29:47.443498Z
+    updated_at: 2026-04-25T16:29:47.443498Z
 --- !u!114 &8395767071459126564
 MonoBehaviour:
   m_ObjectHideFlags: 0

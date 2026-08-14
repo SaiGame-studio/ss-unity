@@ -50,12 +50,19 @@ namespace SaiGame.Services
 
         private void DrawFetchRow(string label, SerializedProperty input, System.Action onGet)
         {
+            const float labelWidth = 110f;
+            const float getButtonWidth = 56f;
+            const float spacing = 4f;
+
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField(input, new GUIContent(label));
+            EditorGUILayout.LabelField(label, GUILayout.Width(labelWidth));
+            input.stringValue = EditorGUILayout.TextField(input.stringValue);
+            GUILayout.Space(spacing);
+            Color previousBackgroundColor = GUI.backgroundColor;
             GUI.backgroundColor = Color.cyan;
-            if (GUILayout.Button("Get", GUILayout.Width(56)))
+            if (GUILayout.Button("Get", GUILayout.Width(getButtonWidth)))
                 onGet();
-            GUI.backgroundColor = Color.white;
+            GUI.backgroundColor = previousBackgroundColor;
             EditorGUILayout.EndHorizontal();
         }
 
