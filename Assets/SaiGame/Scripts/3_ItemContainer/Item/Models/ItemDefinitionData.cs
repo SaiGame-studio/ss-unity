@@ -27,11 +27,13 @@ namespace SaiGame.Services
             string.IsNullOrEmpty(this.metadata) ? null : JsonUtility.FromJson<ItemDefinitionMetadata>(this.metadata);
         public bool is_stackable;
         public int max_stack_size;
+        public int max_owned_quantity;
         public int grid_width;
         public int grid_height;
         public bool client_writable;
         public bool allow_client_update_qty;
         public string created_by;
+        public string updated_by;
         public string created_at;
         public string updated_at;
     }

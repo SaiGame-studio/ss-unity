@@ -171,6 +171,7 @@ MonoBehaviour:
     total: 0
   chainLimit: 50
   chainOffset: 0
+  chainId: 
 --- !u!114 &1892399005449690324
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -333,16 +334,16 @@ GameObject:
   - component: {fileID: 750887673584618928}
   - component: {fileID: 7399820738238440333}
   - component: {fileID: 8153881721212893719}
-  - component: {fileID: 9012489415046225091}
   - component: {fileID: 4042283287993455742}
-  - component: {fileID: 8359460651495667961}
   - component: {fileID: 2893519870010327973}
+  - component: {fileID: 8359460651495667961}
   - component: {fileID: 9128749862781184251}
   - component: {fileID: 770429900078848718}
   - component: {fileID: 7695481116977442798}
   - component: {fileID: 3712696907917878105}
   - component: {fileID: 6379628580400705291}
   - component: {fileID: 6807877424875840272}
+  - component: {fileID: 7353435024058604980}
   - component: {fileID: 8395767071459126564}
   - component: {fileID: 8601982102408770267}
   m_Layer: 0
@@ -408,27 +409,1813 @@ MonoBehaviour:
   autoLoadOnLogin: 0
   autoLoadCategory: 
   currentInventory:
-    items: []
-    limit: 0
+    items:
+    - id: 9efe130d-ec0d-4f14-bd52-47a5d566518a
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 019fcd67-eec0-7728-9016-d585d6a3d4c7
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 16
+      grid_y: 13
+      quantity: 1
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-08-10T04:07:43.950201Z
+      last_modified_at: 2026-08-10T04:07:43.950201Z
+      version: 1
+      definition:
+        id: 019fcd67-eec0-7728-9016-d585d6a3d4c7
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: greater_vessel
+        name: Greater Vessel
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{}'
+        is_stackable: 1
+        max_stack_size: 999999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-08-04T15:32:48.448929Z
+        updated_at: 2026-08-04T15:32:48.448929Z
+    - id: eb682084-3424-4c1a-ab58-888efad57996
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 019fcd46-682c-73d8-8a40-eb921ad9ccc7
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 15
+      grid_y: 13
+      quantity: 1
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-08-10T04:07:38.688277Z
+      last_modified_at: 2026-08-10T04:07:43.128231Z
+      version: 4
+      definition:
+        id: 019fcd46-682c-73d8-8a40-eb921ad9ccc7
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: lesser_vessel
+        name: Lesser Vessel
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{}'
+        is_stackable: 1
+        max_stack_size: 999999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-08-04T14:56:11.309054Z
+        updated_at: 2026-08-04T17:10:06.459626Z
+    - id: bee7e88e-d66b-4d5b-b2d0-793e817a1fc2
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 019fcd67-5d1e-750c-8c75-cdf372b7d1fa
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 11
+      grid_y: 19
+      quantity: 3
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-08-10T04:07:27.382315Z
+      last_modified_at: 2026-08-10T04:07:43.944988Z
+      version: 6
+      definition:
+        id: 019fcd67-5d1e-750c-8c75-cdf372b7d1fa
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: common_vessel
+        name: Common Vessel
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{}'
+        is_stackable: 1
+        max_stack_size: 999999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-08-04T15:32:11.166767Z
+        updated_at: 2026-08-04T15:32:27.1648Z
+    - id: cfa388ed-ee59-4537-bda1-3266c3194eca
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 019fb7b7-f085-7bc4-984b-b583d18e6e84
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 10
+      grid_y: 19
+      quantity: 1
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-07-31T16:57:12.17043Z
+      last_modified_at: 2026-07-31T16:57:12.17043Z
+      version: 1
+      definition:
+        id: 019fb7b7-f085-7bc4-984b-b583d18e6e84
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: win_game_pack
+        name: Win Game Pack
+        category: gacha_pack
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["47d73b13-61b0-49e2-8d86-5035a61f4e14"]}'
+        is_stackable: 1
+        max_stack_size: 9999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-07-31T10:28:33.030378Z
+        updated_at: 2026-07-31T10:29:07.929326Z
+    - id: 5519e73d-abab-4256-a3ff-1f7a05640de2
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 019fb6ee-5286-79b1-a257-1eb05f89ac56
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 9
+      grid_y: 19
+      quantity: 1
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-07-31T16:51:48.3304Z
+      last_modified_at: 2026-07-31T16:51:48.3304Z
+      version: 1
+      definition:
+        id: 019fb6ee-5286-79b1-a257-1eb05f89ac56
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: join_game_pack
+        name: Join Game Pack
+        category: gacha_pack
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["7d0d57f5-a138-43cd-a849-de17905fbe27"]}'
+        is_stackable: 1
+        max_stack_size: 99
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-07-31T06:48:19.848194Z
+        updated_at: 2026-07-31T06:48:32.325689Z
+    - id: c7233ca1-a20e-40fa-a10b-0da224038879
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 019fae58-bc13-7186-8477-c8a764a2b1d9
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 8
+      grid_y: 19
+      quantity: 10
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-07-31T16:51:47.166238Z
+      last_modified_at: 2026-07-31T17:32:45.551395Z
+      version: 10
+      definition:
+        id: 019fae58-bc13-7186-8477-c8a764a2b1d9
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: normal_enemy_count_daily
+        name: Normal Enemy Count Daily
+        category: quest
+        rarity: common
+        base_stats: '{}'
+        metadata: '{}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-07-29T14:47:58.73961Z
+        updated_at: 2026-07-31T17:20:03.386839Z
+    - id: 0fe959d9-c175-401a-a0d5-d5fdfe6cb03d
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 019fb7ab-32aa-7a0f-b70d-0f3ca07236f3
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 7
+      grid_y: 19
+      quantity: 14
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-07-31T16:51:20.5874Z
+      last_modified_at: 2026-08-06T19:13:47.924874Z
+      version: 14
+      definition:
+        id: 019fb7ab-32aa-7a0f-b70d-0f3ca07236f3
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: win_medal
+        name: Win Medal
+        category: decoration
+        rarity: common
+        base_stats: '{}'
+        metadata: '{}'
+        is_stackable: 1
+        max_stack_size: 999999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-07-31T10:14:37.995566Z
+        updated_at: 2026-07-31T10:14:37.995566Z
+    - id: 723fb387-21b3-4fb7-8e70-12c89e56494d
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 17
+      grid_y: 18
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-05-07T21:49:22.314713Z
+      last_modified_at: 2026-05-07T21:49:22.314713Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 3afa8660-5f88-4803-9b35-1b9f49414d57
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 19
+      grid_y: 18
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-05-07T21:49:22.314713Z
+      last_modified_at: 2026-05-07T21:49:22.314713Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 0b4c9700-e801-402e-9026-755b8ac3c972
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 4
+      grid_y: 19
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-05-07T21:49:22.314713Z
+      last_modified_at: 2026-05-07T21:49:22.314713Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 1f36d44a-a9e1-4a39-85fe-9618faffecfe
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 5
+      grid_y: 19
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-05-07T21:49:22.314713Z
+      last_modified_at: 2026-05-07T21:49:22.314713Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 2a837bd8-a914-4b41-b37a-97243186fef1
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 18
+      grid_y: 18
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-05-07T21:49:22.314713Z
+      last_modified_at: 2026-05-07T21:49:22.314713Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: d52867ba-efe0-411b-99f7-b7317611caf4
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 2
+      grid_y: 19
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-05-07T21:49:22.314713Z
+      last_modified_at: 2026-05-07T21:49:22.314713Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: bb38fd96-212a-47ec-bf31-1c5e62c484b7
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 0
+      grid_y: 19
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-05-07T21:49:22.314713Z
+      last_modified_at: 2026-05-07T21:49:22.314713Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: fcacd62a-e29d-407a-9786-6cec78fcb516
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 16
+      grid_y: 18
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-05-07T21:49:22.314713Z
+      last_modified_at: 2026-05-07T21:49:22.314713Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 607dd67e-5436-4540-8455-aa5b068ba007
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 1
+      grid_y: 19
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-05-07T21:49:22.314713Z
+      last_modified_at: 2026-05-07T21:49:22.314713Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 9b165c5e-88d6-4cdf-afd7-2916e78e49f9
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 3
+      grid_y: 19
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-05-07T21:49:22.314713Z
+      last_modified_at: 2026-05-07T21:49:22.314713Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 39ea5320-68ac-43d3-8b77-3a57a230757b
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 6
+      grid_y: 19
+      quantity: 9
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-05-07T21:49:22.314713Z
+      last_modified_at: 2026-05-07T21:49:22.314713Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: de386e6a-81a1-4423-b815-e8510af782ce
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 3
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 9359b100-1c29-4c61-a1bb-bd3b3554cddf
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 0
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 6b936601-9567-461e-9818-dfedd021b03b
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 4
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: ecac665b-0c00-4ccf-b69a-75d41b838e31
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 13
+      grid_y: 15
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 7b85fdb6-b543-4d7f-9a8e-43bc22f394c5
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 9
+      grid_y: 15
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 0166916e-5f32-4338-ab4c-d86aee305bdf
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 5
+      grid_y: 15
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 7f397ff0-21c3-4207-914b-aab341c921a4
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 11
+      grid_y: 15
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 76d6e5d4-1187-4155-8733-0d7115dfd37a
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 12
+      grid_y: 15
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 41365a39-206c-4efb-ba7d-753571babe7f
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 18
+      grid_y: 13
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 34e9ba46-aef3-47b7-8256-c38d48012b7d
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 19
+      grid_y: 13
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 51816c8f-4fef-45c0-ad84-fdd9e6aec21d
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 1
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 560e113a-c806-41d4-8aad-fa1590c2ebc8
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 2
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: b804d994-3b87-41a0-8569-50b6aecdbec8
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 10
+      grid_y: 15
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 17c9293e-0bad-42f6-8a65-2b2ceda4879d
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 14
+      grid_y: 15
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: af480847-630a-4941-a51c-a60b6ad8dd46
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 15
+      grid_y: 15
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 20534a51-2f32-442a-a9d2-2682f3695497
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 1
+      grid_y: 15
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: ee419081-27b0-40bc-9fcf-668dfa82c224
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 18
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: b43be419-21e3-47b9-aaf4-3d17be21936c
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 2
+      grid_y: 15
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: ad2843a0-0eba-4b4f-b2f7-232dabacd5b6
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 11
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: d0e74cdf-be1a-4b40-8ba1-ea35e2b3ccb8
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 7
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 009eb05b-730c-457d-8115-1364d1a23755
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 8
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: c370694a-3ed7-4f57-8407-e4c909aa1c45
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 12
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 743175d3-1950-4edb-a21c-785d16b4380c
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 9
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 88b9f222-876b-4ee6-bb55-dfc88bddef0d
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 10
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 86c1a532-38cf-4d18-8fae-1c39c8b3de9b
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 13
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 5cb9e98a-e68b-493b-bae3-4436fd27a9dc
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 17
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: e723c1f8-69bf-431c-bb1a-ce41af4b0f3e
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 19
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 02932cde-0a85-4168-8cee-39d82d5ace98
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 0
+      grid_y: 15
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: d5cb4803-cdd9-408b-a180-b4400d952328
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 17
+      grid_y: 13
+      quantity: 8
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-08-10T04:07:41.872222Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: b6014915-985a-4cd8-a595-f1242bec09b1
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 5
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 63cf9ed6-ce44-4acd-b718-d05eb568f553
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 8
+      grid_y: 15
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    - id: 9e572597-e961-4e1c-b764-5e80efbebb54
+      studio_id: 
+      game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+      user_id: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+      item_definition_id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+      item_container_id: a36ada41-901c-4daa-951c-6482b2f0b220
+      grid_x: 14
+      grid_y: 14
+      quantity: 99
+      level: 1
+      custom_properties: 
+      private_properties: '{}'
+      public_properties: '{}'
+      acquired_at: 2026-04-30T23:07:54.469501Z
+      last_modified_at: 2026-04-30T23:07:54.469501Z
+      version: 1
+      definition:
+        id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+        game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+        item_code: soul
+        name: Soul
+        category: currency
+        rarity: common
+        base_stats: '{}'
+        metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+        is_stackable: 1
+        max_stack_size: 999
+        max_owned_quantity: 0
+        grid_width: 1
+        grid_height: 1
+        client_writable: 0
+        allow_client_update_qty: 0
+        created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+        updated_by: 
+        created_at: 2026-04-30T11:46:08.877924Z
+        updated_at: 2026-08-03T20:06:59.337807Z
+    limit: 50
     offset: 0
-    total: 0
-  itemsCached: {fileID: 9012489415046225091}
+    total: 392
   itemLimit: 50
   itemOffset: 0
   categoryFilter: 
---- !u!114 &9012489415046225091
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5318073927917700422}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e1c1c04777c34a9c8b310a20e44fc6ba, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemsCached
-  itemDefinitions: []
 --- !u!114 &4042283287993455742
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -449,21 +2236,6 @@ MonoBehaviour:
     offset: 0
   containerLimit: 50
   containerOffset: 0
---- !u!114 &8359460651495667961
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5318073927917700422}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bcbee3008849b86478e24bfd11ceb552, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemGenerator
-  autoLoadOnLogin: 0
-  currentGenerators:
-    generators: []
 --- !u!114 &2893519870010327973
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -483,6 +2255,21 @@ MonoBehaviour:
     total: 0
   currentEquipped:
     equipped: []
+--- !u!114 &8359460651495667961
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5318073927917700422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcbee3008849b86478e24bfd11ceb552, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemGenerator
+  autoLoadOnLogin: 0
+  currentGenerators:
+    generators: []
 --- !u!114 &9128749862781184251
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -594,6 +2381,40 @@ MonoBehaviour:
   playerContainer: {fileID: 4042283287993455742}
   itemAId: 
   itemBId: 
+--- !u!114 &7353435024058604980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5318073927917700422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1c1c04777c34a9c8b310a20e44fc6ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.ItemDefinitions
+  fetchItemId: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+  fetchItemCode: GOLD
+  itemDefinitions:
+  - id: 31504674-5794-4acd-944f-e0c7b3e3f1f8
+    game_id: 2e352068-3b3a-4a31-9e47-564f4dd3af13
+    item_code: soul
+    name: Soul
+    category: currency
+    rarity: common
+    base_stats: '{}'
+    metadata: '{"gacha_pack_ids":["1675594e-fcb9-451d-aabb-ad85a5754eed","4e005063-54d2-43b1-aefa-48478479d3e8"]}'
+    is_stackable: 1
+    max_stack_size: 999
+    max_owned_quantity: 999
+    grid_width: 1
+    grid_height: 1
+    client_writable: 0
+    allow_client_update_qty: 0
+    created_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+    updated_by: 70b39463-e59a-4ff8-b7b5-0d0a7b38efb8
+    created_at: 2026-04-30T11:46:08.877924Z
+    updated_at: 2026-08-03T20:06:59.337807Z
 --- !u!114 &8395767071459126564
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -756,6 +2577,7 @@ MonoBehaviour:
   googleBackendLogin: {fileID: 207283731097068101}
   gamerProgress: {fileID: 3797376410084372741}
   mailbox: {fileID: 390271473075436921}
+  itemDefinitions: {fileID: 0}
   playerItem: {fileID: 8153881721212893719}
   playerEvent: {fileID: 27159321914394544}
   playerContainer: {fileID: 4042283287993455742}
@@ -766,7 +2588,7 @@ MonoBehaviour:
   equipmentSlotManager: {fileID: 2893519870010327973}
   shop: {fileID: 7399820738238440333}
   chainQuest: {fileID: 4308186167237759036}
-  battlePass: {fileID: 0}
+  battlePass: {fileID: 6222148836628058343}
   questProgressor: {fileID: 1733594213501630859}
   questHistory: {fileID: 2399963655362431771}
   dailyQuest: {fileID: 1892399005449690324}
@@ -776,11 +2598,11 @@ MonoBehaviour:
   leaderboard: {fileID: 1993458322055049526}
   battleSessions: {fileID: 8438002230962336466}
   battleScript: {fileID: 5292617345916487666}
-  serverEndpoint: 0
-  domainOption: 0
-  port: 82
-  useHttps: 0
-  gameId: 
+  serverEndpoint: 1
+  domainOption: 1
+  port: 443
+  useHttps: 1
+  gameId: 019feebb-28e1-7f24-b42b-2986b6ec8e3d
   requestTimeout: 30
   serverTime: 
   serverTimestamp: 0
@@ -819,8 +2641,8 @@ MonoBehaviour:
   autoLogin: 1
   autoRefreshToken: 1
   refreshBeforeExpire: 2
-  username: 
-  password: 
+  username: username_1786416666803
+  password: 123qweasd
   registerEmail: 
   registerUsername: 
   registerPassword: 
