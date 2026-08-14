@@ -114,6 +114,16 @@ namespace SaiGame.Services
             Action<ItemDefinitionData> onSuccess = null,
             Action<string> onError = null)
         {
+            ItemDefinitionData cachedDefinition = this.GetItemByCode(itemCode);
+            if (cachedDefinition != null)
+            {
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                    Debug.Log("[ItemDefinitions] <b>Cache hit</b> | FetchByCode", gameObject);
+
+                onSuccess?.Invoke(cachedDefinition);
+                return;
+            }
+
             if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#00FFFF><b>[ItemDefinitions] ► Get by Item Code</b></color>", gameObject);
 
