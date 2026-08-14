@@ -10,6 +10,7 @@ namespace SaiGame.Services
     public class SaiServerEditor : Editor
     {
         private bool showServiceReferences = false;
+        private bool showServerTime = false;
         private bool showDebugSettings = false;
         private static readonly string[] SERVER_ENDPOINT_OPTIONS =
         {
@@ -62,13 +63,18 @@ namespace SaiGame.Services
             }
 
             EditorGUILayout.Space(5);
-            EditorGUILayout.LabelField("Server Time", EditorStyles.boldLabel);
-            using (new EditorGUI.DisabledScope(true))
+            this.showServerTime = EditorGUILayout.Foldout(this.showServerTime, "Server Time", true);
+            if (this.showServerTime)
             {
-                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("serverTime"), new GUIContent("Server Time"));
-                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("serverTimestamp"), new GUIContent("Unix Timestamp"));
-                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("serverTimezone"), new GUIContent("Timezone"));
-                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("serverTimeError"), new GUIContent("Last Error"));
+                EditorGUI.indentLevel++;
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    EditorGUILayout.PropertyField(this.serializedObject.FindProperty("serverTime"), new GUIContent("Server Time"));
+                    EditorGUILayout.PropertyField(this.serializedObject.FindProperty("serverTimestamp"), new GUIContent("Unix Timestamp"));
+                    EditorGUILayout.PropertyField(this.serializedObject.FindProperty("serverTimezone"), new GUIContent("Timezone"));
+                    EditorGUILayout.PropertyField(this.serializedObject.FindProperty("serverTimeError"), new GUIContent("Last Error"));
+                }
+                EditorGUI.indentLevel--;
             }
 
             // Service References foldout
@@ -89,6 +95,7 @@ namespace SaiGame.Services
                 // ── Item child ───────────────────────────────────────────────
                 EditorGUILayout.Space(2);
                 EditorGUILayout.LabelField("Item Child Object", EditorStyles.miniBoldLabel);
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("itemDefinitions"),       new GUIContent("Item Definitions"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("playerItem"),           new GUIContent("Player Item"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("playerContainer"),      new GUIContent("Player Container"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("itemGenerator"),        new GUIContent("Item Generator"));
@@ -134,11 +141,9 @@ namespace SaiGame.Services
             }
 
             EditorGUILayout.Space(5);
-            EditorGUILayout.LabelField("Game Configuration", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(this.serializedObject.FindProperty("gameId"), new GUIContent("Game Id"));
 
             EditorGUILayout.Space(5);
-            EditorGUILayout.LabelField("API Settings", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(this.serializedObject.FindProperty("requestTimeout"), new GUIContent("Request Timeout"));
 
             this.serializedObject.ApplyModifiedProperties();
