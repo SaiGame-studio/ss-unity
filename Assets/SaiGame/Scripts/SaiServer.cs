@@ -10,13 +10,14 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.49";
+        public const string PACKAGE_VERSION = "0.2.50";
         public const string PACKAGE_NAME = "Sai Server";
 
         [SerializeField] protected SaiAuth saiAuth;
         [SerializeField] protected GoogleBackendLogin googleBackendLogin;
         [SerializeField] protected GamerProgress gamerProgress;
         [SerializeField] protected Mailbox mailbox;
+        [SerializeField] protected ItemDefinitions itemDefinitions;
         [SerializeField] protected PlayerItem playerItem;
         [SerializeField] protected PlayerEvent playerEvent;
         [SerializeField] protected PlayerContainer playerContainer;
@@ -108,6 +109,8 @@ namespace SaiGame.Services
         public GamerProgress GamerProgress => this.gamerProgress;
 
         public Mailbox Mailbox => this.mailbox;
+
+        public ItemDefinitions ItemDefinitions => this.itemDefinitions;
 
         public PlayerItem PlayerItem => this.playerItem;
 
@@ -404,6 +407,7 @@ namespace SaiGame.Services
             this.RegisterLoginListeners();
             this.LoadGamerProgress();
             this.LoadMailbox();
+            this.LoadItemDefinitions();
             this.LoadPlayerEvent();
             this.LoadLeaderboard();
             this.LoadPlayerItem();
@@ -551,6 +555,14 @@ namespace SaiGame.Services
             this.playerItem = GetComponentInChildren<PlayerItem>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadPlayerItem", gameObject);
+        }
+
+        protected virtual void LoadItemDefinitions()
+        {
+            if (this.itemDefinitions != null) return;
+            this.itemDefinitions = GetComponent<ItemDefinitions>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadItemDefinitions", gameObject);
         }
 
         protected virtual void LoadPlayerContainer()

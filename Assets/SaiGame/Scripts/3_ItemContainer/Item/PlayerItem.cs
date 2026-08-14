@@ -246,6 +246,7 @@ namespace SaiGame.Services
                             return;
                         }
 
+                        SaiServer.Instance?.ItemDefinitions?.Cache(itemDefinition);
                         onSuccess?.Invoke(itemDefinition);
                     }
                     catch (Exception exception)
@@ -282,6 +283,7 @@ namespace SaiGame.Services
 
                         InventoryResponse inventoryResponse = JsonUtility.FromJson<InventoryResponse>(sanitized);
                         this.currentInventory = inventoryResponse;
+                        this.CacheItemDefinitions(inventoryResponse);
 
                         if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[ItemContainer] Inventory loaded: {inventoryResponse.items.Length} items, total: {inventoryResponse.total}");
@@ -425,6 +427,15 @@ namespace SaiGame.Services
                 offset = 0,
                 total = 0
             };
+        }
+
+        private void CacheItemDefinitions(InventoryResponse inventoryResponse)
+        {
+            if (inventoryResponse?.items == null)
+                return;
+
+            foreach (InventoryItemData item in inventoryResponse.items)
+                SaiServer.Instance?.ItemDefinitions?.Cache(item?.definition);
         }
 
         // ── Convenience query helpers ──────────────────────────────────────────
