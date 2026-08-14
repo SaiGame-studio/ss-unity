@@ -32,9 +32,5 @@ namespace SaiGame.Services
         public int grid_height;
         public bool client_writable;
         public bool allow_client_update_qty;
-        public string created_by;
-        public string updated_by;
-        public string created_at;
-        public string updated_at;
     }
 }

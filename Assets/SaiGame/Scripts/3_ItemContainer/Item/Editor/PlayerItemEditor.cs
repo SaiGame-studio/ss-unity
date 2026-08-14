@@ -319,9 +319,6 @@ namespace SaiGame.Services
                     EditorGUILayout.LabelField("Grid Size",           $"{d.grid_width} × {d.grid_height}");
                     EditorGUILayout.LabelField("Client Writable",     d.client_writable.ToString());
                     EditorGUILayout.LabelField("Allow Client Qty",    d.allow_client_update_qty.ToString());
-                    EditorGUILayout.LabelField("Created By",          d.created_by);
-                    EditorGUILayout.LabelField("Created At",          d.created_at);
-                    EditorGUILayout.LabelField("Updated At",          d.updated_at);
 
                     if (!string.IsNullOrEmpty(d.base_stats))
                     {
