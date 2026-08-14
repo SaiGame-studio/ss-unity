@@ -19,8 +19,6 @@ namespace SaiGame.Services
 
         private bool showCurrentInventory = true;
         private bool showItemList = false;
-        private bool showUtilityButtons = true;
-
         private readonly Dictionary<string, bool> itemFoldouts = new Dictionary<string, bool>();
 
         // Per-item state for the in-place Update Properties form
@@ -163,65 +161,56 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space();
 
-            // Utility Buttons
-            this.showUtilityButtons = EditorGUILayout.Foldout(this.showUtilityButtons, "Utility Actions", true);
-            if (this.showUtilityButtons)
+            // Category Dropdown Row
+            EditorGUILayout.LabelField("Category Filter", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUI.BeginChangeCheck();
+            int newIndex = EditorGUILayout.Popup(this.selectedCategoryIndex, dropdownOptions, GUILayout.Height(24));
+            if (EditorGUI.EndChangeCheck())
             {
-                EditorGUI.indentLevel++;
-
-                // Category Dropdown Row
-                EditorGUILayout.LabelField("Category Filter", EditorStyles.boldLabel);
-                EditorGUILayout.BeginHorizontal();
-
-                EditorGUI.BeginChangeCheck();
-                int newIndex = EditorGUILayout.Popup(this.selectedCategoryIndex, dropdownOptions, GUILayout.Height(24));
-                if (EditorGUI.EndChangeCheck())
-                {
-                    this.selectedCategoryIndex = newIndex;
-                    string selected = (newIndex == 0) ? "" : dropdownOptions[newIndex];
-                    this.categoryFilter.stringValue = selected;
-                    serializedObject.ApplyModifiedProperties();
-                }
-
-                GUI.backgroundColor = isFetchingCategories ? Color.gray : new Color(0.4f, 0.85f, 1f);
-                EditorGUI.BeginDisabledGroup(isFetchingCategories);
-                if (GUILayout.Button(isFetchingCategories ? "Fetching..." : "Reload", GUILayout.Height(24), GUILayout.Width(80)))
-                {
-                    this.FetchCategories();
-                }
-                EditorGUI.EndDisabledGroup();
-                GUI.backgroundColor = Color.white;
-
-                EditorGUILayout.EndHorizontal();
-
-                if (cachedCategories == null)
-                {
-                    EditorGUILayout.HelpBox("Press Reload to load categories from the server.", MessageType.Info);
-                }
-
-                EditorGUILayout.Space(6);
-
-                // Row 1: Get Items / Clear
-                EditorGUILayout.BeginHorizontal();
-
-                GUI.backgroundColor = Color.cyan;
-                if (GUILayout.Button("Get Items", GUILayout.Height(30)))
-                {
-                    this.LoadItems(this.categoryFilter.stringValue);
-                }
-                GUI.backgroundColor = Color.white;
-
-                GUI.backgroundColor = Color.red;
-                if (GUILayout.Button("Clear Inventory", GUILayout.Height(30)))
-                {
-                    this.itemContainer.ClearInventory();
-                }
-                GUI.backgroundColor = Color.white;
-
-                EditorGUILayout.EndHorizontal();
-
-                EditorGUI.indentLevel--;
+                this.selectedCategoryIndex = newIndex;
+                string selected = (newIndex == 0) ? "" : dropdownOptions[newIndex];
+                this.categoryFilter.stringValue = selected;
+                serializedObject.ApplyModifiedProperties();
             }
+
+            GUI.backgroundColor = isFetchingCategories ? Color.gray : new Color(0.4f, 0.85f, 1f);
+            EditorGUI.BeginDisabledGroup(isFetchingCategories);
+            if (GUILayout.Button(isFetchingCategories ? "Fetching..." : "Reload", GUILayout.Height(24), GUILayout.Width(80)))
+            {
+                this.FetchCategories();
+            }
+            EditorGUI.EndDisabledGroup();
+            GUI.backgroundColor = Color.white;
+
+            EditorGUILayout.EndHorizontal();
+
+            if (cachedCategories == null)
+            {
+                EditorGUILayout.HelpBox("Press Reload to load categories from the server.", MessageType.Info);
+            }
+
+            EditorGUILayout.Space(6);
+
+            // Row 1: Get Items / Clear
+            EditorGUILayout.BeginHorizontal();
+
+            GUI.backgroundColor = Color.cyan;
+            if (GUILayout.Button("Get Items", GUILayout.Height(30)))
+            {
+                this.LoadItems(this.categoryFilter.stringValue);
+            }
+            GUI.backgroundColor = Color.white;
+
+            GUI.backgroundColor = Color.red;
+            if (GUILayout.Button("Clear Inventory", GUILayout.Height(30)))
+            {
+                this.itemContainer.ClearInventory();
+            }
+            GUI.backgroundColor = Color.white;
+
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Event Listeners", EditorStyles.boldLabel);
