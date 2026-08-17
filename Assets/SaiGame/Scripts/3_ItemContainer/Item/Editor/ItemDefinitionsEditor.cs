@@ -111,6 +111,7 @@ namespace SaiGame.Services
             DrawIdField("Game ID", definition.game_id);
             EditorGUILayout.LabelField("Item Code", definition.item_code);
             EditorGUILayout.LabelField("Name", definition.name);
+            EditorGUILayout.LabelField("Description", definition.description);
             EditorGUILayout.LabelField("Category", definition.category);
             EditorGUILayout.LabelField("Rarity", definition.rarity);
             EditorGUILayout.LabelField("Stackable", $"{definition.is_stackable}  (max stack {definition.max_stack_size})");

@@ -15,6 +15,7 @@ namespace SaiGame.Services
         public string game_id;
         public string item_code;
         public string name;
+        public string description;
         public string category;
         public string rarity;
         // Raw JSON string – parse with your own deserializer as needed
