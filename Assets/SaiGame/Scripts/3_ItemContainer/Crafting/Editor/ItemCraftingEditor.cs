@@ -505,6 +505,7 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField($"Category: {def.category}  |  Rarity: {def.rarity}", labelStyle);
             EditorGUILayout.LabelField($"Stackable: {(def.is_stackable ? "✔" : "✘")}  |  Max Stack: {def.max_stack_size}  |  Grid: {def.grid_width}x{def.grid_height}", labelStyle);
 
+            string description = def.description;
             if (!string.IsNullOrEmpty(def.metadata))
             {
                 ItemDefinitionMetadata parsedMeta = def.ParsedMetadata;
@@ -516,10 +517,13 @@ namespace SaiGame.Services
                         EditorGUILayout.LabelField($"Flavor: {parsedMeta.flavor_text}", labelStyle);
                     if (!string.IsNullOrEmpty(parsedMeta.currency_code))
                         EditorGUILayout.LabelField($"Currency: {parsedMeta.currency_code}{(parsedMeta.is_default_currency ? " (default)" : "")}", labelStyle);
-                    if (!string.IsNullOrEmpty(parsedMeta.description))
-                        EditorGUILayout.LabelField($"Desc: {parsedMeta.description}", labelStyle);
+                    if (string.IsNullOrEmpty(description))
+                        description = parsedMeta.description;
                 }
             }
+
+            if (!string.IsNullOrEmpty(description))
+                EditorGUILayout.LabelField($"Desc: {description}", labelStyle);
 
             if (!string.IsNullOrEmpty(def.base_stats) && def.base_stats != "{}")
                 EditorGUILayout.LabelField($"Stats: {def.base_stats}", labelStyle);
