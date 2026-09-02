@@ -197,8 +197,8 @@ namespace SaiGame.Services
                 this.scriptFoldouts[displayName] = EditorGUI.Foldout(
                     foldoutRect, this.scriptFoldouts[displayName], displayName, true, EditorStyles.foldoutHeader);
 
-                this.DrawModifiedIndicator(modifiedState);
                 GUILayout.FlexibleSpace();
+                this.DrawModifiedIndicator(modifiedState);
 
                 // Download: backend has file but local does not
                 if (hasBackendScript.boolValue && !hasLocalFile.boolValue)
