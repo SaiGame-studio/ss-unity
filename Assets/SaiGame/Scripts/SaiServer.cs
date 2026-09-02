@@ -10,7 +10,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.53";
+        public const string PACKAGE_VERSION = "0.2.54";
         public const string PACKAGE_NAME = "Sai Server";
 
         [SerializeField] protected SaiAuth saiAuth;
@@ -272,7 +272,7 @@ namespace SaiGame.Services
 
                 if (this.showUrlRequest)
                     Debug.Log($"[SaiServer] POST {request.url}");
-                if (this.showJsonRequest)
+                if (this.showJsonRequest && !IsPasswordAuthenticationRequest(endpoint))
                     Debug.Log($"[SaiServer] POST Request Body\n{jsonData}");
 
                 yield return request.SendWebRequest();
@@ -290,6 +290,11 @@ namespace SaiGame.Services
                     onError?.Invoke(errorMsg);
                 }
             }
+        }
+
+        private static bool IsPasswordAuthenticationRequest(string endpoint)
+        {
+            return endpoint == "/api/v1/auth/login" || endpoint == "/api/v1/auth/register";
         }
 
         public IEnumerator PutRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)
@@ -744,7 +749,7 @@ namespace SaiGame.Services
 
         public void ManualClearGameId()
         {
-            this.gameId = string.Empty;
+            this.gameId = "019f49a1-350b-72c4-ac8f-8fe4f7d1418e";
         }
 
         public int ManualFullResetHierarchyComponents()
