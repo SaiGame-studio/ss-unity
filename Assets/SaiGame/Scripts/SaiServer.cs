@@ -272,7 +272,7 @@ namespace SaiGame.Services
 
                 if (this.showUrlRequest)
                     Debug.Log($"[SaiServer] POST {request.url}");
-                if (this.showJsonRequest)
+                if (this.showJsonRequest && !IsPasswordAuthenticationRequest(endpoint))
                     Debug.Log($"[SaiServer] POST Request Body\n{jsonData}");
 
                 yield return request.SendWebRequest();
@@ -290,6 +290,11 @@ namespace SaiGame.Services
                     onError?.Invoke(errorMsg);
                 }
             }
+        }
+
+        private static bool IsPasswordAuthenticationRequest(string endpoint)
+        {
+            return endpoint == "/api/v1/auth/login" || endpoint == "/api/v1/auth/register";
         }
 
         public IEnumerator PutRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)
