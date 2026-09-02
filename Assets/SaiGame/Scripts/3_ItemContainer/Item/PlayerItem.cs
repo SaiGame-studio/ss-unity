@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SaiGame.Services
@@ -187,21 +188,75 @@ namespace SaiGame.Services
             int actualOffset = offset ?? this.itemOffset;
             string actualCategory = category ?? this.categoryFilter;
 
-            StartCoroutine(this.GetItemsCoroutine(actualLimit, actualOffset, actualCategory, onSuccess, onError));
+            StartCoroutine(this.GetItemsCoroutine(actualLimit, actualOffset, actualCategory, null, false, onSuccess, onError));
+        }
+
+        /// <summary>
+        /// Loads the next inventory page after the last locally cached item.
+        /// </summary>
+        public void LoadMoreItems(
+            System.Action<InventoryResponse> onSuccess = null,
+            System.Action<string> onError = null)
+        {
+            if (SaiServer.Instance == null)
+            {
+                onError?.Invoke("SaiServer not found!");
+                return;
+            }
+
+            if (!SaiServer.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            if (this.currentInventory?.items == null || this.currentInventory.items.Length == 0)
+            {
+                this.GetItems(onSuccess: onSuccess, onError: onError);
+                return;
+            }
+
+            if (this.currentInventory.items.Length >= this.currentInventory.total)
+            {
+                onSuccess?.Invoke(this.currentInventory);
+                return;
+            }
+
+            InventoryItemData lastItem = this.currentInventory.items[this.currentInventory.items.Length - 1];
+            if (string.IsNullOrEmpty(lastItem?.id))
+            {
+                onError?.Invoke("Cannot load more inventory items because the cursor item has no id.");
+                return;
+            }
+
+            StartCoroutine(this.GetItemsCoroutine(
+                this.currentInventory.limit > 0 ? this.currentInventory.limit : this.itemLimit,
+                0,
+                this.categoryFilter,
+                lastItem.id,
+                true,
+                onSuccess,
+                onError));
         }
 
         private IEnumerator GetItemsCoroutine(
             int limit,
             int offset,
             string category,
+            string after,
+            bool append,
             System.Action<InventoryResponse> onSuccess,
             System.Action<string> onError)
         {
             string gameId = SaiServer.Instance.GameId;
-            string endpoint = $"/api/v1/games/{gameId}/inventory?limit={limit}&offset={offset}&include_metadata=true";
+            string endpoint = $"/api/v1/games/{gameId}/inventory?limit={limit}&include_metadata=true";
+            if (string.IsNullOrEmpty(after))
+                endpoint += $"&offset={offset}";
 
             if (!string.IsNullOrEmpty(category))
                 endpoint += $"&category={category}";
+            if (!string.IsNullOrEmpty(after))
+                endpoint += $"&after={after}";
 
             yield return SaiServer.Instance.GetRequest(endpoint,
                 response =>
@@ -214,6 +269,9 @@ namespace SaiGame.Services
                         string sanitized = InventoryJsonHelper.StringifyObjectFields(response);
 
                         InventoryResponse inventoryResponse = JsonUtility.FromJson<InventoryResponse>(sanitized);
+                        if (append)
+                            inventoryResponse = this.AppendInventoryPage(inventoryResponse);
+
                         this.currentInventory = inventoryResponse;
                         this.CacheItemDefinitions(inventoryResponse);
 
@@ -368,6 +426,34 @@ namespace SaiGame.Services
 
             foreach (InventoryItemData item in inventoryResponse.items)
                 SaiServer.Instance?.ItemDefinitions?.Cache(item?.definition);
+        }
+
+        private InventoryResponse AppendInventoryPage(InventoryResponse page)
+        {
+            var mergedItems = new List<InventoryItemData>(this.currentInventory?.items ?? Array.Empty<InventoryItemData>());
+            var knownIDs = new HashSet<string>();
+            foreach (InventoryItemData item in mergedItems)
+            {
+                if (!string.IsNullOrEmpty(item?.id))
+                    knownIDs.Add(item.id);
+            }
+
+            if (page?.items != null)
+            {
+                foreach (InventoryItemData item in page.items)
+                {
+                    if (string.IsNullOrEmpty(item?.id) || knownIDs.Add(item.id))
+                        mergedItems.Add(item);
+                }
+            }
+
+            return new InventoryResponse
+            {
+                items = mergedItems.ToArray(),
+                limit = page?.limit ?? this.itemLimit,
+                offset = 0,
+                total = page?.total ?? mergedItems.Count,
+            };
         }
 
         // ── Convenience query helpers ──────────────────────────────────────────

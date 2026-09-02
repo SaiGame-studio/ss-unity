@@ -34,6 +34,7 @@ namespace SaiGame.Services
         private static string[] cachedCategories = null;
         private static string[] dropdownOptions = new string[] { "(All)" };
         private static bool isFetchingCategories = false;
+        private bool isLoadingItems;
         private int selectedCategoryIndex = 0;
 
         private void OnEnable()
@@ -187,14 +188,28 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space(6);
 
-            // Row 1: Get Items / Clear
+            // Row 1: Get Items / Load More / Clear
             EditorGUILayout.BeginHorizontal();
 
-            GUI.backgroundColor = Color.cyan;
-            if (GUILayout.Button("Get Items", GUILayout.Height(30)))
+            GUI.backgroundColor = this.isLoadingItems ? Color.gray : Color.cyan;
+            EditorGUI.BeginDisabledGroup(this.isLoadingItems);
+            if (GUILayout.Button(this.isLoadingItems ? "Loading..." : "Get Items", GUILayout.Height(30)))
             {
                 this.LoadItems(this.categoryFilter.stringValue);
             }
+            EditorGUI.EndDisabledGroup();
+            GUI.backgroundColor = Color.white;
+
+            int loadedCount = this.itemContainer.CurrentInventory?.items?.Length ?? 0;
+            int totalCount = this.itemContainer.CurrentInventory?.total ?? 0;
+            bool canLoadMore = loadedCount > 0 && loadedCount < totalCount;
+            GUI.backgroundColor = canLoadMore && !this.isLoadingItems ? new Color(0.4f, 1f, 0.6f) : Color.gray;
+            EditorGUI.BeginDisabledGroup(!canLoadMore || this.isLoadingItems);
+            if (GUILayout.Button($"Load More ({loadedCount}/{totalCount})", GUILayout.Height(30)))
+            {
+                this.LoadMoreItems();
+            }
+            EditorGUI.EndDisabledGroup();
             GUI.backgroundColor = Color.white;
 
             GUI.backgroundColor = Color.red;
@@ -736,17 +751,43 @@ namespace SaiGame.Services
                 return;
             }
 
+            this.isLoadingItems = true;
             this.itemContainer.GetItems(
                 category: category,
                 onSuccess: response =>
                 {
+                    this.isLoadingItems = false;
                     if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.Log($"[ItemContainerEditor] Loaded {response.items.Length} items (total: {response.total})");
+                    Repaint();
                 },
                 onError: error =>
                 {
+                    this.isLoadingItems = false;
                     if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
                         Debug.LogError($"[ItemContainerEditor] Failed to load items: {error}");
+                    Repaint();
+                }
+            );
+        }
+
+        private void LoadMoreItems()
+        {
+            this.isLoadingItems = true;
+            this.itemContainer.LoadMoreItems(
+                onSuccess: response =>
+                {
+                    this.isLoadingItems = false;
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
+                        Debug.Log($"[ItemContainerEditor] Loaded {response.items.Length} of {response.total} inventory items");
+                    Repaint();
+                },
+                onError: error =>
+                {
+                    this.isLoadingItems = false;
+                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
+                        Debug.LogError($"[ItemContainerEditor] Failed to load more items: {error}");
+                    Repaint();
                 }
             );
         }
