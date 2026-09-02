@@ -749,7 +749,7 @@ namespace SaiGame.Services
 
         public void ManualClearGameId()
         {
-            this.gameId = string.Empty;
+            this.gameId = "019f49a1-350b-72c4-ac8f-8fe4f7d1418e";
         }
 
         public int ManualFullResetHierarchyComponents()
