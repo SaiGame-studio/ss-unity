@@ -198,6 +198,7 @@ namespace SaiGame.Services
                     foldoutRect, this.scriptFoldouts[displayName], displayName, true, EditorStyles.foldoutHeader);
 
                 GUILayout.FlexibleSpace();
+                this.DrawLocalScriptSize(fileName.stringValue);
                 this.DrawModifiedIndicator(modifiedState);
 
                 // Download: backend has file but local does not
@@ -347,6 +348,18 @@ namespace SaiGame.Services
                     GUILayout.Label("● synced", syncedStyle);
                     break;
             }
+        }
+
+        private void DrawLocalScriptSize(string fileNameValue)
+        {
+            string fullPath = Path.GetFullPath($"{LuaScriptManager.SCRIPT_FOLDER_ASSET_PATH}/{fileNameValue}");
+            if (!File.Exists(fullPath))
+            {
+                return;
+            }
+
+            float sizeInKilobytes = new FileInfo(fullPath).Length / 1024f;
+            GUILayout.Label($"{sizeInKilobytes:F2} KB", EditorStyles.miniLabel);
         }
 
         private bool DrawColoredButton(string label, Color color, params GUILayoutOption[] extraOptions)
