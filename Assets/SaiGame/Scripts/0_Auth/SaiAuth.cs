@@ -43,11 +43,15 @@ namespace SaiGame.Services
         [SerializeField] protected string registerUsername = "";
         [SerializeField] protected string registerPassword = "";
 
-        public bool IsAuthenticated => !string.IsNullOrEmpty(accessToken);
+        public bool HasAccessToken => !string.IsNullOrEmpty(accessToken);
+        // Unity instantiates serialized classes as empty objects, so a null check is not enough.
+        private bool HasUserData => this.userData != null && !string.IsNullOrEmpty(this.userData.id);
+        private bool IsAccessTokenValid => this.HasAccessToken && this.GetTokenRemainingSeconds() > 0;
+        public bool IsAuthenticated => this.IsAccessTokenValid && this.HasUserData;
         public string AccessToken => accessToken;
         public string RefreshToken => refreshToken;
         public int ExpiresIn => expiresIn;
-        public UserData CurrentUser => userData;
+        public UserData CurrentUser => this.HasUserData ? this.userData : null;
 
         private string NormalizeInput(string value)
         {
@@ -78,35 +82,44 @@ namespace SaiGame.Services
             if (!this.persistTokens || SaiServer.Instance == null) return false;
             if (!SaiAuthTokenStorage.TryLoad(out LoginResponse session, out long expiresAt)) return false;
 
+            // Only tokens are persisted. User data is never restored from storage.
             this.accessToken = session.access_token;
             this.refreshToken = session.refresh_token;
             this.expiresIn = session.expires_in;
-            this.userData = session.user;
+            this.userData = null;
             this.tokenExpiresAt = expiresAt;
             this.loginTime = Time.time - (float)(this.expiresIn - this.GetTokenRemainingSeconds());
+
+            // Without auto login, tokens are only loaded: no API call, and the user is not logged in.
+            if (!this.autoLogin) return true;
 
             if (string.IsNullOrEmpty(this.accessToken) || this.GetTokenRemainingSeconds() <= 0)
             {
                 this.accessToken = string.Empty;
                 this.RefreshAuthToken(
-                    response =>
-                    {
-                        if (response.user == null)
-                        {
-                            response.user = session.user;
-                            this.userData = session.user;
-                        }
-                        this.OnLoginSuccess?.Invoke(response);
-                    },
+                    _ => this.LoadProfileAfterRestore(),
                     error => this.OnLoginFailure?.Invoke(error));
             }
             else
             {
                 this.StartTokenExpirationCheck();
-                this.OnLoginSuccess?.Invoke(session);
+                this.LoadProfileAfterRestore();
             }
 
             return true;
+        }
+
+        private void LoadProfileAfterRestore()
+        {
+            this.GetMyProfile(
+                user => this.OnLoginSuccess?.Invoke(new LoginResponse
+                {
+                    access_token = this.accessToken,
+                    refresh_token = this.refreshToken,
+                    expires_in = this.expiresIn,
+                    user = user
+                }),
+                error => this.OnLoginFailure?.Invoke(error));
         }
 
         private double GetTokenRemainingSeconds()
@@ -121,8 +134,7 @@ namespace SaiGame.Services
             {
                 access_token = this.accessToken,
                 refresh_token = this.refreshToken,
-                expires_in = this.expiresIn,
-                user = this.userData
+                expires_in = this.expiresIn
             }, this.tokenExpiresAt);
         }
 
@@ -368,20 +380,25 @@ namespace SaiGame.Services
                     try
                     {
                         LoginResponse loginResponse = JsonUtility.FromJson<LoginResponse>(response);
-                        SaiServer.Instance.SetLoginData(loginResponse.access_token, loginResponse.refresh_token, loginResponse.expires_in, loginResponse.user);
+                        bool wasLoggedIn = this.HasUserData;
+                        SaiServer.Instance.SetLoginData(loginResponse.access_token, loginResponse.refresh_token, loginResponse.expires_in, loginResponse.user ?? this.userData);
 
-                        GetMyProfile(
-                            userData =>
-                            {
-                                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
-                                    Debug.Log($"User data refreshed after token refresh: {userData.username}");
-                            },
-                            error =>
-                            {
-                                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
-                                    Debug.LogWarning($"Failed to refresh user data after token refresh: {error}");
-                            }
-                        );
+                        // Only reload user data for an already logged-in session.
+                        if (wasLoggedIn)
+                        {
+                            GetMyProfile(
+                                userData =>
+                                {
+                                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                                        Debug.Log($"User data refreshed after token refresh: {userData.username}");
+                                },
+                                error =>
+                                {
+                                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                                        Debug.LogWarning($"Failed to refresh user data after token refresh: {error}");
+                                }
+                            );
+                        }
 
                         OnRefreshTokenSuccess?.Invoke(loginResponse);
                         if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
@@ -416,7 +433,7 @@ namespace SaiGame.Services
 
         private IEnumerator LogoutCoroutine()
         {
-            if (SaiServer.Instance != null && SaiServer.Instance.IsAuthenticated)
+            if (SaiServer.Instance != null && SaiServer.Instance.HasAccessToken)
             {
                 yield return StartCoroutine(SaiServer.Instance.PostRequest("/api/v1/auth/logout", "{}",
                     response =>
@@ -463,9 +480,9 @@ namespace SaiGame.Services
         {
             if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#AAFFAA><b>[SaiAuth] ► Get Me</b></color>", gameObject);
-            if (SaiServer.Instance == null || !SaiServer.Instance.IsAuthenticated)
+            if (SaiServer.Instance == null || !SaiServer.Instance.HasAccessToken)
             {
-                onError?.Invoke("Not authenticated! Please login first.");
+                onError?.Invoke("No access token! Please login first.");
                 return;
             }
 

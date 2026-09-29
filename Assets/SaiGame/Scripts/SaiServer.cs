@@ -98,6 +98,8 @@ namespace SaiGame.Services
 
         public bool IsAuthenticated => saiAuth != null && saiAuth.IsAuthenticated;
 
+        public bool HasAccessToken => saiAuth != null && saiAuth.HasAccessToken;
+
         public string AccessToken => saiAuth?.AccessToken ?? "";
 
         public string RefreshToken => saiAuth?.RefreshToken ?? "";
@@ -230,7 +232,7 @@ namespace SaiGame.Services
             request.timeout = requestTimeout;
             request.certificateHandler = new AllowAllCertificateHandler();
 
-            if (IsAuthenticated)
+            if (HasAccessToken)
             {
                 request.SetRequestHeader("Authorization", $"Bearer {AccessToken}");
             }
