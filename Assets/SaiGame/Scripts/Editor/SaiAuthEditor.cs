@@ -117,6 +117,7 @@ namespace SaiGame.Services
             if (this.showAutoSettings)
             {
                 EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("persistTokens"), new GUIContent("Persist Tokens"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("autoLogin"), new GUIContent("Auto Login On Start"));
                 EditorGUI.indentLevel--;
             }

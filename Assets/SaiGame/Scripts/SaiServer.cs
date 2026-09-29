@@ -10,7 +10,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.54";
+        public const string PACKAGE_VERSION = "0.2.55";
         public const string PACKAGE_NAME = "Sai Server";
 
         [SerializeField] protected SaiAuth saiAuth;
@@ -399,6 +399,14 @@ namespace SaiGame.Services
         {
             base.ResetValue();
             this.ManualClearGameId();
+            this.ResetServerEndpointToProduction();
+        }
+
+        private void ResetServerEndpointToProduction()
+        {
+            this.serverEndpoint = ServerEndpointOption.ProductionHttps;
+            this.SyncLegacyServerFieldsFromEndpoint();
+            this.SaveServerEndpointToPlayerPrefs();
         }
 
         protected override void LoadComponents()
@@ -749,7 +757,7 @@ namespace SaiGame.Services
 
         public void ManualClearGameId()
         {
-            this.gameId = "019f49a1-350b-72c4-ac8f-8fe4f7d1418e";
+            this.gameId = "";
         }
 
         public int ManualFullResetHierarchyComponents()
