@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace SaiGame.Services
 {
@@ -27,12 +28,14 @@ namespace SaiGame.Services
         [SerializeField] protected UserData userData;
         [SerializeField] protected float loginTime;
 
-        [Header("Auto Settings")]
-        [SerializeField] protected bool autoLogin = false;
+        [SerializeField] protected bool autoLogin = true;
+        [Tooltip("Save tokens in PlayerPrefs and restore the session on startup without a password.")]
+        [SerializeField] private bool persistTokens = true;
 
-        [Header("Auto Refresh Settings")]
         [SerializeField] protected bool autoRefreshToken = true;
-        [SerializeField] protected int refreshBeforeExpire = 2;
+        [Tooltip("Minutes before the access token expires at which it is refreshed automatically.")]
+        [FormerlySerializedAs("refreshBeforeExpire")]
+        [SerializeField] protected int refreshBeforeExpireMinutes = 5;
 
         [SerializeField] protected string username = "";
         [SerializeField] protected string password = "";
@@ -41,11 +44,15 @@ namespace SaiGame.Services
         [SerializeField] protected string registerUsername = "";
         [SerializeField] protected string registerPassword = "";
 
-        public bool IsAuthenticated => !string.IsNullOrEmpty(accessToken);
+        public bool HasAccessToken => !string.IsNullOrEmpty(accessToken);
+        // Unity instantiates serialized classes as empty objects, so a null check is not enough.
+        private bool HasUserData => this.userData != null && !string.IsNullOrEmpty(this.userData.id);
+        private bool IsAccessTokenValid => this.HasAccessToken && this.GetTokenRemainingSeconds() > 0;
+        public bool IsAuthenticated => this.IsAccessTokenValid && this.HasUserData;
         public string AccessToken => accessToken;
         public string RefreshToken => refreshToken;
         public int ExpiresIn => expiresIn;
-        public UserData CurrentUser => userData;
+        public UserData CurrentUser => this.HasUserData ? this.userData : null;
 
         private string NormalizeInput(string value)
         {
@@ -53,6 +60,7 @@ namespace SaiGame.Services
         }
 
         private Coroutine tokenExpirationChecker;
+        private long tokenExpiresAt;
 
         protected override void LoadComponents()
         {
@@ -66,7 +74,69 @@ namespace SaiGame.Services
 
         protected override void Start()
         {
+            if (this.TryRestoreSession()) return;
             if (this.autoLogin) this.AutoLogin();
+        }
+
+        private bool TryRestoreSession()
+        {
+            if (!this.persistTokens || SaiServer.Instance == null) return false;
+            if (!SaiAuthTokenStorage.TryLoad(out LoginResponse session, out long expiresAt)) return false;
+
+            // Only tokens are persisted. User data is never restored from storage.
+            this.accessToken = session.access_token;
+            this.refreshToken = session.refresh_token;
+            this.expiresIn = session.expires_in;
+            this.userData = null;
+            this.tokenExpiresAt = expiresAt;
+            this.loginTime = Time.time - (float)(this.expiresIn - this.GetTokenRemainingSeconds());
+
+            // Without auto login, tokens are only loaded: no API call, and the user is not logged in.
+            if (!this.autoLogin) return true;
+
+            if (string.IsNullOrEmpty(this.accessToken) || this.GetTokenRemainingSeconds() <= 0)
+            {
+                this.accessToken = string.Empty;
+                this.RefreshAuthToken(
+                    _ => this.LoadProfileAfterRestore(),
+                    error => this.OnLoginFailure?.Invoke(error));
+            }
+            else
+            {
+                this.StartTokenExpirationCheck();
+                this.LoadProfileAfterRestore();
+            }
+
+            return true;
+        }
+
+        private void LoadProfileAfterRestore()
+        {
+            this.GetMyProfile(
+                user => this.OnLoginSuccess?.Invoke(new LoginResponse
+                {
+                    access_token = this.accessToken,
+                    refresh_token = this.refreshToken,
+                    expires_in = this.expiresIn,
+                    user = user
+                }),
+                error => this.OnLoginFailure?.Invoke(error));
+        }
+
+        private double GetTokenRemainingSeconds()
+        {
+            return (this.tokenExpiresAt - DateTime.UtcNow.Ticks) / (double)TimeSpan.TicksPerSecond;
+        }
+
+        private void SaveTokens()
+        {
+            if (!this.persistTokens) return;
+            SaiAuthTokenStorage.Save(new LoginResponse
+            {
+                access_token = this.accessToken,
+                refresh_token = this.refreshToken,
+                expires_in = this.expiresIn
+            }, this.tokenExpiresAt);
         }
 
         public void AutoLogin()
@@ -103,7 +173,7 @@ namespace SaiGame.Services
         private void StartTokenExpirationCheck()
         {
             this.StopTokenExpirationCheck();
-            if (this.autoRefreshToken && this.IsAuthenticated)
+            if (this.autoRefreshToken && this.HasAccessToken)
             {
                 tokenExpirationChecker = StartCoroutine(CheckTokenExpiration());
             }
@@ -120,12 +190,14 @@ namespace SaiGame.Services
 
         private IEnumerator CheckTokenExpiration()
         {
-            while (this.IsAuthenticated)
+            while (this.HasAccessToken)
             {
-                float elapsedTime = Time.time - this.loginTime;
-                float timeUntilExpire = this.expiresIn - elapsedTime;
+                double timeUntilExpire = this.GetTokenRemainingSeconds();
 
-                if (timeUntilExpire <= this.refreshBeforeExpire && timeUntilExpire > 0)
+                // Never refresh earlier than half of the token lifetime, so short-lived tokens do not refresh in a loop.
+                double refreshThreshold = Math.Min(this.refreshBeforeExpireMinutes * 60d, this.expiresIn / 2d);
+
+                if (timeUntilExpire <= refreshThreshold)
                 {
                     if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"Auto-refreshing token... (expires in {timeUntilExpire:F1}s)");
@@ -146,7 +218,7 @@ namespace SaiGame.Services
                     yield break;
                 }
 
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSecondsRealtime(1f);
             }
         }
 
@@ -249,16 +321,8 @@ namespace SaiGame.Services
                         LoginResponse loginResponse = JsonUtility.FromJson<LoginResponse>(response);
                         SaiServer.Instance.SetLoginData(loginResponse.access_token, loginResponse.refresh_token, loginResponse.expires_in, loginResponse.user);
 
-                        this.accessToken = loginResponse.access_token;
-                        this.refreshToken = loginResponse.refresh_token;
-                        this.expiresIn = loginResponse.expires_in;
-                        this.userData = loginResponse.user;
-                        this.loginTime = Time.time;
-
                         this.username = username;
                         this.password = password;
-
-                        StartTokenExpirationCheck();
 
                         OnLoginSuccess?.Invoke(loginResponse);
                         if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
@@ -320,28 +384,25 @@ namespace SaiGame.Services
                     try
                     {
                         LoginResponse loginResponse = JsonUtility.FromJson<LoginResponse>(response);
-                        SaiServer.Instance.SetLoginData(loginResponse.access_token, loginResponse.refresh_token, loginResponse.expires_in, loginResponse.user);
+                        bool wasLoggedIn = this.HasUserData;
+                        SaiServer.Instance.SetLoginData(loginResponse.access_token, loginResponse.refresh_token, loginResponse.expires_in, loginResponse.user ?? this.userData);
 
-                        this.accessToken = loginResponse.access_token;
-                        this.refreshToken = loginResponse.refresh_token;
-                        this.expiresIn = loginResponse.expires_in;
-                        this.userData = loginResponse.user;
-                        this.loginTime = Time.time;
-
-                        StartTokenExpirationCheck();
-
-                        GetMyProfile(
-                            userData =>
-                            {
-                                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
-                                    Debug.Log($"User data refreshed after token refresh: {userData.username}");
-                            },
-                            error =>
-                            {
-                                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
-                                    Debug.LogWarning($"Failed to refresh user data after token refresh: {error}");
-                            }
-                        );
+                        // Only reload user data for an already logged-in session.
+                        if (wasLoggedIn)
+                        {
+                            GetMyProfile(
+                                userData =>
+                                {
+                                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                                        Debug.Log($"User data refreshed after token refresh: {userData.username}");
+                                },
+                                error =>
+                                {
+                                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                                        Debug.LogWarning($"Failed to refresh user data after token refresh: {error}");
+                                }
+                            );
+                        }
 
                         OnRefreshTokenSuccess?.Invoke(loginResponse);
                         if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
@@ -376,7 +437,7 @@ namespace SaiGame.Services
 
         private IEnumerator LogoutCoroutine()
         {
-            if (SaiServer.Instance != null && SaiServer.Instance.IsAuthenticated)
+            if (SaiServer.Instance != null && SaiServer.Instance.HasAccessToken)
             {
                 yield return StartCoroutine(SaiServer.Instance.PostRequest("/api/v1/auth/logout", "{}",
                     response =>
@@ -404,6 +465,7 @@ namespace SaiGame.Services
         private void ClearAuthData()
         {
             StopTokenExpirationCheck();
+            SaiAuthTokenStorage.Clear();
 
             if (SaiServer.Instance != null)
             {
@@ -415,15 +477,16 @@ namespace SaiGame.Services
             this.expiresIn = 0;
             this.userData = null;
             this.loginTime = 0;
+            this.tokenExpiresAt = 0;
         }
 
         public void GetMyProfile(System.Action<UserData> onSuccess = null, System.Action<string> onError = null)
         {
             if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#AAFFAA><b>[SaiAuth] ► Get Me</b></color>", gameObject);
-            if (SaiServer.Instance == null || !SaiServer.Instance.IsAuthenticated)
+            if (SaiServer.Instance == null || !SaiServer.Instance.HasAccessToken)
             {
-                onError?.Invoke("Not authenticated! Please login first.");
+                onError?.Invoke("No access token! Please login first.");
                 return;
             }
 
@@ -441,6 +504,7 @@ namespace SaiGame.Services
                     {
                         GetMeResponse meResponse = JsonUtility.FromJson<GetMeResponse>(response);
                         this.userData = meResponse.user;
+                        this.SaveTokens();
 
                         if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"Profile loaded: {userData.username} ({userData.email})");
@@ -472,6 +536,7 @@ namespace SaiGame.Services
         public void SetAccessToken(string token)
         {
             this.accessToken = token;
+            this.SaveTokens();
         }
 
         public void SetLoginData(string access, string refresh, int expires, UserData user = null)
@@ -483,6 +548,12 @@ namespace SaiGame.Services
             this.expiresIn = expires;
             this.userData = user;
             this.loginTime = string.IsNullOrEmpty(access) ? 0 : Time.time;
+            this.tokenExpiresAt = DateTime.UtcNow.AddSeconds(Math.Max(0, expires)).Ticks;
+
+            if (string.IsNullOrEmpty(access) && string.IsNullOrEmpty(refresh))
+                SaiAuthTokenStorage.Clear();
+            else
+                this.SaveTokens();
 
             this.StartTokenExpirationCheck();
         }

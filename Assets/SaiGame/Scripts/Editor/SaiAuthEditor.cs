@@ -7,7 +7,6 @@ namespace SaiGame.Services
     public class SaiAuthEditor : Editor
     {
         private const string PREF_AUTO_SETTINGS = "SaiAuthEditor.showAutoSettings";
-        private const string PREF_AUTO_REFRESH = "SaiAuthEditor.showAutoRefreshSettings";
         private const string PREF_LOGIN_INPUTS = "SaiAuthEditor.showLoginInputs";
         private const string PREF_REGISTER_INPUTS = "SaiAuthEditor.showRegisterInputs";
         private const string PREF_SHOW_PASSWORDS = "SaiAuthEditor.showPasswords";
@@ -16,12 +15,6 @@ namespace SaiGame.Services
         {
             get => EditorPrefs.GetBool(PREF_AUTO_SETTINGS, true);
             set => EditorPrefs.SetBool(PREF_AUTO_SETTINGS, value);
-        }
-
-        private bool showAutoRefreshSettings
-        {
-            get => EditorPrefs.GetBool(PREF_AUTO_REFRESH, true);
-            set => EditorPrefs.SetBool(PREF_AUTO_REFRESH, value);
         }
 
         private bool showLoginInputs
@@ -103,6 +96,10 @@ namespace SaiGame.Services
 
             // Authentication Data
             EditorGUILayout.LabelField("Authentication Data", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.Toggle("Is Login", saiAuth.IsAuthenticated);
+            }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("accessToken"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("refreshToken"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("expiresIn"));
@@ -117,20 +114,10 @@ namespace SaiGame.Services
             if (this.showAutoSettings)
             {
                 EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("persistTokens"), new GUIContent("Persist Tokens"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("autoLogin"), new GUIContent("Auto Login On Start"));
-                EditorGUI.indentLevel--;
-            }
-
-            EditorGUILayout.Space();
-
-            // Auto Refresh Settings (collapsible)
-            bool autoRefresh = EditorGUILayout.Foldout(this.showAutoRefreshSettings, "Auto Refresh Settings", true);
-            if (autoRefresh != this.showAutoRefreshSettings) this.showAutoRefreshSettings = autoRefresh;
-            if (this.showAutoRefreshSettings)
-            {
-                EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("autoRefreshToken"), new GUIContent("Auto Refresh Token"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("refreshBeforeExpire"), new GUIContent("Refresh Before Expire"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("refreshBeforeExpireMinutes"), new GUIContent("Refresh Before Expire (minutes)", "Minutes before the access token expires at which it is refreshed automatically."));
                 EditorGUI.indentLevel--;
             }
 
@@ -216,7 +203,7 @@ namespace SaiGame.Services
             GUI.backgroundColor = new Color(0.5f, 0.8f, 1f);
             if (GUILayout.Button("Refresh Token", GUILayout.Height(25)))
             {
-                if (saiAuth.IsAuthenticated)
+                if (saiAuth.HasAccessToken)
                 {
                     saiAuth.RefreshAuthToken(
                         response => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Token refreshed successfully! New token expires in: {response.expires_in}s"); },
@@ -234,7 +221,7 @@ namespace SaiGame.Services
             GUI.backgroundColor = new Color(0.3f, 0.9f, 0.5f);
             if (GUILayout.Button("Get Me", GUILayout.Height(25)))
             {
-                if (saiAuth.IsAuthenticated)
+                if (saiAuth.HasAccessToken)
                 {
                     saiAuth.GetMyProfile(
                         userData => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Profile retrieved: {userData.username} ({userData.email}), Active: {userData.is_active}, Verified: {userData.is_verified}"); },
