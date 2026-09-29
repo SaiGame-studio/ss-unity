@@ -117,7 +117,7 @@ namespace SaiGame.Services
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("persistTokens"), new GUIContent("Persist Tokens"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("autoLogin"), new GUIContent("Auto Login On Start"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("autoRefreshToken"), new GUIContent("Auto Refresh Token"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("refreshBeforeExpire"), new GUIContent("Refresh Before Expire"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("refreshBeforeExpireMinutes"), new GUIContent("Refresh Before Expire (minutes)", "Minutes before the access token expires at which it is refreshed automatically."));
                 EditorGUI.indentLevel--;
             }
 

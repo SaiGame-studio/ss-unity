@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace SaiGame.Services
 {
@@ -27,14 +28,14 @@ namespace SaiGame.Services
         [SerializeField] protected UserData userData;
         [SerializeField] protected float loginTime;
 
-        [Header("Auto Settings")]
-        [SerializeField] protected bool autoLogin = false;
+        [SerializeField] protected bool autoLogin = true;
         [Tooltip("Save tokens in PlayerPrefs and restore the session on startup without a password.")]
         [SerializeField] private bool persistTokens = true;
 
-        [Header("Auto Refresh Settings")]
         [SerializeField] protected bool autoRefreshToken = true;
-        [SerializeField] protected int refreshBeforeExpire = 2;
+        [Tooltip("Minutes before the access token expires at which it is refreshed automatically.")]
+        [FormerlySerializedAs("refreshBeforeExpire")]
+        [SerializeField] protected int refreshBeforeExpireMinutes = 5;
 
         [SerializeField] protected string username = "";
         [SerializeField] protected string password = "";
@@ -172,7 +173,7 @@ namespace SaiGame.Services
         private void StartTokenExpirationCheck()
         {
             this.StopTokenExpirationCheck();
-            if (this.autoRefreshToken && this.IsAuthenticated)
+            if (this.autoRefreshToken && this.HasAccessToken)
             {
                 tokenExpirationChecker = StartCoroutine(CheckTokenExpiration());
             }
@@ -189,11 +190,14 @@ namespace SaiGame.Services
 
         private IEnumerator CheckTokenExpiration()
         {
-            while (this.IsAuthenticated)
+            while (this.HasAccessToken)
             {
                 double timeUntilExpire = this.GetTokenRemainingSeconds();
 
-                if (timeUntilExpire <= this.refreshBeforeExpire)
+                // Never refresh earlier than half of the token lifetime, so short-lived tokens do not refresh in a loop.
+                double refreshThreshold = Math.Min(this.refreshBeforeExpireMinutes * 60d, this.expiresIn / 2d);
+
+                if (timeUntilExpire <= refreshThreshold)
                 {
                     if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                         Debug.Log($"Auto-refreshing token... (expires in {timeUntilExpire:F1}s)");
