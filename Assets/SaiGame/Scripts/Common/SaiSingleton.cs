@@ -13,10 +13,8 @@ namespace SaiGame.Services
                 if (_instance == null)
                 {
                     _instance = Object.FindFirstObjectByType<T>(FindObjectsInactive.Include);
-                    if (_instance == null && Application.isPlaying)
-                    {
-                        Debug.LogError("Singleton instance has not been created yet!");
-                    }
+                    if (_instance is SaiSingleton<T> singleton && Application.isPlaying)
+                        singleton.LoadInstance();
                 }
                 return _instance;
             }
@@ -24,24 +22,41 @@ namespace SaiGame.Services
 
         protected override void Awake()
         {
-            base.Awake();
             this.LoadInstance();
+            if (_instance != this) return;
+
+            base.Awake();
         }
 
         protected virtual void LoadInstance()
         {
-            if (_instance == null)
+            if (_instance != null && _instance != this)
             {
-                _instance = this as T;
-                if (transform.parent == null) DontDestroyOnLoad(gameObject);
+                enabled = false;
+
+                // Keep the original instance safe if it shares this object or hierarchy.
+                if (_instance.transform.IsChildOf(transform))
+                {
+                    Destroy(this);
+                }
+                else
+                {
+                    gameObject.SetActive(false);
+                    Destroy(gameObject);
+                }
                 return;
             }
 
-            if (_instance != this)
-            {
-                Debug.LogWarning($"Another instance of {typeof(T).Name} already exists! Destroying the new one.");
-                Destroy(gameObject);
-            }
+            _instance = this as T;
+            if (!Application.isPlaying) return;
+
+            if (transform.parent != null) transform.SetParent(null, true);
+            DontDestroyOnLoad(gameObject);
+        }
+
+        protected virtual void OnDestroy()
+        {
+            if (_instance == this) _instance = null;
         }
     }
 }

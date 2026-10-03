@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace SaiGame.Services
@@ -464,7 +465,9 @@ namespace SaiGame.Services
                 {
                     try
                     {
-                        ChainQuestTreeResponse treeResponse = JsonUtility.FromJson<ChainQuestTreeResponse>(response);
+                        ChainQuestTreeResponse treeResponse = JsonConvert.DeserializeObject<ChainQuestTreeResponse>(response);
+                        if (treeResponse == null)
+                            throw new JsonSerializationException("Chain quest tree response is null.");
 
                         if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                             Debug.Log($"[ChainQuest] Chain tree loaded: {treeResponse.nodes?.Length ?? 0} root nodes");
