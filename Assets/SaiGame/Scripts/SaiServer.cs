@@ -10,7 +10,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.55";
+        public const string PACKAGE_VERSION = "0.2.56";
         public const string PACKAGE_NAME = "Sai Server";
 
         [SerializeField] protected SaiAuth saiAuth;
@@ -460,13 +460,15 @@ namespace SaiGame.Services
             }
         }
 
-        protected virtual void OnDestroy()
+        protected override void OnDestroy()
         {
             if (this.saiAuth != null)
                 this.saiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
 
             if (this.googleBackendLogin != null)
                 this.googleBackendLogin.OnLoginSuccess -= this.HandleLoginSuccess;
+
+            base.OnDestroy();
         }
 
         protected virtual void HandleLoginSuccess(LoginResponse _)
