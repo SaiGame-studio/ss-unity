@@ -1,0 +1,6 @@
+SGemIcon.png
+
+Source: Twemoji "gem stone" (U+1F48E), https://github.com/jdecked/twemoji
+Original file: assets/svg/1f48e.svg, rendered to a 128x128 PNG.
+Copyright (c) Twitter, Inc and other contributors (graphics) / jdecked and contributors.
+Licensed under CC-BY 4.0: https://creativecommons.org/licenses/by/4.0/

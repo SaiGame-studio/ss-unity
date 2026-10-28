@@ -47,6 +47,9 @@ namespace SaiGame.Services
             serializedObject.Update();
 
             EditorGUILayout.Space();
+            this.DrawSGemWallet();
+
+            EditorGUILayout.Space();
             EditorGUILayout.LabelField("Shop Configuration", EditorStyles.boldLabel);
             EditorGUILayout.Space();
 
@@ -121,8 +124,6 @@ namespace SaiGame.Services
 
                 EditorGUILayout.EndHorizontal();
 
-                this.DrawSGemWallet();
-
                 EditorGUI.indentLevel--;
             }
 
@@ -173,7 +174,18 @@ namespace SaiGame.Services
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField($"Key: {shop.shop_key}");
             EditorGUILayout.LabelField($"Type: {shop.shop_type}  |  Active: {shop.is_active}");
-            EditorGUILayout.LabelField($"Currency: {FormatShopCurrency(shop.currency_type, shop.currency_item_def_id)}");
+            if (shop.currency_type == ShopCurrencyTypes.SGem)
+            {
+                EditorGUILayout.BeginHorizontal();
+                SGemEditorIcon.Indent();
+                GUILayout.Label("Currency:", GUILayout.ExpandWidth(false));
+                SGemEditorIcon.InlineLabel();
+                EditorGUILayout.EndHorizontal();
+            }
+            else
+            {
+                EditorGUILayout.LabelField($"Currency: {FormatShopCurrency(shop.currency_type, shop.currency_item_def_id)}");
+            }
             EditorGUILayout.LabelField($"Items: {shop.item_count}");
 
             if (!string.IsNullOrEmpty(shop.description))
@@ -247,7 +259,19 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField($"ID: {item.id}");
             if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = item.id;
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.LabelField($"Price: {item.price} {FormatShopCurrency(item.payment_currency_type, string.IsNullOrEmpty(item.currency_item_def_id) ? this.shop.GetShopById(shopId)?.currency_item_def_id : item.currency_item_def_id)}  |  Stock: {item.stock}  |  Active: {item.is_active}");
+            if (item.IsPaidWithSGem)
+            {
+                EditorGUILayout.BeginHorizontal();
+                SGemEditorIcon.Indent();
+                GUILayout.Label($"Price: {item.price}", GUILayout.ExpandWidth(false));
+                SGemEditorIcon.InlineLabel();
+                GUILayout.Label($" |  Stock: {item.stock}  |  Active: {item.is_active}");
+                EditorGUILayout.EndHorizontal();
+            }
+            else
+            {
+                EditorGUILayout.LabelField($"Price: {item.price} {FormatShopCurrency(item.payment_currency_type, string.IsNullOrEmpty(item.currency_item_def_id) ? this.shop.GetShopById(shopId)?.currency_item_def_id : item.currency_item_def_id)}  |  Stock: {item.stock}  |  Active: {item.is_active}");
+            }
             this.DrawPurchaseLimitInfo(item);
 
             if (!string.IsNullOrEmpty(item.description))
@@ -457,30 +481,39 @@ namespace SaiGame.Services
         }
     
 
+        // sGem wallet row: balance on the left, "Get sGem Wallet" button aligned right.
         private void DrawSGemWallet()
         {
+            SGemWallet wallet = this.shop.CurrentSGemWallet;
+            string balance = wallet != null && !string.IsNullOrEmpty(wallet.id)
+                ? wallet.balance.ToString("N0")
+                : "not loaded";
+
+            EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+            // Vertically center the balance against the taller button.
+            EditorGUILayout.BeginVertical();
+            GUILayout.FlexibleSpace();
             EditorGUILayout.BeginHorizontal();
+            SGemEditorIcon.InlineLabel($"{ShopCurrencyTypes.SGemLabel} balance: {balance}");
+            EditorGUILayout.EndHorizontal();
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndVertical();
+            GUILayout.FlexibleSpace();
+
             GUI.backgroundColor = Color.cyan;
-            if (GUILayout.Button("Get sGem Wallet", GUILayout.Height(24), GUILayout.Width(140)))
+            if (SGemEditorIcon.Button("Get sGem Wallet", GUILayout.Height(24), GUILayout.Width(150)))
             {
                 this.shop.GetSGemWallet(
                     onSuccess: _ => Repaint(),
                     onError: error => Debug.LogError($"[ShopEditor] Get sGem wallet failed: {error}"));
             }
             GUI.backgroundColor = Color.white;
-
-            SGemWallet wallet = this.shop.CurrentSGemWallet;
-            string balance = wallet != null && !string.IsNullOrEmpty(wallet.id)
-                ? wallet.balance.ToString("N0")
-                : "not loaded";
-            EditorGUILayout.LabelField($"{ShopCurrencyTypes.SGemLabel} balance: {balance}");
             EditorGUILayout.EndHorizontal();
         }
 
+        // sGem is drawn with its icon by SGemEditorIcon; this formats item and coin currencies.
         private static string FormatShopCurrency(string currencyType, string currencyItemDefId)
         {
-            if (currencyType == ShopCurrencyTypes.SGem)
-                return ShopCurrencyTypes.SGemLabel;
             return string.IsNullOrEmpty(currencyItemDefId) ? "coins" : $"item {currencyItemDefId}";
         }
     }
