@@ -121,6 +121,8 @@ namespace SaiGame.Services
 
                 EditorGUILayout.EndHorizontal();
 
+                this.DrawSGemWallet();
+
                 EditorGUI.indentLevel--;
             }
 
@@ -171,6 +173,7 @@ namespace SaiGame.Services
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.LabelField($"Key: {shop.shop_key}");
             EditorGUILayout.LabelField($"Type: {shop.shop_type}  |  Active: {shop.is_active}");
+            EditorGUILayout.LabelField($"Currency: {FormatShopCurrency(shop.currency_type, shop.currency_item_def_id)}");
             EditorGUILayout.LabelField($"Items: {shop.item_count}");
 
             if (!string.IsNullOrEmpty(shop.description))
@@ -244,7 +247,7 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField($"ID: {item.id}");
             if (GUILayout.Button("Copy", GUILayout.Width(50))) GUIUtility.systemCopyBuffer = item.id;
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.LabelField($"Price: {item.price}  |  Stock: {item.stock}  |  Active: {item.is_active}");
+            EditorGUILayout.LabelField($"Price: {item.price} {FormatShopCurrency(item.payment_currency_type, string.IsNullOrEmpty(item.currency_item_def_id) ? this.shop.GetShopById(shopId)?.currency_item_def_id : item.currency_item_def_id)}  |  Stock: {item.stock}  |  Active: {item.is_active}");
             this.DrawPurchaseLimitInfo(item);
 
             if (!string.IsNullOrEmpty(item.description))
@@ -322,7 +325,9 @@ namespace SaiGame.Services
                             $"  unit_price:        {r?.unit_price}\n" +
                             $"  total_price:       {r?.total_price}\n" +
                             $"  idempotency_key:   {r?.idempotency_key}\n" +
+                            $"  currency_type:     {r?.currency_type}\n" +
                             $"  currency_item_def: {r?.currency_item_def_id}\n" +
+                            $"  sgem_tx_id:        {r?.sgem_tx_id}\n" +
                             $"  created_at:        {r?.created_at}");
                         if (this.shop.AutoRefreshAfterPurchase)
                             this.LoadShopItemsForShop(shopId);
@@ -449,6 +454,34 @@ namespace SaiGame.Services
                     Repaint();
                 }
             );
+        }
+    
+
+        private void DrawSGemWallet()
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUI.backgroundColor = Color.cyan;
+            if (GUILayout.Button("Get sGem Wallet", GUILayout.Height(24), GUILayout.Width(140)))
+            {
+                this.shop.GetSGemWallet(
+                    onSuccess: _ => Repaint(),
+                    onError: error => Debug.LogError($"[ShopEditor] Get sGem wallet failed: {error}"));
+            }
+            GUI.backgroundColor = Color.white;
+
+            SGemWallet wallet = this.shop.CurrentSGemWallet;
+            string balance = wallet != null && !string.IsNullOrEmpty(wallet.id)
+                ? wallet.balance.ToString("N0")
+                : "not loaded";
+            EditorGUILayout.LabelField($"{ShopCurrencyTypes.SGemLabel} balance: {balance}");
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private static string FormatShopCurrency(string currencyType, string currencyItemDefId)
+        {
+            if (currencyType == ShopCurrencyTypes.SGem)
+                return ShopCurrencyTypes.SGemLabel;
+            return string.IsNullOrEmpty(currencyItemDefId) ? "coins" : $"item {currencyItemDefId}";
         }
     }
 }

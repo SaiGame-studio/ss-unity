@@ -12,11 +12,7 @@ namespace SaiGame.Services
         private bool showServiceReferences = false;
         private bool showServerTime = false;
         private bool showDebugSettings = false;
-        private static readonly string[] SERVER_ENDPOINT_OPTIONS =
-        {
-            "Local API (HTTP) - local-api.saigame.studio:82",
-            "Production API (HTTPS) - api.saigame.studio"
-        };
+        private const string ENV_EXAMPLE_PATH = "Assets/SaiGame/env.example.txt";
 
         public override void OnInspectorGUI()
         {
@@ -51,15 +47,19 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space(5);
             EditorGUILayout.LabelField("Server Configuration", EditorStyles.boldLabel);
-            SerializedProperty serverEndpointProperty = this.serializedObject.FindProperty("serverEndpoint");
-            int currentIndex = Mathf.Clamp(serverEndpointProperty.enumValueIndex, 0, SERVER_ENDPOINT_OPTIONS.Length - 1);
-            int newIndex = EditorGUILayout.Popup("Server Endpoint", currentIndex, SERVER_ENDPOINT_OPTIONS);
-            if (newIndex != currentIndex)
+            using (new EditorGUI.DisabledScope(true))
             {
-                serverEndpointProperty.enumValueIndex = newIndex;
-                this.serializedObject.ApplyModifiedProperties();
-                SaiServer svc = (SaiServer)this.target;
-                if (svc != null) svc.ManualSaveServerEndpoint();
+                EditorGUILayout.TextField(
+                    new GUIContent("Server Endpoint", "Production only. Use SERVER_ENDPOINT in .env to target another server in the Editor."),
+                    SaiServer.PRODUCTION_BASE_URL);
+            }
+
+            SaiServer endpointTarget = (SaiServer)this.target;
+            if (endpointTarget != null && !string.IsNullOrEmpty(endpointTarget.ServerEndpointOverride))
+            {
+                EditorGUILayout.HelpBox(
+                    $"Overridden by .env SERVER_ENDPOINT for this play session: {endpointTarget.ServerEndpointOverride}",
+                    MessageType.Info);
             }
 
             EditorGUILayout.Space(5);
@@ -155,7 +155,7 @@ namespace SaiGame.Services
 
             bool envExists = EnvLoader.EnvFileExists();
             EditorGUILayout.HelpBox(
-                envExists ? ".env file found at project root." : ".env file not found. Create one from env.txt at the SaiGame folder.",
+                envExists ? ".env file found at project root." : ".env file not found. Click \"Create .env\" or copy env.example.txt from the SaiGame folder to the project root as .env.",
                 envExists ? MessageType.Info : MessageType.Warning);
 
             GUI.enabled = envExists;
@@ -163,13 +163,35 @@ namespace SaiGame.Services
             bool updated = EditorGUILayout.Toggle(
                 new GUIContent(
                     "Load .env on Play",
-                    "When checked, GAME_ID / USERNAME / PASSWORD are applied from .env automatically when entering Play mode. " +
+                    "When checked, GAME_ID / USERNAME / PASSWORD / SERVER_ENDPOINT are applied from .env automatically when entering Play mode. " +
                     "Credentials are written to PlayerPrefs only — never saved to the scene file."),
                 current);
             if (updated != current)
             {
                 EnvAutoLoader.LoadEnvOnPlay = updated;
             }
+
+            GUI.enabled = envExists && EnvAutoLoader.LoadEnvOnPlay;
+            EditorGUI.indentLevel++;
+            this.serializedObject.Update();
+            EditorGUILayout.PropertyField(
+                this.serializedObject.FindProperty("envOverrideServerEndpoint"),
+                new GUIContent(
+                    "Override server endpoint",
+                    "When checked, SERVER_ENDPOINT from .env replaces the Server Endpoint option when entering Play mode. " +
+                    "The override lasts for the play session only and is never saved to the scene."));
+            EditorGUILayout.PropertyField(
+                this.serializedObject.FindProperty("envOverrideGameId"),
+                new GUIContent(
+                    "Override game id",
+                    "When checked, GAME_ID from .env replaces the Game Id when entering Play mode."));
+            EditorGUILayout.PropertyField(
+                this.serializedObject.FindProperty("envOverrideCredentials"),
+                new GUIContent(
+                    "Override credentials",
+                    "When checked, USERNAME / PASSWORD from .env are applied to SaiAuth when entering Play mode."));
+            this.serializedObject.ApplyModifiedProperties();
+            EditorGUI.indentLevel--;
             GUI.enabled = true;
 
             EditorGUILayout.Space(10);
@@ -183,10 +205,15 @@ namespace SaiGame.Services
                 if (saiServer != null)
                 {
                     bool confirmed = EditorUtility.DisplayDialog(
-                        "Confirm Full Reset",
-                        "This will invoke reset on all components in this object and all child objects. Continue?",
+                        "Warning: Full Reset",
+                        "All settings in every Sai Server class on this object and its child objects " +
+                        "(SaiServer, SaiAuth, Shop, Mailbox, Quest, Item, Battle, ...) will be reset to their default configuration.\n\n" +
+                        "Values you set in the Inspector (Game Id, auto-load options, limits, references, ...) will be lost.\n\n" +
+                        "Do you want to continue?",
                         "Reset All",
                         "Cancel");
+                    if (!confirmed)
+                        Debug.Log("[SaiServer] Full Reset cancelled by user.");
 
                     if (confirmed)
                     {
@@ -250,7 +277,7 @@ namespace SaiGame.Services
                         if (success)
                         {
                             if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
-                                Debug.Log("✓ Connection test passed!");
+                                Debug.Log("✓ Connection test <color=#00FF88><b>passed</b></color>!");
                         }
                         else
                         {
@@ -281,20 +308,27 @@ namespace SaiGame.Services
         {
             string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
             string destPath = Path.Combine(projectRoot, ".env");
-            string sourcePath = Path.GetFullPath("Assets/SaiGame/env.txt");
+            string sourcePath = Path.GetFullPath(ENV_EXAMPLE_PATH);
 
             if (!File.Exists(sourcePath))
             {
-                EditorUtility.DisplayDialog("env.txt Not Found", $"env.txt was not found at:\n{sourcePath}", "OK");
+                EditorUtility.DisplayDialog("env.example.txt Not Found", $"env.example.txt was not found at:\n{sourcePath}", "OK");
                 return;
             }
 
-            if (!File.Exists(destPath))
+            if (File.Exists(destPath))
             {
-                File.Copy(sourcePath, destPath);
-                EditorUtility.DisplayDialog(".env Created", ".env created at project root from .env.example.", "OK");
+                Debug.LogWarning($"[SaiServer] .env already exists at {destPath} — Create .env was cancelled.");
+                EditorUtility.DisplayDialog(
+                    ".env Already Exists",
+                    $".env already exists at:\n{destPath}\n\nIt was not created or overwritten. " +
+                    "Copy the keys you need from env.example.txt into the existing .env instead.",
+                    "OK");
+                return;
             }
 
+            File.Copy(sourcePath, destPath, overwrite: false);
+            EditorUtility.DisplayDialog(".env Created", ".env created at project root from env.example.txt.", "OK");
             EditorUtility.OpenWithDefaultApp(destPath);
         }
 

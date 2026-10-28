@@ -47,7 +47,14 @@ namespace SaiGame.Services
         public bool HasAccessToken => !string.IsNullOrEmpty(accessToken);
         // Unity instantiates serialized classes as empty objects, so a null check is not enough.
         private bool HasUserData => this.userData != null && !string.IsNullOrEmpty(this.userData.id);
-        private bool IsAccessTokenValid => this.HasAccessToken && this.GetTokenRemainingSeconds() > 0;
+        // Valid = present, not past the expires_in deadline, and its JWT exp claim not reached.
+        private bool IsAccessTokenValid => this.HasAccessToken
+                                           && this.GetTokenRemainingSeconds() > 0
+                                           && !JwtExpiry.IsExpired(this.accessToken);
+        public bool HasValidAccessToken => this.IsAccessTokenValid;
+        // A refresh token with this many seconds or less left is treated as expired and never used.
+        private const double RefreshTokenMinRemainingSeconds = 10 * 60;
+        public bool HasValidRefreshToken => !JwtExpiry.IsExpiringWithin(this.refreshToken, RefreshTokenMinRemainingSeconds);
         public bool IsAuthenticated => this.IsAccessTokenValid && this.HasUserData;
         public string AccessToken => accessToken;
         public string RefreshToken => refreshToken;
@@ -83,6 +90,15 @@ namespace SaiGame.Services
             if (!this.persistTokens || SaiServer.Instance == null) return false;
             if (!SaiAuthTokenStorage.TryLoad(out LoginResponse session, out long expiresAt)) return false;
 
+            // A refresh token that is expired or has 10 minutes or less left is never used: drop it instead of sending it.
+            if (JwtExpiry.IsExpiringWithin(session.refresh_token, RefreshTokenMinRemainingSeconds))
+            {
+                SaiAuthTokenStorage.Clear();
+                if (SaiServer.Instance.ShowDebug)
+                    Debug.LogWarning("<color=#00FFFF>[SaiAuth] Saved refresh token expired or expires within 10 minutes — session cleared, falling back to login.</color>");
+                return false;
+            }
+
             // Only tokens are persisted. User data is never restored from storage.
             this.accessToken = session.access_token;
             this.refreshToken = session.refresh_token;
@@ -94,8 +110,9 @@ namespace SaiGame.Services
             // Without auto login, tokens are only loaded: no API call, and the user is not logged in.
             if (!this.autoLogin) return true;
 
-            if (string.IsNullOrEmpty(this.accessToken) || this.GetTokenRemainingSeconds() <= 0)
+            if (!this.IsAccessTokenValid)
             {
+                // Never send an expired access token: drop it and refresh with the still-valid refresh token.
                 this.accessToken = string.Empty;
                 this.RefreshAuthToken(
                     _ => this.LoadProfileAfterRestore(),
@@ -364,6 +381,17 @@ namespace SaiGame.Services
                 return;
             }
 
+            if (!this.HasValidRefreshToken)
+            {
+                const string expiredMsg = "Refresh token expired or expires within 10 minutes! Please login again.";
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                    Debug.LogWarning($"<color=#00FFFF>[SaiAuth] {expiredMsg} Session cleared without calling the server.</color>");
+                this.ClearAuthData();
+                OnRefreshTokenFailure?.Invoke(expiredMsg);
+                onError?.Invoke(expiredMsg);
+                return;
+            }
+
             StartCoroutine(RefreshTokenCoroutine(onSuccess, onError));
         }
 
@@ -437,7 +465,7 @@ namespace SaiGame.Services
 
         private IEnumerator LogoutCoroutine()
         {
-            if (SaiServer.Instance != null && SaiServer.Instance.HasAccessToken)
+            if (SaiServer.Instance != null && SaiServer.Instance.HasValidAccessToken)
             {
                 yield return StartCoroutine(SaiServer.Instance.PostRequest("/api/v1/auth/logout", "{}",
                     response =>
@@ -484,9 +512,9 @@ namespace SaiGame.Services
         {
             if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#AAFFAA><b>[SaiAuth] ► Get Me</b></color>", gameObject);
-            if (SaiServer.Instance == null || !SaiServer.Instance.HasAccessToken)
+            if (SaiServer.Instance == null || !SaiServer.Instance.HasValidAccessToken)
             {
-                onError?.Invoke("No access token! Please login first.");
+                onError?.Invoke("No valid access token! Please login first.");
                 return;
             }
 
