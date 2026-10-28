@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SaiGame.Services
 {
     /// <summary>
-    /// Draws the sGem icon (Twemoji gem stone, see Icons/SGemIcon-ATTRIBUTION.txt) next to "sGem" text in inspectors.
+    /// Draws the sGem icon (same artwork as the web sgem.svg) next to "sGem" text in inspectors.
     /// </summary>
     internal static class SGemEditorIcon
     {
