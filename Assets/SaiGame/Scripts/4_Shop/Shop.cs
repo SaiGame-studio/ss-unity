@@ -14,6 +14,8 @@ namespace SaiGame.Services
         public event Action<string> OnGetShopItemsFailure;
         public event Action<PurchaseResponse> OnPurchaseSuccess;
         public event Action<string> OnPurchaseFailure;
+        public event Action<SGemWallet> OnGetSGemWalletSuccess;
+        public event Action<string> OnGetSGemWalletFailure;
 
         [Header("Auto Load Settings")]
         [SerializeField] protected bool autoLoadOnLogin = false;
@@ -28,8 +30,13 @@ namespace SaiGame.Services
         [SerializeField] protected ShopItemsResponse currentShopItemsResponse;
         [SerializeField] protected string lastLoadedShopId = "";
 
+        [Header("sGem Wallet")]
+        [Tooltip("Last loaded sGem wallet of the logged-in player (used to pay sgem-priced shop items)")]
+        [SerializeField] protected SGemWallet currentSGemWallet;
+
         public ShopResponse CurrentShopResponse => this.currentShopResponse;
         public ShopItemsResponse CurrentShopItemsResponse => this.currentShopItemsResponse;
+        public SGemWallet CurrentSGemWallet => this.currentSGemWallet;
         public bool AutoRefreshAfterPurchase => this.autoRefreshAfterPurchase;
         public bool HasShops => this.currentShopResponse != null
                                 && this.currentShopResponse.shops != null
@@ -92,6 +99,7 @@ namespace SaiGame.Services
                 Debug.Log("[Shop] Logout successful, clearing shop data...");
 
             this.ClearLocalShops();
+            this.currentSGemWallet = null;
 
             if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
                 Debug.Log("[Shop] Shop data cleared successfully");
@@ -434,7 +442,9 @@ namespace SaiGame.Services
                                 $"  unit_price:          {r?.unit_price}\n" +
                                 $"  total_price:         {r?.total_price}\n" +
                                 $"  idempotency_key:     {r?.idempotency_key}\n" +
+                                $"  currency_type:       {r?.currency_type}\n" +
                                 $"  currency_item_def:   {r?.currency_item_def_id}\n" +
+                                $"  sgem_tx_id:          {r?.sgem_tx_id}\n" +
                                 $"  created_at:          {r?.created_at}");
                         }
 
@@ -465,6 +475,76 @@ namespace SaiGame.Services
                     this.OnPurchaseFailure?.Invoke(error);
                     if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[Shop] PurchaseItem</color> → <b><color=#FF4444>onError</color></b> callback (network) | Shop.cs › PurchaseItemCoroutine | {error}");
+                    onError?.Invoke(error);
+                }
+            );
+        }
+    
+
+        // ── sGem Wallet ───────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Fetches the logged-in player's sGem wallet (balance used for sgem-priced shop items).
+        /// Endpoint: GET /api/v1/me/sgem-wallet
+        /// </summary>
+        public void GetSGemWallet(
+            System.Action<SGemWallet> onSuccess = null,
+            System.Action<string> onError = null)
+        {
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
+                Debug.Log("<color=#00FFFF><b>[Shop] ► Get sGem Wallet</b></color>", gameObject);
+
+            if (SaiServer.Instance == null)
+            {
+                onError?.Invoke("SaiServer not found!");
+                return;
+            }
+
+            if (!SaiServer.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Not authenticated! Please login first.");
+                return;
+            }
+
+            StartCoroutine(this.GetSGemWalletCoroutine(onSuccess, onError));
+        }
+
+        private IEnumerator GetSGemWalletCoroutine(
+            System.Action<SGemWallet> onSuccess,
+            System.Action<string> onError)
+        {
+            const string endpoint = "/api/v1/me/sgem-wallet";
+
+            yield return SaiServer.Instance.GetRequest(endpoint,
+                response =>
+                {
+                    try
+                    {
+                        SGemWallet wallet = JsonUtility.FromJson<SGemWallet>(response);
+                        this.currentSGemWallet = wallet;
+
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                            Debug.Log($"[Shop] sGem wallet loaded: balance {wallet.balance}");
+
+                        this.OnGetSGemWalletSuccess?.Invoke(wallet);
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                            Debug.Log("<color=#66CCFF>[Shop] GetSGemWallet</color> → <b><color=#00FF88>onSuccess</color></b> callback | Shop.cs › GetSGemWalletCoroutine");
+                        onSuccess?.Invoke(wallet);
+                    }
+                    catch (System.Exception e)
+                    {
+                        string errorMsg = $"Parse sGem wallet response error: {e.Message}";
+                        this.OnGetSGemWalletFailure?.Invoke(errorMsg);
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                            Debug.LogWarning($"<color=#66CCFF>[Shop] GetSGemWallet</color> → <b><color=#FF4444>onError</color></b> callback (parse) | Shop.cs › GetSGemWalletCoroutine | {errorMsg}");
+                        onError?.Invoke(errorMsg);
+                    }
+                },
+                error =>
+                {
+                    this.OnGetSGemWalletFailure?.Invoke(error);
+                    if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                        Debug.LogWarning($"<color=#66CCFF>[Shop] GetSGemWallet</color> → <b><color=#FF4444>onError</color></b> callback (network) | Shop.cs › GetSGemWalletCoroutine | {error}");
                     onError?.Invoke(error);
                 }
             );

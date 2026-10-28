@@ -440,9 +440,49 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: password
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: username
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: refreshBeforeExpireMinutes
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5323172006139148077, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: endDate
+      value: 2026-11-01
+      objectReference: {fileID: 0}
+    - target: {fileID: 5323172006139148077, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: startDate
+      value: 2026-10-26
+      objectReference: {fileID: 0}
     - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_Name
       value: SaiServer
+      objectReference: {fileID: 0}
+    - target: {fileID: 7353435024058604980, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: fetchItemId
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 7353435024058604980, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: fetchItemCode
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 8153881721212893719, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: currentInventory.limit
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8153881721212893719, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: currentInventory.total
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8153881721212893719, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: currentInventory.items.Array.size
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalPosition.x
@@ -483,6 +523,30 @@ PrefabInstance:
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: port
+      value: 443
+      objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: gameId
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: useHttps
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: domainOption
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: serverEndpoint
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: envOverrideCredentials
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

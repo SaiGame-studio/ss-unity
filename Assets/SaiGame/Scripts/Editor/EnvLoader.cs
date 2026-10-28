@@ -9,10 +9,15 @@ namespace SaiGame.Services
 {
     /// <summary>
     /// Reads .env file from project root and applies values to SaiServer / SaiAuth serialized fields.
-    /// Supported keys: GAME_ID, USERNAME, PASSWORD.
+    /// Supported keys: GAME_ID, USERNAME, PASSWORD, SERVER_ENDPOINT.
     /// </summary>
     public static class EnvLoader
     {
+        public const string KEY_GAME_ID = "GAME_ID";
+        public const string KEY_USERNAME = "USERNAME";
+        public const string KEY_PASSWORD = "PASSWORD";
+        public const string KEY_SERVER_ENDPOINT = "SERVER_ENDPOINT";
+
         private static string EnvFilePath =>
             Path.Combine(Path.GetDirectoryName(Application.dataPath), ".env");
 
@@ -73,7 +78,7 @@ namespace SaiGame.Services
             int applied = 0;
 
             // Apply GAME_ID
-            if (env.TryGetValue("GAME_ID", out string gameId))
+            if (env.TryGetValue(KEY_GAME_ID, out string gameId))
             {
                 SerializedObject serverSO = new SerializedObject(saiServer);
                 SerializedProperty gameIdProp = serverSO.FindProperty("gameId");
@@ -98,6 +103,9 @@ namespace SaiGame.Services
         /// Applies .env values to live runtime instances using reflection.
         /// Safe to call from RuntimeInitializeOnLoadMethod (AfterSceneLoad).
         /// USERNAME / PASSWORD are written to PlayerPrefs only — never left in serialized fields.
+        /// GAME_ID is applied only when SaiServer.EnvOverrideGameId is on;
+        /// SERVER_ENDPOINT only when SaiServer.EnvOverrideServerEndpoint is on;
+        /// USERNAME / PASSWORD only when SaiServer.EnvOverrideCredentials is on.
         /// </summary>
         public static int ApplyAtRuntime(SaiServer saiServer)
         {
@@ -108,7 +116,7 @@ namespace SaiGame.Services
 
             int applied = 0;
 
-            if (env.TryGetValue("GAME_ID", out string gameId))
+            if (saiServer.EnvOverrideGameId && env.TryGetValue(KEY_GAME_ID, out string gameId))
             {
                 FieldInfo field = FindField(saiServer.GetType(), "gameId");
                 if (field != null)
@@ -118,8 +126,17 @@ namespace SaiGame.Services
                 }
             }
 
-            bool hasUsername = env.ContainsKey("USERNAME");
-            bool hasPassword = env.ContainsKey("PASSWORD");
+            if (saiServer.EnvOverrideServerEndpoint
+                && env.TryGetValue(KEY_SERVER_ENDPOINT, out string serverEndpoint)
+                && !string.IsNullOrWhiteSpace(serverEndpoint))
+            {
+                saiServer.SetServerEndpointOverride(serverEndpoint);
+                Debug.Log($"[EnvLoader] Server endpoint overridden from .env: {saiServer.BaseUrl}");
+                applied++;
+            }
+
+            bool hasUsername = saiServer.EnvOverrideCredentials && env.ContainsKey(KEY_USERNAME);
+            bool hasPassword = saiServer.EnvOverrideCredentials && env.ContainsKey(KEY_PASSWORD);
 
             if (hasUsername || hasPassword)
             {
@@ -131,13 +148,13 @@ namespace SaiGame.Services
 
                     if (hasUsername && usernameField != null)
                     {
-                        usernameField.SetValue(saiAuth, env["USERNAME"]);
+                        usernameField.SetValue(saiAuth, env[KEY_USERNAME]);
                         applied++;
                     }
 
                     if (hasPassword && passwordField != null)
                     {
-                        passwordField.SetValue(saiAuth, env["PASSWORD"]);
+                        passwordField.SetValue(saiAuth, env[KEY_PASSWORD]);
                         applied++;
                     }
                 }

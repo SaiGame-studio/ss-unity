@@ -10,7 +10,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.56a";
+        public const string PACKAGE_VERSION = "0.2.57";
         public const string PACKAGE_NAME = "Sai Server";
 
         [SerializeField] protected SaiAuth saiAuth;
@@ -45,9 +45,20 @@ namespace SaiGame.Services
         [HideInInspector][SerializeField] protected int port = 80;
         [HideInInspector][SerializeField] protected bool useHttps = false;
 
+        // Environment overrides (drawn under "Load .env on Play" by SaiServerEditor)
+        [Tooltip("When Load .env on Play is on, SERVER_ENDPOINT from .env replaces the server endpoint at game start")]
+        [SerializeField] protected bool envOverrideServerEndpoint = true;
+        // Runtime-only base URL override (e.g. from .env SERVER_ENDPOINT); never saved to the scene
+        [NonSerialized] private string serverEndpointOverride = "";
+        [Tooltip("When Load .env on Play is on, GAME_ID from .env replaces the Game Id at game start")]
+        [SerializeField] protected bool envOverrideGameId = true;
+        [Tooltip("When Load .env on Play is on, USERNAME / PASSWORD from .env are applied to SaiAuth at game start")]
+        [SerializeField] protected bool envOverrideCredentials = true;
+
         [Header("Game Configuration")]
         [SerializeField] protected string gameId = "";
         private const string PREF_SERVER_ENDPOINT = "SaiGame_ServerEndpoint";
+        public const string PRODUCTION_BASE_URL = "https://api.saigame.studio";
 
         [Header("API Settings")]
         [SerializeField] protected int requestTimeout = 30;
@@ -81,24 +92,38 @@ namespace SaiGame.Services
 
         public bool ShowJsonResponse => showJsonResponse;
 
+        public bool EnvOverrideGameId => this.envOverrideGameId;
+
+        public bool EnvOverrideServerEndpoint => this.envOverrideServerEndpoint;
+
+        public bool EnvOverrideCredentials => this.envOverrideCredentials;
+
+        public string ServerEndpointOverride => this.serverEndpointOverride;
+
+        /// <summary>
+        /// Overrides BaseUrl for this play session only. Pass an empty value to clear the override.
+        /// </summary>
+        public void SetServerEndpointOverride(string baseUrl)
+        {
+            this.serverEndpointOverride = this.NormalizeInput(baseUrl).TrimEnd('/');
+        }
+
         public string BaseUrl
         {
             get
             {
-                switch (this.serverEndpoint)
-                {
-                    case ServerEndpointOption.ProductionHttps:
-                        return "https://api.saigame.studio";
-                    case ServerEndpointOption.LocalHttp:
-                    default:
-                        return "http://local-api.saigame.studio:82";
-                }
+                if (!string.IsNullOrEmpty(this.serverEndpointOverride))
+                    return this.serverEndpointOverride;
+
+                return PRODUCTION_BASE_URL;
             }
         }
 
         public bool IsAuthenticated => saiAuth != null && saiAuth.IsAuthenticated;
 
         public bool HasAccessToken => saiAuth != null && saiAuth.HasAccessToken;
+
+        public bool HasValidAccessToken => saiAuth != null && saiAuth.HasValidAccessToken;
 
         public string AccessToken => saiAuth?.AccessToken ?? "";
 
@@ -179,30 +204,18 @@ namespace SaiGame.Services
             return string.IsNullOrEmpty(value) ? string.Empty : value.Trim();
         }
 
+        // Only production is allowed: values saved from the removed local option are corrected here.
         private void SyncLegacyServerFieldsFromEndpoint()
         {
-            switch (this.serverEndpoint)
-            {
-                case ServerEndpointOption.ProductionHttps:
-                    this.domainOption = DomainOption.Production;
-                    this.useHttps = true;
-                    this.port = 443;
-                    break;
-                case ServerEndpointOption.LocalHttp:
-                default:
-                    this.domainOption = DomainOption.Local;
-                    this.useHttps = false;
-                    this.port = 82;
-                    break;
-            }
+            this.serverEndpoint = ServerEndpointOption.ProductionHttps;
+            this.domainOption = DomainOption.Production;
+            this.useHttps = true;
+            this.port = 443;
         }
 
         private void SyncEndpointFromLegacyServerFields()
         {
-            bool isProduction = this.domainOption == DomainOption.Production;
-            this.serverEndpoint = isProduction
-                ? ServerEndpointOption.ProductionHttps
-                : ServerEndpointOption.LocalHttp;
+            this.serverEndpoint = ServerEndpointOption.ProductionHttps;
         }
 
         public void SetAccessToken(string token)
@@ -232,9 +245,14 @@ namespace SaiGame.Services
             request.timeout = requestTimeout;
             request.certificateHandler = new AllowAllCertificateHandler();
 
-            if (HasAccessToken)
+            // Never send an expired access token to the server.
+            if (HasValidAccessToken)
             {
                 request.SetRequestHeader("Authorization", $"Bearer {AccessToken}");
+            }
+            else if (HasAccessToken && this.showDebugLog)
+            {
+                Debug.LogWarning($"[SaiServer] Access token expired — {method} {endpoint} sent without Authorization header.");
             }
 
             return request;
@@ -738,13 +756,6 @@ namespace SaiGame.Services
             PlayerPrefs.Save();
             if (this.showDebugLog)
                 Debug.Log($"Saved Server Endpoint to PlayerPrefs: {this.serverEndpoint}");
-        }
-
-        public void ManualSaveServerEndpoint()
-        {
-            if (this.showButtonsLog)
-                Debug.Log("<color=#00FF88><b>[SaiServer] ► Save Server Endpoint to PlayerPrefs</b></color>", gameObject);
-            this.SaveServerEndpointToPlayerPrefs();
         }
 
         public void SetGameId(string newGameId)
