@@ -12,6 +12,10 @@ namespace SaiGame.Services
     {
         public const string PACKAGE_VERSION = "0.2.57";
         public const string PACKAGE_NAME = "Sai Server";
+        // Optional headers that tell the server which client sent a request; the client ID is the game ID.
+        public const string CLIENT_ID_HEADER = "X-Client-ID";
+        public const string CLIENT_VERSION_HEADER = "X-Client-Version";
+        public const string CLIENT_NAME = "sai-unity";
 
         [SerializeField] protected SaiAuth saiAuth;
         [SerializeField] protected GoogleBackendLogin googleBackendLogin;
@@ -244,6 +248,10 @@ namespace SaiGame.Services
             request.downloadHandler = new DownloadHandlerBuffer();
             request.timeout = requestTimeout;
             request.certificateHandler = new AllowAllCertificateHandler();
+
+            request.SetRequestHeader(CLIENT_VERSION_HEADER, $"{CLIENT_NAME}/{PACKAGE_VERSION}");
+            if (!string.IsNullOrEmpty(GameId))
+                request.SetRequestHeader(CLIENT_ID_HEADER, GameId);
 
             // Never send an expired access token to the server.
             if (HasValidAccessToken)
