@@ -10,6 +10,7 @@ namespace SaiGame.Services
         private const string PREF_LOGIN_INPUTS = "SaiAuthEditor.showLoginInputs";
         private const string PREF_REGISTER_INPUTS = "SaiAuthEditor.showRegisterInputs";
         private const string PREF_SHOW_PASSWORDS = "SaiAuthEditor.showPasswords";
+        private string twoFactorCode = string.Empty;
 
         private bool showAutoSettings
         {
@@ -131,6 +132,7 @@ namespace SaiGame.Services
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("username"), new GUIContent("Username"));
                 this.DrawPasswordPropertyField(serializedObject.FindProperty("password"), "Password");
+                this.twoFactorCode = EditorGUILayout.TextField("2FA Code", this.twoFactorCode);
                 EditorGUI.indentLevel--;
 
                 serializedObject.ApplyModifiedProperties();
@@ -146,7 +148,14 @@ namespace SaiGame.Services
                         error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Login failed: {error}"); }
                     );
                 }
-                GUI.backgroundColor = Color.white;
+                if (GUILayout.Button("2FA Login", GUILayout.Height(25)))
+                {
+                    string code = this.twoFactorCode;
+                    this.twoFactorCode = string.Empty;
+                    saiAuth.VerifyTwoFactor(code,
+                        response => { Debug.Log("[Editor] 2FA login successful."); Repaint(); },
+                        error => { Debug.LogError($"[Editor] 2FA login failed: {error}"); Repaint(); });
+                }
                 GUI.backgroundColor = new Color(1f, 0.7f, 0.3f);
                 if (GUILayout.Button("Logout", GUILayout.Height(25)))
                 {
@@ -154,6 +163,8 @@ namespace SaiGame.Services
                 }
                 GUI.backgroundColor = Color.white;
                 EditorGUILayout.EndHorizontal();
+                if (saiAuth.RequiresTwoFactor)
+                    EditorGUILayout.HelpBox("Enter your Authenticator code to complete login. If the challenge expires, login again.", MessageType.Info);
             }
 
             EditorGUILayout.Space();
