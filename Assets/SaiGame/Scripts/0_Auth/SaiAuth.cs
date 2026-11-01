@@ -336,6 +336,27 @@ namespace SaiGame.Services
                     try
                     {
                         LoginResponse loginResponse = JsonUtility.FromJson<LoginResponse>(response);
+                        string loginError = null;
+                        if (loginResponse != null &&
+                            (loginResponse.message_code == "TWO_FACTOR_REQUIRED" ||
+                             !string.IsNullOrWhiteSpace(loginResponse.challenge_token)))
+                        {
+                            loginError = "TWO_FACTOR_REQUIRED: Authenticator verification is required. Submit a 2FA code to complete login.";
+                        }
+                        else if (loginResponse == null || string.IsNullOrWhiteSpace(loginResponse.access_token))
+                        {
+                            loginError = "Login failed: the server response did not include an access token.";
+                        }
+
+                        if (loginError != null)
+                        {
+                            OnLoginFailure?.Invoke(loginError);
+                            if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                                Debug.LogWarning($"[SaiAuth] Login onError callback | {loginError}");
+                            onError?.Invoke(loginError);
+                            return;
+                        }
+
                         SaiServer.Instance.SetLoginData(loginResponse.access_token, loginResponse.refresh_token, loginResponse.expires_in, loginResponse.user);
 
                         this.username = username;

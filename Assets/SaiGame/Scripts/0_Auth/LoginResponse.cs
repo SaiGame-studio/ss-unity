@@ -9,5 +9,7 @@ namespace SaiGame.Services
         public string access_token;
         public string refresh_token;
         public int expires_in;
+        public string message_code;
+        public string challenge_token;
     }
 }
