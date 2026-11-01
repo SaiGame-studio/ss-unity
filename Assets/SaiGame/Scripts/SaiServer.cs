@@ -10,7 +10,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.57";
+        public const string PACKAGE_VERSION = "0.2.58";
         public const string PACKAGE_NAME = "Sai Server";
         // Optional headers that tell the server which client sent a request; the client ID is the game ID.
         public const string CLIENT_ID_HEADER = "X-Client-ID";
@@ -322,7 +322,8 @@ namespace SaiGame.Services
 
         private static bool IsPasswordAuthenticationRequest(string endpoint)
         {
-            return endpoint == "/api/v1/auth/login" || endpoint == "/api/v1/auth/register";
+            return endpoint == "/api/v1/auth/login" || endpoint == "/api/v1/auth/register"
+                || endpoint == "/api/v1/auth/2fa/verify";
         }
 
         public IEnumerator PutRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)

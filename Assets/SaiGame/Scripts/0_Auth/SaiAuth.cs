@@ -68,6 +68,41 @@ namespace SaiGame.Services
 
         private Coroutine tokenExpirationChecker;
         private long tokenExpiresAt;
+        private LoginResponse pendingTwoFactorChallenge;
+        private DateTime twoFactorExpiresAt;
+        public bool RequiresTwoFactor => this.pendingTwoFactorChallenge != null;
+
+        public void VerifyTwoFactor(string code, Action<LoginResponse> onSuccess = null, Action<string> onError = null)
+        {
+            string error = null;
+            if (SaiServer.Instance == null)
+                error = "SaiServer not found!";
+            else if (!this.RequiresTwoFactor)
+                error = "No pending 2FA challenge. Please login first.";
+            else if (DateTime.UtcNow >= this.twoFactorExpiresAt)
+            {
+                this.pendingTwoFactorChallenge = null;
+                error = "The 2FA challenge expired. Please login again.";
+            }
+            else if (string.IsNullOrWhiteSpace(code))
+                error = "Enter an Authenticator code to complete login.";
+
+            if (error != null)
+            {
+                OnLoginFailure?.Invoke(error);
+                onError?.Invoke(error);
+                return;
+            }
+
+            var request = new TwoFactorLoginRequest
+            {
+                user_id = this.pendingTwoFactorChallenge.user_id,
+                challenge_token = this.pendingTwoFactorChallenge.challenge_token,
+                code = code.Trim()
+            };
+            StartCoroutine(this.AuthenticateCoroutine("/api/v1/auth/2fa/verify", JsonUtility.ToJson(request),
+                this.username, this.password, onSuccess, onError));
+        }
 
         protected override void LoadComponents()
         {
@@ -315,6 +350,7 @@ namespace SaiGame.Services
             string normalizedUsername = this.NormalizeInput(username);
             string normalizedPassword = this.NormalizeInput(password);
 
+            this.pendingTwoFactorChallenge = null;
             StartCoroutine(LoginCoroutine(normalizedUsername, normalizedPassword, onSuccess, onError));
         }
 
@@ -330,6 +366,12 @@ namespace SaiGame.Services
 
             string jsonData = JsonUtility.ToJson(loginRequest);
 
+            yield return this.AuthenticateCoroutine(endpoint, jsonData, username, password, onSuccess, onError);
+        }
+
+        private IEnumerator AuthenticateCoroutine(string endpoint, string jsonData, string username, string password,
+            Action<LoginResponse> onSuccess, Action<string> onError)
+        {
             yield return SaiServer.Instance.PostRequest(endpoint, jsonData,
                 response =>
                 {
@@ -341,6 +383,10 @@ namespace SaiGame.Services
                             (loginResponse.message_code == "TWO_FACTOR_REQUIRED" ||
                              !string.IsNullOrWhiteSpace(loginResponse.challenge_token)))
                         {
+                            this.pendingTwoFactorChallenge = loginResponse;
+                            this.twoFactorExpiresAt = DateTime.UtcNow.AddSeconds(Math.Max(0, loginResponse.expires_in));
+                            this.username = username;
+                            this.password = password;
                             loginError = "TWO_FACTOR_REQUIRED: Authenticator verification is required. Submit a 2FA code to complete login.";
                         }
                         else if (loginResponse == null || string.IsNullOrWhiteSpace(loginResponse.access_token))
@@ -358,6 +404,7 @@ namespace SaiGame.Services
                         }
 
                         SaiServer.Instance.SetLoginData(loginResponse.access_token, loginResponse.refresh_token, loginResponse.expires_in, loginResponse.user);
+                        this.pendingTwoFactorChallenge = null;
 
                         this.username = username;
                         this.password = password;
@@ -513,6 +560,7 @@ namespace SaiGame.Services
 
         private void ClearAuthData()
         {
+            this.pendingTwoFactorChallenge = null;
             StopTokenExpirationCheck();
             SaiAuthTokenStorage.Clear();
 
