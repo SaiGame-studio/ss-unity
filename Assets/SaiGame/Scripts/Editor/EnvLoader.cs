@@ -10,6 +10,7 @@ namespace SaiGame.Services
     /// <summary>
     /// Reads .env file from project root and applies values to SaiServer / SaiAuth serialized fields.
     /// Supported keys: GAME_ID, USERNAME, PASSWORD, SERVER_ENDPOINT.
+    /// Also parses .env.build, which BuildEnvSceneProcessor applies to player builds.
     /// </summary>
     public static class EnvLoader
     {
@@ -18,23 +19,38 @@ namespace SaiGame.Services
         public const string KEY_PASSWORD = "PASSWORD";
         public const string KEY_SERVER_ENDPOINT = "SERVER_ENDPOINT";
 
-        private static string EnvFilePath =>
-            Path.Combine(Path.GetDirectoryName(Application.dataPath), ".env");
+        public const string ENV_FILE_NAME = ".env";
+        public const string BUILD_ENV_FILE_NAME = ".env.build";
+
+        public static string EnvFilePath => ProjectRootFile(ENV_FILE_NAME);
+
+        public static string BuildEnvFilePath => ProjectRootFile(BUILD_ENV_FILE_NAME);
+
+        private static string ProjectRootFile(string fileName) =>
+            Path.Combine(Path.GetDirectoryName(Application.dataPath), fileName);
 
         /// <summary>
         /// Parses the .env file and returns a key-value dictionary.
         /// Lines starting with '#' and empty lines are ignored.
         /// </summary>
-        public static Dictionary<string, string> Load()
+        public static Dictionary<string, string> Load() => LoadFile(EnvFilePath);
+
+        /// <summary>
+        /// Parses the .env.build file (values applied to player builds).
+        /// Returns an empty dictionary when the file does not exist.
+        /// </summary>
+        public static Dictionary<string, string> LoadBuild() => LoadFile(BuildEnvFilePath);
+
+        private static Dictionary<string, string> LoadFile(string path)
         {
             var result = new Dictionary<string, string>();
 
-            if (!File.Exists(EnvFilePath))
+            if (!File.Exists(path))
             {
                 return result;
             }
 
-            foreach (string line in File.ReadAllLines(EnvFilePath))
+            foreach (string line in File.ReadAllLines(path))
             {
                 string trimmed = line.Trim();
                 if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#"))
@@ -57,6 +73,8 @@ namespace SaiGame.Services
         }
 
         public static bool EnvFileExists() => File.Exists(EnvFilePath);
+
+        public static bool BuildEnvFileExists() => File.Exists(BuildEnvFilePath);
 
         /// <summary>
         /// Applies GAME_ID to SaiServer and USERNAME / PASSWORD to SaiAuth.
