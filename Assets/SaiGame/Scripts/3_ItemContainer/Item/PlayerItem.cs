@@ -12,10 +12,6 @@ namespace SaiGame.Services
         public event Action<InventoryResponse> OnGetItemsSuccess;
         public event Action<string> OnGetItemsFailure;
 
-        [Header("Auto Load Settings")]
-        [SerializeField] protected bool autoLoadOnLogin = false;
-        [SerializeField] protected string autoLoadCategory = "";
-
         [Header("Current Inventory Data")]
         [SerializeField] protected InventoryResponse currentInventory;
 
@@ -41,7 +37,6 @@ namespace SaiGame.Services
         protected override void LoadComponents()
         {
             base.LoadComponents();
-            this.RegisterLoginListener();
             this.RegisterLogoutListener();
             this.InitializeCategories();
         }
@@ -98,13 +93,6 @@ namespace SaiGame.Services
             ));
         }
 
-        protected virtual void RegisterLoginListener()
-        {
-            if (SaiServer.Instance?.SaiAuth == null) return;
-
-            SaiServer.Instance.SaiAuth.OnLoginSuccess += this.HandleLoginSuccess;
-        }
-
         protected virtual void RegisterLogoutListener()
         {
             if (SaiServer.Instance?.SaiAuth == null) return;
@@ -116,35 +104,8 @@ namespace SaiGame.Services
         {
             if (SaiServer.Instance?.SaiAuth != null)
             {
-                SaiServer.Instance.SaiAuth.OnLoginSuccess -= this.HandleLoginSuccess;
                 SaiServer.Instance.SaiAuth.OnLogoutSuccess -= this.HandleLogoutSuccess;
             }
-        }
-
-        protected virtual void HandleLoginSuccess(LoginResponse response)
-        {
-            if (!this.autoLoadOnLogin) return;
-
-            // Fetch categories now that we're authenticated, if cache was missing/expired at startup
-            if (runtimeCategoriesCache == null)
-                StartCoroutine(this.FetchAndCacheCategoriesCoroutine());
-
-            if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
-                Debug.Log("[ItemContainer] Auto-loading inventory after successful login...");
-
-            this.GetItems(
-                category: this.autoLoadCategory,
-                onSuccess: inventory =>
-                {
-                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
-                        Debug.Log($"[ItemContainer] Inventory auto-loaded: {inventory.items.Length} items, total: {inventory.total}");
-                },
-                onError: error =>
-                {
-                    if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
-                        Debug.LogWarning($"[ItemContainer] Auto-load inventory failed: {error}");
-                }
-            );
         }
 
         protected virtual void HandleLogoutSuccess()
