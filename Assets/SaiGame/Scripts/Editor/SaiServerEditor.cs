@@ -13,6 +13,9 @@ namespace SaiGame.Services
         private bool showServerTime = false;
         private bool showDebugSettings = false;
         private const string ENV_EXAMPLE_PATH = "Assets/SaiGame/env.example.txt";
+        // Relative to the project root (Unity's working directory).
+        private const string BUILD_ENV_EXAMPLE_PATH = ".env.build.example";
+        private const float CREATE_ENV_BUTTON_WIDTH = 110f;
 
         public override void OnInspectorGUI()
         {
@@ -143,9 +146,6 @@ namespace SaiGame.Services
             EditorGUILayout.Space(5);
             EditorGUILayout.PropertyField(this.serializedObject.FindProperty("gameId"), new GUIContent("Game Id"));
 
-            EditorGUILayout.Space(5);
-            EditorGUILayout.PropertyField(this.serializedObject.FindProperty("requestTimeout"), new GUIContent("Request Timeout"));
-
             this.serializedObject.ApplyModifiedProperties();
 
             SaiServer saiServer = (SaiServer)target;
@@ -154,10 +154,7 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("Environment", EditorStyles.boldLabel);
 
             bool envExists = EnvLoader.EnvFileExists();
-            EditorGUILayout.HelpBox(
-                envExists ? ".env file found at project root." : ".env file not found. Click \"Create .env\" or copy env.example.txt from the SaiGame folder to the project root as .env.",
-                envExists ? MessageType.Info : MessageType.Warning);
-
+            EditorGUILayout.BeginHorizontal();
             GUI.enabled = envExists;
             bool current = EnvAutoLoader.LoadEnvOnPlay;
             bool updated = EditorGUILayout.Toggle(
@@ -171,8 +168,27 @@ namespace SaiGame.Services
                 EnvAutoLoader.LoadEnvOnPlay = updated;
             }
 
-            GUI.enabled = envExists && EnvAutoLoader.LoadEnvOnPlay;
+            GUI.enabled = !envExists;
+            if (GUILayout.Button(
+                new GUIContent("Create .env", "Creates .env at the project root from env.example.txt. Disabled when .env already exists."),
+                EditorStyles.miniButton,
+                GUILayout.Width(CREATE_ENV_BUTTON_WIDTH)))
+            {
+                this.CreateEnvFileFromExample(ENV_EXAMPLE_PATH, EnvLoader.EnvFilePath);
+            }
+            GUI.enabled = true;
+            EditorGUILayout.EndHorizontal();
+
             EditorGUI.indentLevel++;
+            GUI.enabled = false;
+            EditorGUILayout.Toggle(
+                new GUIContent(
+                    ".env found",
+                    "Read only. Checked when a .env file exists at the project root. " +
+                    "If missing, click \"Create .env\" or copy env.example.txt from the SaiGame folder to the project root as .env."),
+                envExists);
+
+            GUI.enabled = envExists && EnvAutoLoader.LoadEnvOnPlay;
             this.serializedObject.Update();
             EditorGUILayout.PropertyField(
                 this.serializedObject.FindProperty("envOverrideServerEndpoint"),
@@ -193,6 +209,40 @@ namespace SaiGame.Services
             this.serializedObject.ApplyModifiedProperties();
             EditorGUI.indentLevel--;
             GUI.enabled = true;
+
+            EditorGUILayout.Space(5);
+            bool buildEnvExists = EnvLoader.BuildEnvFileExists();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Load .env.build on build", EditorStyles.boldLabel);
+            GUI.enabled = !buildEnvExists;
+            if (GUILayout.Button(
+                new GUIContent("Create .env.build", "Creates .env.build at the project root from .env.build.example. Disabled when .env.build already exists."),
+                EditorStyles.miniButton,
+                GUILayout.Width(CREATE_ENV_BUTTON_WIDTH)))
+            {
+                this.CreateEnvFileFromExample(BUILD_ENV_EXAMPLE_PATH, EnvLoader.BuildEnvFilePath);
+            }
+            GUI.enabled = true;
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUI.indentLevel++;
+            GUI.enabled = false;
+            EditorGUILayout.Toggle(
+                new GUIContent(
+                    ".env.build found",
+                    "Read only. Checked when a .env.build file exists at the project root. " +
+                    "If missing, click \"Create .env.build\" or copy .env.build.example to .env.build at the project root."),
+                buildEnvExists);
+            GUI.enabled = true;
+            this.serializedObject.Update();
+            EditorGUILayout.PropertyField(
+                this.serializedObject.FindProperty("buildEnvOverrideGameId"),
+                new GUIContent(
+                    "Override game id",
+                    "When checked, GAME_ID from .env.build replaces the Game Id in the built player. " +
+                    "Only the built copy of the scene is changed; the scene asset is never modified."));
+            this.serializedObject.ApplyModifiedProperties();
+            EditorGUI.indentLevel--;
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Service Actions", EditorStyles.boldLabel);
@@ -256,13 +306,6 @@ namespace SaiGame.Services
                 }
             }
             GUI.backgroundColor = Color.white;
-
-            GUI.backgroundColor = new Color(0.4f, 0.85f, 0.55f);
-            if (GUILayout.Button("Create .env", GUILayout.Height(28)))
-            {
-                this.CreateEnvFileFromExample();
-            }
-            GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(5);
@@ -304,32 +347,31 @@ namespace SaiGame.Services
             EditorGUILayout.EndHorizontal();
         }
 
-        private void CreateEnvFileFromExample()
+        private void CreateEnvFileFromExample(string exampleRelativePath, string destPath)
         {
-            string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-            string destPath = Path.Combine(projectRoot, ".env");
-            string sourcePath = Path.GetFullPath(ENV_EXAMPLE_PATH);
+            string sourcePath = Path.GetFullPath(exampleRelativePath);
+            string sourceName = Path.GetFileName(sourcePath);
+            string destName = Path.GetFileName(destPath);
 
             if (!File.Exists(sourcePath))
             {
-                EditorUtility.DisplayDialog("env.example.txt Not Found", $"env.example.txt was not found at:\n{sourcePath}", "OK");
+                EditorUtility.DisplayDialog($"{sourceName} Not Found", $"{sourceName} was not found at:\n{sourcePath}", "OK");
                 return;
             }
 
             if (File.Exists(destPath))
             {
-                Debug.LogWarning($"[SaiServer] .env already exists at {destPath} — Create .env was cancelled.");
+                Debug.LogWarning($"[SaiServer] {destName} already exists at {destPath} — Create {destName} was cancelled.");
                 EditorUtility.DisplayDialog(
-                    ".env Already Exists",
-                    $".env already exists at:\n{destPath}\n\nIt was not created or overwritten. " +
-                    "Copy the keys you need from env.example.txt into the existing .env instead.",
+                    $"{destName} Already Exists",
+                    $"{destName} already exists at:\n{destPath}\n\nIt was not created or overwritten. " +
+                    $"Copy the keys you need from {sourceName} into the existing {destName} instead.",
                     "OK");
                 return;
             }
 
             File.Copy(sourcePath, destPath, overwrite: false);
-            EditorUtility.DisplayDialog(".env Created", ".env created at project root from env.example.txt.", "OK");
-            EditorUtility.OpenWithDefaultApp(destPath);
+            EditorUtility.DisplayDialog($"{destName} Created", $"{destName} created at project root from {sourceName}.", "OK");
         }
 
         private bool ResetComponentSerializedFieldsToDefaults(Component targetComponent)

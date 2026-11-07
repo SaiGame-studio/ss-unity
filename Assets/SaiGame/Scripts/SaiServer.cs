@@ -59,6 +59,10 @@ namespace SaiGame.Services
         [Tooltip("When Load .env on Play is on, USERNAME / PASSWORD from .env are applied to SaiAuth at game start")]
         [SerializeField] protected bool envOverrideCredentials = true;
 
+        // Build overrides (drawn under "Load .env.build on build" by SaiServerEditor)
+        [Tooltip("When checked, GAME_ID from .env.build replaces the Game Id in the built player")]
+        [SerializeField] protected bool buildEnvOverrideGameId = true;
+
         [Header("Game Configuration")]
         [SerializeField] protected string gameId = "";
         private const string PREF_SERVER_ENDPOINT = "SaiGame_ServerEndpoint";
@@ -101,6 +105,8 @@ namespace SaiGame.Services
         public bool EnvOverrideServerEndpoint => this.envOverrideServerEndpoint;
 
         public bool EnvOverrideCredentials => this.envOverrideCredentials;
+
+        public bool BuildEnvOverrideGameId => this.buildEnvOverrideGameId;
 
         public string ServerEndpointOverride => this.serverEndpointOverride;
 
