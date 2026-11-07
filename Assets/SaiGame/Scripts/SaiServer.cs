@@ -272,8 +272,34 @@ namespace SaiGame.Services
             return request;
         }
 
+        private bool ValidateGamerProgressRequest(string endpoint, string method, Action<string> onError)
+        {
+            string path = (endpoint ?? string.Empty).Split('?')[0].TrimEnd('/');
+            string gamePath = $"/api/v1/games/{this.GameId}";
+            bool isBootstrapRequest =
+                (method == "POST" && (path == "/api/v1/auth/register"
+                    || path == "/api/v1/auth/login" || path == "/api/v1/auth/2fa/verify"
+                    || path == "/api/v1/auth/refresh" || path == "/api/v1/auth/logout"
+                    || path == "/api/v1/client/auth/google/session"
+                    || path == gamePath + "/gamer-progress"))
+                || (method == "GET" && (path == "/api/v1/auth/me" || path == "/api/v1/time"
+                    || path.StartsWith("/api/v1/client/auth/google/session/", StringComparison.Ordinal)
+                    || path == gamePath + "/my-gamer-progress"));
+
+            if (isBootstrapRequest || (this.gamerProgress != null && this.gamerProgress.IsDataLoaded))
+                return true;
+
+            string error = $"[SaiServer] Blocked {method} {endpoint}: Call GamerProgress.CreateProgress or GamerProgress.GetProgress first and successfully load GamerProgress data before calling this API.";
+            Debug.LogError(error, gameObject);
+            onError?.Invoke(error);
+            return false;
+        }
+
         public IEnumerator GetRequest(string endpoint, Action<string> onSuccess, Action<string> onError)
         {
+            if (!this.ValidateGamerProgressRequest(endpoint, "GET", onError))
+                yield break;
+
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "GET"))
             {
                 if (this.showUrlRequest)
@@ -298,6 +324,9 @@ namespace SaiGame.Services
 
         public IEnumerator PostRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)
         {
+            if (!this.ValidateGamerProgressRequest(endpoint, "POST", onError))
+                yield break;
+
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "POST"))
             {
                 byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
@@ -334,6 +363,9 @@ namespace SaiGame.Services
 
         public IEnumerator PutRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)
         {
+            if (!this.ValidateGamerProgressRequest(endpoint, "PUT", onError))
+                yield break;
+
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "PUT"))
             {
                 byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
@@ -364,6 +396,9 @@ namespace SaiGame.Services
 
         public IEnumerator PatchRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)
         {
+            if (!this.ValidateGamerProgressRequest(endpoint, "PATCH", onError))
+                yield break;
+
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "PATCH"))
             {
                 byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
@@ -394,6 +429,9 @@ namespace SaiGame.Services
 
         public IEnumerator DeleteRequest(string endpoint, Action<string> onSuccess, Action<string> onError)
         {
+            if (!this.ValidateGamerProgressRequest(endpoint, "DELETE", onError))
+                yield break;
+
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "DELETE"))
             {
                 if (this.showUrlRequest)

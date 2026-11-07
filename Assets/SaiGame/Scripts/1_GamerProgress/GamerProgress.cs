@@ -20,6 +20,8 @@ namespace SaiGame.Services
 
         [Header("Current Progress Data")]
         [SerializeField] protected GamerProgressData currentProgress;
+        [SerializeField, Tooltip("True only after progress data has been successfully created or loaded for this session.")]
+        private bool isDataLoaded;
 
         [Header("Update Delta Values")]
         [SerializeField] protected int experienceDelta = 0;
@@ -27,7 +29,14 @@ namespace SaiGame.Services
         [SerializeField][TextArea(3, 10)] protected string gameData = "{}";
 
         public GamerProgressData CurrentProgress => currentProgress;
+        public bool IsDataLoaded => isDataLoaded && HasProgress;
         public bool HasProgress => currentProgress != null && !string.IsNullOrEmpty(currentProgress.id);
+
+        protected override void Awake()
+        {
+            this.isDataLoaded = false;
+            base.Awake();
+        }
 
         protected override void LoadComponents()
         {
@@ -38,15 +47,25 @@ namespace SaiGame.Services
 
         protected virtual void RegisterLoginListener()
         {
-            if (SaiServer.Instance?.SaiAuth == null) return;
+            if (SaiServer.Instance == null) return;
 
-            SaiServer.Instance.SaiAuth.OnLoginSuccess += HandleLoginSuccess;
+            if (SaiServer.Instance.SaiAuth != null)
+            {
+                SaiServer.Instance.SaiAuth.OnLoginSuccess -= HandleLoginSuccess;
+                SaiServer.Instance.SaiAuth.OnLoginSuccess += HandleLoginSuccess;
+            }
+            if (SaiServer.Instance.GoogleBackendLogin != null)
+            {
+                SaiServer.Instance.GoogleBackendLogin.OnLoginSuccess -= HandleLoginSuccess;
+                SaiServer.Instance.GoogleBackendLogin.OnLoginSuccess += HandleLoginSuccess;
+            }
         }
 
         protected virtual void RegisterLogoutListener()
         {
             if (SaiServer.Instance?.SaiAuth == null) return;
 
+            SaiServer.Instance.SaiAuth.OnLogoutSuccess -= HandleLogoutSuccess;
             SaiServer.Instance.SaiAuth.OnLogoutSuccess += HandleLogoutSuccess;
         }
 
@@ -57,10 +76,16 @@ namespace SaiGame.Services
                 SaiServer.Instance.SaiAuth.OnLoginSuccess -= HandleLoginSuccess;
                 SaiServer.Instance.SaiAuth.OnLogoutSuccess -= HandleLogoutSuccess;
             }
+            if (SaiServer.Instance?.GoogleBackendLogin != null)
+            {
+                SaiServer.Instance.GoogleBackendLogin.OnLoginSuccess -= HandleLoginSuccess;
+            }
         }
 
         protected virtual void HandleLoginSuccess(LoginResponse response)
         {
+            this.isDataLoaded = false;
+            this.currentProgress = null;
             if (!autoLoadOnLogin) return;
 
             if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
@@ -262,6 +287,9 @@ namespace SaiGame.Services
 
                         CreateGamerProgressResponse progressResponse = JsonUtility.FromJson<CreateGamerProgressResponse>(response);
                         this.currentProgress = progressResponse.data;
+                        this.isDataLoaded = this.HasProgress;
+                        if (!this.isDataLoaded)
+                            throw new InvalidOperationException("GamerProgress response does not contain valid progress data.");
 
                         if (this.currentProgress != null)
                             this.currentProgress.game_data = gameDataJson;
@@ -323,6 +351,9 @@ namespace SaiGame.Services
 
                         GamerProgressData progress = JsonUtility.FromJson<GamerProgressData>(response);
                         this.currentProgress = progress;
+                        this.isDataLoaded = this.HasProgress;
+                        if (!this.isDataLoaded)
+                            throw new InvalidOperationException("GamerProgress response does not contain valid progress data.");
 
                         if (this.currentProgress != null)
                         {
@@ -365,9 +396,11 @@ namespace SaiGame.Services
         {
             if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FFD700><b>[GamerProgress] ► Update Progress</b></color>", gameObject);
-            if (this.currentProgress == null)
+            if (!this.IsDataLoaded)
             {
-                onError?.Invoke("No current progress found! Create or get progress first.");
+                const string error = "Call GamerProgress.CreateProgress or GamerProgress.GetProgress first and successfully load GamerProgress data before updating progress.";
+                Debug.LogError(error, gameObject);
+                onError?.Invoke(error);
                 return;
             }
 
@@ -406,6 +439,9 @@ namespace SaiGame.Services
 
                         GamerProgressData updatedProgress = JsonUtility.FromJson<GamerProgressData>(response);
                         this.currentProgress = updatedProgress;
+                        this.isDataLoaded = this.HasProgress;
+                        if (!this.isDataLoaded)
+                            throw new InvalidOperationException("GamerProgress response does not contain valid progress data.");
 
                         if (this.currentProgress != null)
                             this.currentProgress.game_data = gameDataJson;
@@ -481,6 +517,7 @@ namespace SaiGame.Services
 
         private void ClearLocalProgress()
         {
+            this.isDataLoaded = false;
             this.currentProgress = new GamerProgressData
             {
                 id = "",

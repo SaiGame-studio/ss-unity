@@ -47,7 +47,11 @@ namespace SaiGame.Services
                     continue;
                 }
                 if (prop.name == "m_Script") { GUI.enabled = false; EditorGUILayout.PropertyField(prop); GUI.enabled = true; }
-                else EditorGUILayout.PropertyField(prop, true);
+                else
+                {
+                    using (new EditorGUI.DisabledScope(prop.name == "isDataLoaded"))
+                        EditorGUILayout.PropertyField(prop, true);
+                }
             }
 
             serializedObject.ApplyModifiedProperties();
@@ -90,7 +94,7 @@ namespace SaiGame.Services
             GUI.backgroundColor = Color.yellow;
             if (GUILayout.Button($"Update Progress (+{expDelta} XP, +{goldDelta} Gold)", GUILayout.Height(25)))
             {
-                if (gamerProgress.HasProgress)
+                if (gamerProgress.IsDataLoaded)
                 {
                     gamerProgress.UpdateProgress(
                         expDelta,
@@ -102,8 +106,7 @@ namespace SaiGame.Services
                 }
                 else
                 {
-                    if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug)
-                        Debug.LogWarning("[Editor] No progress found! Create progress first.");
+                    Debug.LogError("Call GamerProgress.CreateProgress or GamerProgress.GetProgress first and successfully load GamerProgress data before updating progress.", gamerProgress);
                 }
             }
             GUI.backgroundColor = Color.white;

@@ -14,7 +14,7 @@ namespace SaiGame.Services
         private bool showDebugSettings = false;
         private const string ENV_EXAMPLE_PATH = "Assets/SaiGame/env.example.txt";
         // Relative to the project root (Unity's working directory).
-        private const string BUILD_ENV_EXAMPLE_PATH = ".env.build.example";
+        private const string BUILD_ENV_EXAMPLE_PATH = "Assets/SaiGame/env.build.example.txt";
         private const float CREATE_ENV_BUTTON_WIDTH = 110f;
 
         public override void OnInspectorGUI()
@@ -216,7 +216,7 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("Load .env.build on build", EditorStyles.boldLabel);
             GUI.enabled = !buildEnvExists;
             if (GUILayout.Button(
-                new GUIContent("Create .env.build", "Creates .env.build at the project root from .env.build.example. Disabled when .env.build already exists."),
+                new GUIContent("Create .env.build", "Creates .env.build at the project root from env.build.example.txt in the SaiGame folder. Disabled when .env.build already exists."),
                 EditorStyles.miniButton,
                 GUILayout.Width(CREATE_ENV_BUTTON_WIDTH)))
             {
@@ -231,7 +231,7 @@ namespace SaiGame.Services
                 new GUIContent(
                     ".env.build found",
                     "Read only. Checked when a .env.build file exists at the project root. " +
-                    "If missing, click \"Create .env.build\" or copy .env.build.example to .env.build at the project root."),
+                    "If missing, click \"Create .env.build\" or copy env.build.example.txt from the SaiGame folder to the project root as .env.build."),
                 buildEnvExists);
             GUI.enabled = true;
             this.serializedObject.Update();
