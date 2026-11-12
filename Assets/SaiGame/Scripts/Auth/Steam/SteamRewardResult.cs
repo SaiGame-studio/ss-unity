@@ -6,7 +6,6 @@ namespace SaiGame.Auth.Steam
     public class SteamRewardResult
     {
         public string status;
-        public string reward_code;
         public string message_code;
     }
 }

@@ -5,7 +5,7 @@ Task source: user request, 2026-11-12; no external ticket ID.
 ## Setup
 
 1. Enable the backend as described in `ss-go/docs/api/steam-login-rewards.md`:
-   migrations 269/270 and the server game-secret encryption key. In Studio,
+   migrations through 271 and the server game-secret encryption key. In Studio,
    open the game **Settings > Steam**, configure its AppID, publisher key,
    and reward items, then enable Steam. Configuration is stored per game in the
    database and applies without a backend restart.
@@ -75,6 +75,9 @@ SaiServer.Instance.SteamBackendLogin.ClaimRewards(
 All operations get a fresh ticket and leave AppID, SteamID, eligibility, item
 IDs, and quantities to the backend. Status values are `granted`,
 `already_granted`, `pending`, `ineligible`, or `not_configured`.
+Each Steam owner receives the configured items once per game. The backend checks
+the inventory transaction log; there is no reward code to enter or send. Editing
+reward items does not grant again to owners who already received their reward.
 Family Sharing can authenticate with an active license but cannot claim the
 permanent ownership reward. Steam key activations with permanent ownership
 also qualify; the response is not a purchase receipt.
