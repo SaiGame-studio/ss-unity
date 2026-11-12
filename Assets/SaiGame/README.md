@@ -6,6 +6,8 @@ A comprehensive game backend integration SDK for Unity, providing a service laye
 
 ## Online Tutorials
 
+Steam authentication and ownership rewards: [SDK setup](Scripts/Auth/Steam/README.md).
+
 Full tutorials and documentation are available at: https://admin.saigame.studio/tutorials
 
 

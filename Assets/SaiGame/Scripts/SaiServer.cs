@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Reflection;
 using System.Text;
+using SaiGame.Auth.Steam;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -19,6 +20,7 @@ namespace SaiGame.Services
 
         [SerializeField] protected SaiAuth saiAuth;
         [SerializeField] protected GoogleBackendLogin googleBackendLogin;
+        [SerializeField] private SteamBackendLogin steamBackendLogin;
         [SerializeField] protected GamerProgress gamerProgress;
         [SerializeField] protected Mailbox mailbox;
         [SerializeField] protected ItemDefinitions itemDefinitions;
@@ -192,6 +194,7 @@ namespace SaiGame.Services
         public SaiAuth SaiAuth => saiAuth;
 
         public GoogleBackendLogin GoogleBackendLogin => this.googleBackendLogin;
+        public SteamBackendLogin SteamBackendLogin => this.steamBackendLogin;
 
         public string GameId => this.NormalizeInput(this.gameId);
 
@@ -281,6 +284,9 @@ namespace SaiGame.Services
                     || path == "/api/v1/auth/login" || path == "/api/v1/auth/2fa/verify"
                     || path == "/api/v1/auth/refresh" || path == "/api/v1/auth/logout"
                     || path == "/api/v1/client/auth/google/session"
+                    || path == SaiGame.Auth.Steam.SteamBackendLogin.LoginEndpoint
+                    || path == SaiGame.Auth.Steam.SteamBackendLogin.LinkEndpoint
+                    || path == SaiGame.Auth.Steam.SteamBackendLogin.ClaimEndpoint
                     || path == gamePath + "/gamer-progress"))
                 || (method == "GET" && (path == "/api/v1/auth/me" || path == "/api/v1/time"
                     || path.StartsWith("/api/v1/client/auth/google/session/", StringComparison.Ordinal)
@@ -342,7 +348,7 @@ namespace SaiGame.Services
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
-                    if (this.showJsonResponse)
+                    if (this.showJsonResponse && !IsPasswordAuthenticationRequest(endpoint))
                         Debug.Log($"[SaiServer] POST Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
@@ -358,7 +364,10 @@ namespace SaiGame.Services
         private static bool IsPasswordAuthenticationRequest(string endpoint)
         {
             return endpoint == "/api/v1/auth/login" || endpoint == "/api/v1/auth/register"
-                || endpoint == "/api/v1/auth/2fa/verify";
+                || endpoint == "/api/v1/auth/2fa/verify"
+                || endpoint == SaiGame.Auth.Steam.SteamBackendLogin.LoginEndpoint
+                || endpoint == SaiGame.Auth.Steam.SteamBackendLogin.LinkEndpoint
+                || endpoint == SaiGame.Auth.Steam.SteamBackendLogin.ClaimEndpoint;
         }
 
         public IEnumerator PutRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)
@@ -489,6 +498,8 @@ namespace SaiGame.Services
             this.SyncLegacyServerFieldsFromEndpoint();
             this.LoadSaiAuth();
             this.LoadGoogleBackendLogin();
+            if (this.steamBackendLogin == null)
+                this.steamBackendLogin = GetComponentInChildren<SteamBackendLogin>();
 
             this.RegisterLoginListeners();
             this.LoadGamerProgress();
