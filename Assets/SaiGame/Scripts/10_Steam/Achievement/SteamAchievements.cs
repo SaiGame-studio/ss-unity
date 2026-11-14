@@ -30,8 +30,10 @@ namespace SaiGame.Services
         public const string InvalidName = "STEAM_INVALID_NAME";
         private const string LogTag = "[SteamAchievements]";
 
+#pragma warning disable CS0067 // Raised only when Steamworks.NET is available.
         public event Action<List<SteamAchievementInfo>> OnAchievementsLoaded;
         public event Action<string> OnAchievementUnlocked;
+#pragma warning restore CS0067
         public event Action<string> OnFailure;
 
         [Header("Achievement State")]
