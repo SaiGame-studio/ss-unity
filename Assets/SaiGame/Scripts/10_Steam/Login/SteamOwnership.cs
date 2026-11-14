@@ -1,6 +1,6 @@
 using System;
 
-namespace SaiGame.Auth.Steam
+namespace SaiGame.Services
 {
     [Serializable]
     public class SteamOwnership

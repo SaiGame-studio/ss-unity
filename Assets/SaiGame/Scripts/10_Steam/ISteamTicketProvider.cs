@@ -1,6 +1,6 @@
 using System;
 
-namespace SaiGame.Auth.Steam
+namespace SaiGame.Services
 {
     // The game owns Steam initialization and callback pumping. Implementations
     // keep the ticket alive until CancelTicket is called by the login flow.

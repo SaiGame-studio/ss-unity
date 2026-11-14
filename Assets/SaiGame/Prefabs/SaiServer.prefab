@@ -394,6 +394,14 @@ MonoBehaviour:
     item_count: 0
     shop_id: 
   lastLoadedShopId: 
+  currentSGemWallet:
+    id: 
+    user_id: 
+    balance: 0
+    total_bought: 0
+    total_spent: 0
+    created_at: 
+    updated_at: 
 --- !u!114 &8153881721212893719
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -406,8 +414,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27b40b3f397144a45a96173283e22f3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.PlayerItem
-  autoLoadOnLogin: 0
-  autoLoadCategory: 
   currentInventory:
     items:
     - id: 9efe130d-ec0d-4f14-bd52-47a5d566518a
@@ -2349,6 +2355,115 @@ MonoBehaviour:
   scriptName: 
   requestBody: "{\n    \"payload\": {\n\n    }\n}"
   jsonResponse: 
+--- !u!1 &5773730568387480150
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2869456026570005504}
+  - component: {fileID: 2302586159097302283}
+  - component: {fileID: 5293678567489229214}
+  - component: {fileID: 276369035625675369}
+  m_Layer: 0
+  m_Name: Steam
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2869456026570005504
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5773730568387480150}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8277413932139228352}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2302586159097302283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5773730568387480150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 347ad581da8345e983fc74ad8293f290, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SteamBackendLogin
+  accessToken: 
+  refreshToken: 
+  expiresIn: 0
+  userData:
+    id: 
+    email: 
+    username: 
+    display_name: 
+    is_active: 0
+    is_verified: 0
+    created_at: 0
+  loginTime: 0
+  isLoggingIn: 0
+  requiresTwoFactor: 0
+  ownership:
+    steam_id: 
+    app_id: 0
+    owns_app: 0
+    permanent: 0
+    owner_steam_id: 
+  reward:
+    status: 
+    message_code: 
+  lastError: 
+  ticketProvider: {fileID: 5293678567489229214}
+  ticketTimeoutSeconds: 30
+--- !u!114 &5293678567489229214
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5773730568387480150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1306dd41a0c4daca79879fc897ffa2f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SteamworksNetTicketProvider
+  initializeSteamApi: 1
+  steamworksAvailable: 0
+  steamInitialized: 0
+  steamLoggedOn: 0
+  localSteamId: 
+  personaName: 
+  initError: 
+--- !u!114 &276369035625675369
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5773730568387480150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dba5a75f443d1a74a816e45d5d87e4f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SteamAchievements
+  isLoading: 0
+  statsLoaded: 0
+  achievements: []
+  lastError: 
+  steamClient: {fileID: 5293678567489229214}
+  statsTimeoutSeconds: 15
 --- !u!1 &6971719431293405431
 GameObject:
   m_ObjectHideFlags: 0
@@ -2389,6 +2504,7 @@ Transform:
   - {fileID: 3667272808700333575}
   - {fileID: 8448881463889205349}
   - {fileID: 7391328292783992900}
+  - {fileID: 2869456026570005504}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8686393883881292769
@@ -2405,6 +2521,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SaiServer
   saiAuth: {fileID: 813458455079530658}
   googleBackendLogin: {fileID: 207283731097068101}
+  steamBackendLogin: {fileID: 2302586159097302283}
+  steamAchievements: {fileID: 276369035625675369}
   gamerProgress: {fileID: 3797376410084372741}
   mailbox: {fileID: 390271473075436921}
   itemDefinitions: {fileID: 7353435024058604980}
@@ -2432,7 +2550,11 @@ MonoBehaviour:
   domainOption: 1
   port: 443
   useHttps: 1
-  gameId: 019f49a1-350b-72c4-ac8f-8fe4f7d1418e
+  envOverrideServerEndpoint: 1
+  envOverrideGameId: 1
+  envOverrideCredentials: 1
+  buildEnvOverrideGameId: 1
+  gameId: 
   requestTimeout: 30
   serverTime: 
   serverTimestamp: 0
@@ -2442,8 +2564,8 @@ MonoBehaviour:
   showCallbackLog: 1
   showDebugLog: 1
   showUrlRequest: 1
-  showJsonRequest: 1
-  showJsonResponse: 1
+  showJsonRequest: 0
+  showJsonResponse: 0
 --- !u!114 &813458455079530658
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2469,8 +2591,9 @@ MonoBehaviour:
     created_at: 0
   loginTime: 0
   autoLogin: 1
+  persistTokens: 1
   autoRefreshToken: 1
-  refreshBeforeExpire: 2
+  refreshBeforeExpireMinutes: 2
   username: username_1786416666803
   password: 123qweasd
   registerEmail: 
@@ -2529,6 +2652,7 @@ MonoBehaviour:
     created_at: 0
     updated_at: 0
     version: 0
+  isDataLoaded: 0
   experienceDelta: 0
   goldDelta: 0
   gameData: '{}'

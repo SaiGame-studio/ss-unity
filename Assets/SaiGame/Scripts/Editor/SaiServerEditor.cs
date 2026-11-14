@@ -90,6 +90,7 @@ namespace SaiGame.Services
                 // ── Root (SaiServer) ────────────────────────────────────────
                 EditorGUILayout.LabelField("Root Object", EditorStyles.miniBoldLabel);
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("saiAuth"),              new GUIContent("Sai Auth"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("googleBackendLogin"),   new GUIContent("Google Backend Login"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("gamerProgress"),        new GUIContent("Gamer Progress"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("mailbox"),              new GUIContent("Mailbox"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("playerEvent"),          new GUIContent("Player Event"));
@@ -124,6 +125,12 @@ namespace SaiGame.Services
                 EditorGUILayout.LabelField("Battle Child Object", EditorStyles.miniBoldLabel);
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("battleSessions"),       new GUIContent("Battle Sessions"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("battleScript"),         new GUIContent("Battle Script"));
+
+                // ── Steam child ──────────────────────────────────────────────
+                EditorGUILayout.Space(2);
+                EditorGUILayout.LabelField("Steam Child Object", EditorStyles.miniBoldLabel);
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("steamBackendLogin"),    new GUIContent("Steam Backend Login"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("steamAchievements"),    new GUIContent("Steam Achievements"));
 
                 EditorGUI.indentLevel--;
             }

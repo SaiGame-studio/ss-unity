@@ -1,11 +1,10 @@
 using System;
 using System.Collections;
 using System.Text;
-using SaiGame.Services;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace SaiGame.Auth.Steam
+namespace SaiGame.Services
 {
     // Authentication uses default TLS validation and never logs tickets/tokens.
     public static class SteamBackendTransport

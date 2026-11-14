@@ -1,7 +1,6 @@
 using System;
-using SaiGame.Services;
 
-namespace SaiGame.Auth.Steam
+namespace SaiGame.Services
 {
     [Serializable]
     public class SteamLoginResponse : LoginResponse

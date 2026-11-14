@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
-using SaiGame.Services;
 using UnityEngine;
 
-namespace SaiGame.Auth.Steam
+namespace SaiGame.Services
 {
+    [DefaultExecutionOrder(-99)]
     public class SteamBackendLogin : SaiBehaviour
     {
         public const string TicketIdentity = "ss-go";
@@ -12,40 +12,88 @@ namespace SaiGame.Auth.Steam
         public const string LinkEndpoint = "/api/v1/player/auth/steam/link";
         public const string ClaimEndpoint = "/api/v1/player/auth/steam/rewards/claim";
         private const string TwoFactorEndpoint = "/api/v1/auth/2fa/verify";
-
-        [Tooltip("A component implementing ISteamTicketProvider, such as SteamworksNetTicketProvider.")]
-        [SerializeField] private MonoBehaviour ticketProvider;
-        [Tooltip("Maximum time to wait for Steam to return a Web API ticket.")]
-        [SerializeField] private float ticketTimeoutSeconds = 30f;
+        private const string TwoFactorRequiredCode = "TWO_FACTOR_REQUIRED";
+        private const string LogTag = "[SteamBackendLogin]";
 
         public event Action<SteamLoginResponse> OnLoginSuccess;
         public event Action<LoginResponse> OnTwoFactorRequired;
         public event Action<SteamRewardResult> OnRewardResult;
         public event Action<string> OnLoginFailure;
 
-        public bool IsLoggingIn => busy;
-        public bool RequiresTwoFactor => challenge != null && DateTime.UtcNow < challengeExpiresAt;
-        public SteamOwnership Ownership { get; private set; }
-        public SteamRewardResult Reward { get; private set; }
+        [Header("Authentication Data")]
+        [SerializeField] protected string accessToken;
+        [SerializeField] protected string refreshToken;
+        [SerializeField] protected int expiresIn;
+        [SerializeField] protected UserData userData;
+        [SerializeField] protected float loginTime;
 
-        private bool busy;
+        [Header("Steam State")]
+        [SerializeField] protected bool isLoggingIn;
+        [SerializeField] protected bool requiresTwoFactor;
+        [SerializeField] protected SteamOwnership ownership;
+        [SerializeField] protected SteamRewardResult reward;
+        [Tooltip("message_code of the last failed operation.")]
+        [SerializeField] protected string lastError;
+
+        [Header("Steam Settings")]
+        [Tooltip("A component implementing ISteamTicketProvider, such as SteamworksNetTicketProvider.")]
+        [SerializeField] private MonoBehaviour ticketProvider;
+        [Tooltip("Maximum time to wait for Steam to return a Web API ticket.")]
+        [SerializeField] private float ticketTimeoutSeconds = 30f;
+
         private Coroutine operation;
         private ISteamTicketProvider activeProvider;
         private LoginResponse challenge;
         private DateTime challengeExpiresAt;
+        private string linkCode;
+        private string linkRecoveryCode;
+
+        public bool IsAuthenticated => !string.IsNullOrEmpty(accessToken);
+        public bool IsLoggingIn => isLoggingIn;
+        public bool RequiresTwoFactor => challenge != null && DateTime.UtcNow < challengeExpiresAt;
+        public string AccessToken => accessToken;
+        public string RefreshToken => refreshToken;
+        public int ExpiresIn => expiresIn;
+        public UserData CurrentUser => userData;
+        public SteamOwnership Ownership => ownership;
+        public SteamRewardResult Reward => reward;
+        public string LastError => lastError;
+        public ISteamTicketProvider TicketProvider => ticketProvider as ISteamTicketProvider;
+
+        protected override void LoadComponents()
+        {
+            base.LoadComponents();
+            this.LoadTicketProvider();
+        }
+
+        protected virtual void LoadTicketProvider()
+        {
+            if (this.ticketProvider != null) return;
+            this.ticketProvider = GetComponentInChildren<ISteamTicketProvider>() as MonoBehaviour;
+        }
 
         public void StartLogin(Action<SteamLoginResponse> onSuccess = null, Action<string> onError = null)
         {
+            LogButton("Start Login");
             StartTicketOperation(LoginEndpoint, true, onSuccess, onError);
         }
 
-        public void LinkAccount(Action<SteamLoginResponse> onSuccess = null, Action<string> onError = null)
+        // Accounts with 2FA pass an Authenticator code or a recovery code.
+        // Accounts without 2FA must have signed in within the backend's
+        // re-authentication window, otherwise STEAM_LINK_REAUTH_REQUIRED.
+        public void LinkAccount(Action<SteamLoginResponse> onSuccess = null, Action<string> onError = null,
+            string twoFactorCode = null, string recoveryCode = null)
         {
+            LogButton("Link Account");
+            if (isLoggingIn) { Fail("STEAM_OPERATION_IN_PROGRESS", onError); return; }
+            linkCode = twoFactorCode?.Trim();
+            linkRecoveryCode = recoveryCode?.Trim();
             StartTicketOperation(LinkEndpoint, false, onSuccess, onError);
         }
 
         public void ClaimRewards(Action<SteamLoginResponse> onSuccess = null, Action<string> onError = null)
         {
+            LogButton("Claim Rewards");
             StartTicketOperation(ClaimEndpoint, false, onSuccess, onError);
         }
 
@@ -55,29 +103,44 @@ namespace SaiGame.Auth.Steam
         {
             if (!CanStart(true, onError)) return;
             if (string.IsNullOrEmpty(hexTicket)) { Fail("STEAM_INVALID_TICKET", onError); return; }
-            challenge = null;
-            Ownership = null;
-            Reward = null;
-            busy = true;
+            ResetLoginState();
+            BeginOperation();
             operation = StartCoroutine(SendTicket(LoginEndpoint, hexTicket, true, onSuccess, onError));
         }
 
         public void VerifyTwoFactor(string code, Action<LoginResponse> onSuccess = null, Action<string> onError = null)
         {
+            LogButton("Verify Two Factor");
             if (!CanStart(true, onError)) return;
-            if (!RequiresTwoFactor) { Fail("TWO_FACTOR_CHALLENGE_EXPIRED", onError); return; }
+            if (!RequiresTwoFactor) { SetTwoFactorChallenge(null); Fail("TWO_FACTOR_CHALLENGE_EXPIRED", onError); return; }
             if (string.IsNullOrWhiteSpace(code)) { Fail("INVALID_TWO_FACTOR_CODE", onError); return; }
-            busy = true;
+            BeginOperation();
             operation = StartCoroutine(CompleteTwoFactor(code.Trim(), onSuccess, onError));
+        }
+
+        public void CancelLogin()
+        {
+            LogButton("Cancel Login");
+            if (operation != null) StopCoroutine(operation);
+            bool wasBusy = isLoggingIn;
+            FinishOperation();
+            SetTwoFactorChallenge(null);
+            if (wasBusy) Fail("STEAM_CANCELLED", null);
+        }
+
+        private void OnDisable()
+        {
+            if (operation != null) StopCoroutine(operation);
+            FinishOperation();
         }
 
         private void StartTicketOperation(string endpoint, bool login, Action<SteamLoginResponse> onSuccess, Action<string> onError)
         {
             if (!CanStart(login, onError)) return;
-            var provider = ticketProvider as ISteamTicketProvider;
+            ISteamTicketProvider provider = TicketProvider;
             if (provider == null) { Fail("STEAM_TICKET_PROVIDER_REQUIRED", onError); return; }
-            if (login) { challenge = null; Ownership = null; Reward = null; }
-            busy = true;
+            if (login) ResetLoginState();
+            BeginOperation();
             activeProvider = provider;
             operation = StartCoroutine(RequestAndSend(provider, endpoint, login, onSuccess, onError));
         }
@@ -85,9 +148,9 @@ namespace SaiGame.Auth.Steam
         private bool CanStart(bool login, Action<string> onError)
         {
             string error = null;
-            if (busy) error = "STEAM_OPERATION_IN_PROGRESS";
+            if (isLoggingIn) error = "STEAM_OPERATION_IN_PROGRESS";
             else if (SaiServer.Instance == null || string.IsNullOrEmpty(SaiServer.Instance.GameId)) error = "SAI_SERVER_GAME_REQUIRED";
-            else if (!login && (SaiServer.Instance.SaiAuth == null || !SaiServer.Instance.SaiAuth.IsAuthenticated)) error = "UNAUTHORIZED";
+            else if (!login && !SaiServer.Instance.IsAuthenticated) error = "UNAUTHORIZED";
             if (error == null) return true;
             Fail(error, onError);
             return false;
@@ -125,6 +188,7 @@ namespace SaiGame.Auth.Steam
             string response = null;
             string error = null;
             var request = new SteamTicketRequest { game_id = SaiServer.Instance.GameId, ticket = ticket };
+            if (endpoint == LinkEndpoint) { request.code = linkCode; request.recovery_code = linkRecoveryCode; }
             yield return SteamBackendTransport.Post(endpoint, JsonUtility.ToJson(request), value => response = value, value => error = value);
             SteamLoginResponse result = null;
             if (error == null)
@@ -134,25 +198,20 @@ namespace SaiGame.Auth.Steam
             }
             FinishOperation();
             if (error != null || result == null) { ReportError(error ?? "STEAM_INVALID_RESPONSE", onError, reportFailure); yield break; }
-            if (login && result.message_code == "TWO_FACTOR_REQUIRED")
+            if (login && result.message_code == TwoFactorRequiredCode)
             {
-                challenge = result;
-                challengeExpiresAt = DateTime.UtcNow.AddSeconds(Math.Max(0, result.expires_in));
+                SetTwoFactorChallenge(result);
                 OnTwoFactorRequired?.Invoke(result);
-                Fail("TWO_FACTOR_REQUIRED", onError);
+                Fail(TwoFactorRequiredCode, onError);
                 yield break;
             }
             if (login)
             {
                 if (string.IsNullOrEmpty(result.access_token) || result.user == null) { Fail("STEAM_INVALID_RESPONSE", onError); yield break; }
-                SaiServer.Instance.SetLoginData(result.access_token, result.refresh_token, result.expires_in, result.user);
-                challenge = null;
+                ApplyLogin(result);
             }
-            Ownership = result.ownership;
-            Reward = result.reward;
-            if (result.reward != null) OnRewardResult?.Invoke(result.reward);
-            if (login) OnLoginSuccess?.Invoke(result);
-            onSuccess?.Invoke(result);
+            ApplyRewardResult(result.ownership, result.reward);
+            Succeed(login ? "Login" : endpoint == LinkEndpoint ? "Link" : "Claim", result, login, onSuccess);
         }
 
         private IEnumerator CompleteTwoFactor(string code, Action<LoginResponse> onSuccess, Action<string> onError)
@@ -170,8 +229,8 @@ namespace SaiGame.Auth.Steam
             FinishOperation();
             if (error != null || result == null || string.IsNullOrEmpty(result.access_token))
             { Fail(error ?? "STEAM_INVALID_RESPONSE", onError); yield break; }
-            challenge = null;
-            SaiServer.Instance.SetLoginData(result.access_token, result.refresh_token, result.expires_in, result.user);
+
+            ApplyLogin(result);
             var completed = new SteamLoginResponse
             {
                 user = result.user, access_token = result.access_token,
@@ -180,44 +239,84 @@ namespace SaiGame.Auth.Steam
             };
             // Obtain a fresh ticket after 2FA. Optional reward failure must not
             // turn a completed login into failure.
-            var provider = ticketProvider as ISteamTicketProvider;
+            ISteamTicketProvider provider = TicketProvider;
             if (provider != null)
             {
-                busy = true;
+                BeginOperation();
                 activeProvider = provider;
                 yield return RequestAndSend(provider, ClaimEndpoint, false,
                     claimed => { completed.ownership = claimed.ownership; completed.reward = claimed.reward; },
                     errorCode => { }, false);
             }
-            Ownership = completed.ownership;
-            Reward = completed.reward;
-            OnLoginSuccess?.Invoke(completed);
+            ApplyRewardResult(completed.ownership, completed.reward);
+            Succeed("Verify Two Factor", completed, true, null);
             onSuccess?.Invoke(completed);
         }
 
-        public void CancelLogin()
+        private void ApplyLogin(LoginResponse result)
         {
-            if (operation != null) StopCoroutine(operation);
-            bool wasBusy = busy;
-            FinishOperation();
-            challenge = null;
-            if (wasBusy) OnLoginFailure?.Invoke("STEAM_CANCELLED");
+            SetTwoFactorChallenge(null);
+            this.accessToken = result.access_token;
+            this.refreshToken = result.refresh_token;
+            this.expiresIn = result.expires_in;
+            this.userData = result.user;
+            this.loginTime = Time.time;
+            this.SetTokenToSaiAuth();
         }
 
-        private void OnDisable() { CancelLogin(); }
+        private void ApplyRewardResult(SteamOwnership newOwnership, SteamRewardResult newReward)
+        {
+            if (newOwnership != null) this.ownership = newOwnership;
+            this.reward = newReward;
+            if (newReward != null) OnRewardResult?.Invoke(newReward);
+        }
+
+        private void ResetLoginState()
+        {
+            SetTwoFactorChallenge(null);
+            this.ownership = null;
+            this.reward = null;
+        }
+
+        private void SetTwoFactorChallenge(LoginResponse value)
+        {
+            challenge = value;
+            challengeExpiresAt = value != null ? DateTime.UtcNow.AddSeconds(Math.Max(0, value.expires_in)) : DateTime.MinValue;
+            requiresTwoFactor = value != null;
+        }
+
+        private void BeginOperation()
+        {
+            isLoggingIn = true;
+            lastError = "";
+        }
 
         private void FinishOperation()
         {
             try { activeProvider?.CancelTicket(); }
-            catch (Exception) { Debug.LogWarning("[SteamBackendLogin] Steam ticket cleanup failed."); }
+            catch (Exception) { Debug.LogWarning(LogTag + " Steam ticket cleanup failed."); }
             activeProvider = null;
             operation = null;
-            busy = false;
+            isLoggingIn = false;
+            linkCode = null;
+            linkRecoveryCode = null;
+        }
+
+        private void Succeed(string action, SteamLoginResponse result, bool login, Action<SteamLoginResponse> onSuccess)
+        {
+            lastError = "";
+            if (login) OnLoginSuccess?.Invoke(result);
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                Debug.Log($"<color=#66CCFF>{LogTag} {action}</color> → <b><color=#00FF88>onSuccess</color></b> callback | reward: {(result.reward != null ? result.reward.status : "none")}");
+            onSuccess?.Invoke(result);
         }
 
         private void Fail(string error, Action<string> onError)
         {
+            lastError = error;
             OnLoginFailure?.Invoke(error);
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                Debug.LogWarning($"<color=#66CCFF>{LogTag}</color> → <b><color=#FF4444>onError</color></b> callback | {error}");
             onError?.Invoke(error);
         }
 
@@ -225,6 +324,50 @@ namespace SaiGame.Auth.Steam
         {
             if (reportFailure) Fail(error, onError);
             else onError?.Invoke(error);
+        }
+
+        private void LogButton(string action)
+        {
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
+                Debug.Log($"<color=#1B2838><b>{LogTag} ► {action}</b></color>", gameObject);
+        }
+
+        public void SetLoginData(string access, string refresh, int expires, UserData user = null)
+        {
+            this.accessToken = access;
+            this.refreshToken = refresh;
+            this.expiresIn = expires;
+            this.userData = user;
+            this.loginTime = string.IsNullOrEmpty(access) ? 0 : Time.time;
+        }
+
+        public void SetTokenToSaiAuth()
+        {
+            LogButton("Set Token To SaiAuth");
+            if (SaiServer.Instance == null)
+            {
+                Debug.LogWarning(LogTag + " SaiServer not found!");
+                return;
+            }
+
+            SaiServer.Instance.SetLoginData(this.accessToken, this.refreshToken, this.expiresIn, this.userData);
+
+            if (SaiServer.Instance.ShowDebug)
+                Debug.Log($"{LogTag} Pushed token to SaiAuth (master) | access expires in {this.expiresIn}s");
+        }
+
+        public void ClearAuthData()
+        {
+            LogButton("Clear Auth Data");
+            this.accessToken = "";
+            this.refreshToken = "";
+            this.expiresIn = 0;
+            this.userData = null;
+            this.loginTime = 0;
+            this.ownership = null;
+            this.reward = null;
+            this.lastError = "";
+            SetTwoFactorChallenge(null);
         }
     }
 }
