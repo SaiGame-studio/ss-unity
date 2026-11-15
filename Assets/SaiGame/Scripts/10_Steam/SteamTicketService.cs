@@ -37,6 +37,10 @@ namespace SaiGame.Services
         [Tooltip("Maximum time to wait for Steam to return a Web API ticket.")]
         [SerializeField] private float ticketTimeoutSeconds = 30f;
 
+        private double retryAvailableAt;
+        public bool HasRetryAfter => retryAvailableAt > 0;
+        public double RetryAfterSeconds => Math.Max(0, retryAvailableAt - Time.realtimeSinceStartupAsDouble);
+
         private Coroutine operation;
         private ISteamTicketProvider activeProvider;
 
@@ -141,7 +145,8 @@ namespace SaiGame.Services
         {
             string response = null;
             string error = null;
-            yield return SteamBackendTransport.Post(endpoint, JsonUtility.ToJson(request), value => response = value, value => error = value);
+            yield return SteamBackendTransport.Post(endpoint, JsonUtility.ToJson(request), value => response = value, value => error = value,
+                details => retryAvailableAt = Time.realtimeSinceStartupAsDouble + Math.Max(0, details.retry_after_seconds));
             T result = null;
             if (error == null)
             {
@@ -203,6 +208,7 @@ namespace SaiGame.Services
         {
             isBusy = true;
             lastError = "";
+            retryAvailableAt = 0;
         }
 
         protected virtual void FinishOperation()

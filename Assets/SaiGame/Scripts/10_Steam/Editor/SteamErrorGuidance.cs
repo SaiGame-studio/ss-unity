@@ -35,7 +35,7 @@ namespace SaiGame.Services
                 case InvalidTwoFactorCode: return "The code is invalid, expired, or already used. Enter a new code.";
                 case LinkReauthRequired: return "Your sign-in is older than 10 minutes. Logout, sign in again in step 2, then press Link Steam.";
                 case LinkConflict: return "This Steam account or this Sai account is already linked to another account. Unlinking is done on Sai Play.";
-                case RelinkCooldown: return "This Steam account or this Sai account was unlinked less than 24 hours ago. Link the same pair again, or wait.";
+                case RelinkCooldown: return "This Steam account or this Sai account is waiting for the server-configured relink cooldown. Link the same pair again, or wait.";
                 case LinkBlocked: return "This Steam account was linked before to a banned Sai account and cannot be linked.";
                 case GameNotOwned: return "This Steam account does not own the game.";
                 case NotLoggedOn: return "Start the Steam client and sign in to Steam, then try again.";

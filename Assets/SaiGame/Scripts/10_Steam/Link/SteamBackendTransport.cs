@@ -9,9 +9,10 @@ namespace SaiGame.Services
     // Authentication uses default TLS validation and never logs tickets/tokens.
     public static class SteamBackendTransport
     {
-        public static IEnumerator Post(string endpoint, string body, Action<string> onSuccess, Action<string> onError)
+        public static IEnumerator Post(string endpoint, string body, Action<string> onSuccess, Action<string> onError,
+            Action<SteamErrorResponse> onErrorDetails = null)
         {
-            return Send(UnityWebRequest.kHttpVerbPOST, endpoint, body, onSuccess, onError);
+            return Send(UnityWebRequest.kHttpVerbPOST, endpoint, body, onSuccess, onError, onErrorDetails);
         }
 
         public static IEnumerator Get(string endpoint, Action<string> onSuccess, Action<string> onError)
@@ -19,7 +20,8 @@ namespace SaiGame.Services
             return Send(UnityWebRequest.kHttpVerbGET, endpoint, null, onSuccess, onError);
         }
 
-        private static IEnumerator Send(string method, string endpoint, string body, Action<string> onSuccess, Action<string> onError)
+        private static IEnumerator Send(string method, string endpoint, string body, Action<string> onSuccess, Action<string> onError,
+            Action<SteamErrorResponse> onErrorDetails = null)
         {
             var server = SaiServer.Instance;
             if (server == null) { onError?.Invoke("SAI_SERVER_GAME_REQUIRED"); yield break; }
@@ -50,7 +52,11 @@ namespace SaiGame.Services
                 try
                 {
                     var error = JsonUtility.FromJson<SteamErrorResponse>(request.downloadHandler.text);
-                    if (error != null && !string.IsNullOrEmpty(error.message_code)) code = error.message_code;
+                    if (error != null && !string.IsNullOrEmpty(error.message_code))
+                    {
+                        code = error.message_code;
+                        onErrorDetails?.Invoke(error);
+                    }
                 }
                 catch (Exception) { /* Non-JSON gateway errors use the fallback code. */ }
                 onError?.Invoke(code);

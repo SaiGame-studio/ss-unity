@@ -100,7 +100,19 @@ namespace SaiGame.Services
         public static void DrawLastError(SteamTicketService service)
         {
             if (string.IsNullOrEmpty(service.LastError)) return;
-            EditorGUILayout.HelpBox(service.LastError + "\n" + SteamErrorGuidance.For(service.LastError), MessageType.Error);
+            string guidance = SteamErrorGuidance.For(service.LastError);
+            if (service.LastError == SteamErrorGuidance.RelinkCooldown)
+            {
+                double seconds = service.RetryAfterSeconds;
+                if (seconds > 0)
+                {
+                    var remaining = System.TimeSpan.FromSeconds(System.Math.Ceiling(seconds));
+                    guidance = $"Wait {remaining.Days}d {remaining.Hours}h {remaining.Minutes}m {remaining.Seconds}s before linking a different account. You can link the same pair again now.";
+                }
+                else if (service.HasRetryAfter)
+                    guidance = "The wait has ended. Press Link Steam to try again.";
+            }
+            EditorGUILayout.HelpBox(service.LastError + "\n" + guidance, MessageType.Error);
         }
 
         // A ✔ / ✘ status line; message may use rich text.
