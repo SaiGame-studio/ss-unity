@@ -47,8 +47,7 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("steam app id", EditorStyles.boldLabel);
             bool appIdReady = SteamEditorUtility.DrawAppId(steamLogin, server);
 
-            using (new EditorGUI.DisabledScope(!appIdReady))
-                this.DrawSignIn(steamLogin, server);
+            this.DrawSignIn(steamLogin, server, appIdReady);
 
             if (steamLogin.IsBusy && GUILayout.Button("Cancel", EditorStyles.miniButton))
                 steamLogin.Cancel();
@@ -65,15 +64,16 @@ namespace SaiGame.Services
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void DrawSignIn(SteamLogin steamLogin, SaiServer server)
+        private void DrawSignIn(SteamLogin steamLogin, SaiServer server, bool appIdReady)
         {
             SteamEditorUtility.DrawProviderProblems(steamLogin);
             SteamLink steamLink = server != null ? server.SteamLink : steamLogin.GetComponent<SteamLink>();
             bool busy = steamLogin.IsBusy || (steamLink != null && steamLink.IsBusy);
+            bool operationsDisabled = !appIdReady || busy;
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("step 1: check steam link", EditorStyles.boldLabel);
-            using (new EditorGUI.DisabledScope(!Application.isPlaying || busy))
+            using (new EditorGUI.DisabledScope(!Application.isPlaying || operationsDisabled))
             {
                 if (SteamEditorUtility.SteamButton("Check Link", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
                     steamLogin.CheckLinked(linked => SteamEditorUtility.LogInfo(linked ? "Steam account is linked" : "Steam account is not linked"),
@@ -84,13 +84,11 @@ namespace SaiGame.Services
             serializedObject.Update();
             EditorGUILayout.Space(10);
             SerializedProperty autoSignIn = serializedObject.FindProperty("autoSignInOnCheckLinkSuccess");
-            EditorGUILayout.BeginHorizontal();
-            autoSignIn.boolValue = EditorGUILayout.Toggle(GUIContent.none, autoSignIn.boolValue, GUILayout.Width(18));
-            EditorGUILayout.LabelField("auto sign in on check link success", EditorStyles.wordWrappedLabel);
-            EditorGUILayout.EndHorizontal();
+            autoSignIn.boolValue = EditorGUILayout.ToggleLeft("auto sign in on check link success",
+                autoSignIn.boolValue, EditorStyles.wordWrappedLabel);
             serializedObject.ApplyModifiedProperties();
-            this.DrawStep2SignIn(steamLogin, busy);
-            this.DrawStep3ClaimGame(steamLogin, busy);
+            this.DrawStep2SignIn(steamLogin, operationsDisabled);
+            this.DrawStep3ClaimGame(steamLogin, operationsDisabled);
             if (!Application.isPlaying)
                 EditorGUILayout.HelpBox("Steam operations are available in Play Mode.", MessageType.None);
         }

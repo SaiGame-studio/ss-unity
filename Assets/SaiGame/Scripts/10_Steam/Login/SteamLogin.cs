@@ -30,7 +30,7 @@ namespace SaiGame.Services
         [SerializeField] protected SteamLinkState linkState;
         [SerializeField] protected string steamId;
         [Tooltip("Automatically sign in when Check Link confirms the Steam account is linked.")]
-        [SerializeField] private bool autoSignInOnCheckLinkSuccess = true;
+        [SerializeField] private bool autoSignInOnCheckLinkSuccess = false;
 
         [Header("Session")]
         [SerializeField] protected string accessToken;
