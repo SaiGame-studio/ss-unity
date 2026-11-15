@@ -294,7 +294,7 @@ namespace SaiGame.Services
                     || path == SteamLogin.SignInEndpoint
                     || path == SteamLogin.StatusEndpoint
                     || path == SteamLink.LinkEndpoint
-                    || path == SteamLink.ClaimEndpoint
+                    || path == SteamLogin.ClaimEndpoint
                     || path == gamePath + "/gamer-progress"))
                 || (method == "GET" && (path == "/api/v1/auth/me" || path == "/api/v1/time"
                     || path.StartsWith("/api/v1/client/auth/google/session/", StringComparison.Ordinal)
@@ -382,7 +382,7 @@ namespace SaiGame.Services
                 || path == SteamLogin.SignInEndpoint
                 || path == SteamLogin.StatusEndpoint
                 || path == SteamLink.LinkEndpoint
-                || path == SteamLink.ClaimEndpoint;
+                || path == SteamLogin.ClaimEndpoint;
         }
 
         // Certificate validation is skipped only for a local development server.

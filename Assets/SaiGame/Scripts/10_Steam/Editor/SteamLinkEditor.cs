@@ -40,15 +40,40 @@ namespace SaiGame.Services
             SteamLink steamLink = (SteamLink)target;
             SaiServer server = SteamEditorUtility.FindServer(steamLink);
 
-            EditorGUILayout.LabelField("step 1: steam app id", EditorStyles.boldLabel);
-            bool appIdReady = SteamEditorUtility.DrawAppId(steamLink, server);
+            SteamLogin steamLogin = server != null ? server.SteamLogin : steamLink.GetComponent<SteamLogin>();
+            SteamLinkState linkState = steamLogin != null ? steamLogin.LinkState : SteamLinkState.Unknown;
+            EditorGUILayout.BeginHorizontal();
+            switch (linkState)
+            {
+                case SteamLinkState.Linked:
+                    SteamEditorUtility.DrawStatus(true, "steam account linked");
+                    break;
+                case SteamLinkState.NotLinked:
+                    SteamEditorUtility.DrawStatus(false, "steam account not linked");
+                    break;
+                default:
+                    EditorGUILayout.LabelField("link status unknown: run Check Link");
+                    break;
+            }
+            GUILayout.FlexibleSpace();
+            SteamEditorUtility.DrawSelectButton(steamLogin, nameof(SteamLogin));
+            EditorGUILayout.EndHorizontal();
+            if (linkState == SteamLinkState.Linked)
+                EditorGUILayout.HelpBox("SteamLink is disabled because this Steam account is already linked. No further linking is needed. Continue with Sign In With Linked Steam in SteamLogin.", MessageType.Info);
+            EditorGUILayout.Space(10);
 
-            bool signedIn;
-            using (new EditorGUI.DisabledScope(!appIdReady))
-                signedIn = this.DrawStep2SignIn(server);
+            using (new EditorGUI.DisabledScope(!steamLink.CanLink))
+            {
+                EditorGUILayout.LabelField("step 1: steam app id", EditorStyles.boldLabel);
+                bool appIdReady = SteamEditorUtility.DrawAppId(steamLink, server);
 
-            using (new EditorGUI.DisabledScope(!appIdReady || !signedIn))
-                this.DrawStep3Link(steamLink);
+                bool signedIn;
+                using (new EditorGUI.DisabledScope(!appIdReady))
+                    signedIn = this.DrawStep2SignIn(server);
+
+                using (new EditorGUI.DisabledScope(!appIdReady || !signedIn))
+                    this.DrawStep3Link(steamLink);
+            }
 
             if (steamLink.IsBusy && GUILayout.Button("Cancel", EditorStyles.miniButton))
                 steamLink.Cancel();
@@ -130,9 +155,8 @@ namespace SaiGame.Services
             {
                 if (GUILayout.Button("Link Steam", GUILayout.Height(30)))
                     this.Link(steamLink);
-                if (GUILayout.Button("Claim Game", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
-                    steamLink.ClaimGame(result => SteamEditorUtility.LogResult("Claim Game checked", result), SteamEditorUtility.LogError);
             }
+            EditorGUILayout.HelpBox("Linking does not start a Steam game session or claim items. Sign in with SteamLogin after linking.", MessageType.Info);
         }
 
         // Signs in with the username and password set on the SaiAuth component (.env or its Inspector).

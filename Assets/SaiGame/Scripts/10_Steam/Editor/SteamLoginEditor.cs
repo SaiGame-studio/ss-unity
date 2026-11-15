@@ -67,10 +67,12 @@ namespace SaiGame.Services
 
         private void DrawSignIn(SteamLogin steamLogin, SaiServer server)
         {
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("sign in with linked steam", EditorStyles.boldLabel);
             SteamEditorUtility.DrawProviderProblems(steamLogin);
+            SteamLink steamLink = server != null ? server.SteamLink : steamLogin.GetComponent<SteamLink>();
+            bool busy = steamLogin.IsBusy || (steamLink != null && steamLink.IsBusy);
 
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("step 1: check steam link", EditorStyles.boldLabel);
             switch (steamLogin.LinkState)
             {
                 case SteamLinkState.Linked:
@@ -78,42 +80,66 @@ namespace SaiGame.Services
                     break;
                 case SteamLinkState.NotLinked:
                     SteamEditorUtility.DrawStatus(false, $"steam account not linked{SteamIdSuffix(steamLogin)}");
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.HelpBox("This Steam account is not linked to a Sai account. Link it with SteamLink first.", MessageType.Warning);
-                    SteamLink steamLink = server != null ? server.SteamLink : steamLogin.GetComponent<SteamLink>();
+                    EditorGUILayout.HelpBox("Complete the three steps in SteamLink, then return here to sign in.", MessageType.Info);
                     SteamEditorUtility.DrawSelectButton(steamLink, nameof(SteamLink));
-                    EditorGUILayout.EndHorizontal();
                     break;
                 default:
                     SteamEditorUtility.DrawStatus(false, "link not checked yet: press Check Link");
                     break;
             }
-
-            using (new EditorGUI.DisabledScope(!Application.isPlaying || steamLogin.IsBusy))
+            using (new EditorGUI.DisabledScope(!Application.isPlaying || busy))
             {
-                EditorGUILayout.BeginHorizontal();
                 if (SteamEditorUtility.SteamButton("Check Link", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
                     steamLogin.CheckLinked(linked => SteamEditorUtility.LogInfo(linked ? "Steam account is linked" : "Steam account is not linked"),
                         SteamEditorUtility.LogError);
-                using (new EditorGUI.DisabledScope(steamLogin.LinkState != SteamLinkState.Linked))
-                {
-                    if (SteamEditorUtility.SteamButton("Sign In With Linked Steam", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
-                        steamLogin.SignIn(result => SteamEditorUtility.LogResult("Signed in with the linked Steam account", result),
-                            SteamEditorUtility.LogError);
-                }
-                EditorGUILayout.EndHorizontal();
+            }
 
-                // Pushes the session from the last sign-in into SaiAuth again, as on GoogleBackendLogin.
+            this.DrawStep2SignIn(steamLogin, busy);
+            this.DrawStep3ClaimGame(steamLogin, busy);
+            if (!Application.isPlaying)
+                EditorGUILayout.HelpBox("Steam operations are available in Play Mode.", MessageType.None);
+        }
+
+        private void DrawStep2SignIn(SteamLogin steamLogin, bool busy)
+        {
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("step 2: sign in with linked steam", EditorStyles.boldLabel);
+            SteamEditorUtility.DrawStatus(steamLogin.HasActiveSteamSession, steamLogin.HasActiveSteamSession
+                ? "signed in with Steam: game session ready"
+                : "Steam sign-in required before Claim Game");
+            using (new EditorGUI.DisabledScope(!Application.isPlaying || busy
+                || steamLogin.LinkState != SteamLinkState.Linked))
+            {
+                if (SteamEditorUtility.SteamButton("Sign In With Linked Steam", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
+                    steamLogin.SignIn(result => SteamEditorUtility.LogResult("Signed in with the linked Steam account", result),
+                        SteamEditorUtility.LogError);
+                if (steamLogin.RequiresTwoFactor) this.DrawTwoFactor(steamLogin);
                 using (new EditorGUI.DisabledScope(!steamLogin.IsAuthenticated))
                 {
                     if (SteamEditorUtility.SteamButton("Set Token To SaiAuth", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
                         steamLogin.SetTokenToSaiAuth();
                 }
             }
-            if (!Application.isPlaying)
-                EditorGUILayout.HelpBox("Check Link and sign in appear in Play Mode.", MessageType.None);
+        }
 
-            if (steamLogin.RequiresTwoFactor) this.DrawTwoFactor(steamLogin);
+        private void DrawStep3ClaimGame(SteamLogin steamLogin, bool busy)
+        {
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("step 3: claim game", EditorStyles.boldLabel);
+            string claimStatus = steamLogin.ClaimGameResult?.status;
+            bool claimed = claimStatus == "granted" || claimStatus == "already_granted"
+                || claimStatus == "transferred";
+            SteamEditorUtility.DrawStatus(claimed, claimed
+                ? $"game claimed ({claimStatus})"
+                : string.IsNullOrEmpty(claimStatus) ? "claim status unknown: sign in or press Claim Game"
+                : $"game not claimed ({claimStatus})");
+            using (new EditorGUI.DisabledScope(!Application.isPlaying || busy
+                || steamLogin.LinkState != SteamLinkState.Linked || !steamLogin.HasActiveSteamSession || claimed))
+            {
+                if (SteamEditorUtility.SteamButton("Claim Game", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
+                    steamLogin.ClaimGame(result => SteamEditorUtility.LogResult("Claim Game checked", result),
+                        SteamEditorUtility.LogError);
+            }
         }
 
         // Shown only when the linked Sai account has 2FA and the server asks for a code.

@@ -104,7 +104,7 @@ with Google/password, then link Steam once:
 
 ```csharp
 SaiServer.Instance.SteamLink.Link(
-    result => UnityEngine.Debug.Log("Steam linked, claim game: " + result.reward.status),
+    result => UnityEngine.Debug.Log("Steam linked. Sign in with SteamLogin next."),
     error => UnityEngine.Debug.LogWarning(error));
 ```
 
@@ -117,19 +117,21 @@ Linking requires proof of the account owner, not only a session:
   10 minutes. A restored or refreshed old session gets
   `STEAM_LINK_REAUTH_REQUIRED`; sign in again, then link.
 
-After linking, `SignIn` signs into that same account. Linking never merges
+After linking, call `SteamLogin.SignIn` to obtain the Steam game session.
+The Google/password session used for linking cannot be used by `SteamLogin.ClaimGame`.
+Linking does not claim items. `SignIn` signs into that same account. Linking never merges
 or transfers accounts. A conflict requires account
 resolution; repeatedly retrying cannot overwrite the existing link.
 
 ## Claim Game
 
 Claim Game grants the items the studio set in Game Settings > Steam to a player
-whose Steam account owns the game. It runs automatically on link and on sign-in.
+whose Steam account owns the game. It runs automatically on Steam sign-in, never on link.
 Call it to retry a pending Claim Game after freeing inventory space, or after
-restoring an existing SaiAuth session:
+signing in with `SteamLogin`. The active SaiAuth token must match the SteamLogin token:
 
 ```csharp
-SaiServer.Instance.SteamLink.ClaimGame(
+SaiServer.Instance.SteamLogin.ClaimGame(
     result => UnityEngine.Debug.Log("Claim game: " + result.reward.status),
     error => UnityEngine.Debug.LogWarning(error));
 ```
@@ -143,9 +145,9 @@ the next linked Sai account receives exactly that (status `transferred`); items
 already used do not move. The backend checks the
 inventory transaction log; there is no code to enter or send. Editing the items
 does not grant again to players who already claimed the game. The JSON key of
-the result is still `reward`. Family Sharing can authenticate with an active
-license but cannot Claim Game. Steam key activations with permanent ownership
-also qualify; the response is not a purchase receipt.
+the result is still `reward`. Claim Game requires `owns_app` or `permanent` to be
+true; a matching owner SteamID is not required. Active Family Sharing licenses
+also qualify. Canceled licenses remain rejected; the response is not a purchase receipt.
 
 The Steam transport requires HTTPS (HTTP is allowed only for loopback local
 development), validates TLS certificates, rejects redirects, and returns the
@@ -179,16 +181,27 @@ previous one is done:
   SteamAPI runs as a different AppID.
 - **step 2: sai server sign in**: whether a Sai account is signed in, with
   Password Login (`SaiAuth`) and Google Login (`GoogleBackendLogin`).
-- **step 3: link steam**: Link Steam and Claim Game. A code field appears
+- **step 3: link steam**: Link Steam only. Sign in with SteamLogin afterwards. A code field appears
   only when the server asks for one (2FA).
 
-`SteamLogin` signs in with the linked account:
+At game entry, call `SteamLogin.CheckLinked` first. Unknown or failed checks keep
+linking and sign-in locked. Only `NotLinked` unlocks the three SteamLink steps;
+`Linked` locks SteamLink and unlocks Steam sign-in. Runtime calls enforce these
+conditions too (`STEAM_LINK_CHECK_REQUIRED`, `STEAM_ALREADY_LINKED`, or `STEAM_NOT_LINKED`).
+
+`SteamLogin` signs in with the linked account through three Inspector steps:
 
 - **steam app id**: as in `SteamLink`.
-- **sign in with linked steam**: Check Link asks whether the running Steam
+- **step 1: check steam link**: Check Link asks whether the running Steam
   account is linked. Sign In With Linked Steam is enabled only when it is;
   otherwise the Inspector says the account is not linked, with a button to
   select `SteamLink`.
+- **step 2: sign in with linked steam**: available only after a successful link
+  check or linking. Complete 2FA here if required. Sign-in automatically sets the
+  Steam session on SaiAuth and attempts Claim Game.
+- **step 3: claim game**: shows the latest SteamLogin claim result. Claim Game is
+  disabled for `granted`, `already_granted`, and `transferred`, and until the active
+  session uses the SteamLogin token. Unknown status is not treated as claimed.
 
 SteamAPI starts automatically on the first Steam request. Cancel appears only
 while a request runs; **last result** and **steam settings** are collapsed

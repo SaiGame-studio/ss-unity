@@ -12,6 +12,7 @@ namespace SaiGame.Services
     {
         public const string SignInEndpoint = "/api/v1/player/auth/steam";
         public const string StatusEndpoint = "/api/v1/player/auth/steam/status";
+        public const string ClaimEndpoint = "/api/v1/player/auth/steam/rewards/claim";
         private const string TwoFactorEndpoint = "/api/v1/auth/2fa/verify";
         private const string TwoFactorRequiredCode = "TWO_FACTOR_REQUIRED";
         private const string NotLinkedCode = "STEAM_NOT_LINKED";
@@ -39,6 +40,8 @@ namespace SaiGame.Services
         public SteamLinkState LinkState => linkState;
         public string SteamId => steamId;
         public bool IsAuthenticated => !string.IsNullOrEmpty(accessToken);
+        public bool HasActiveSteamSession => IsAuthenticated && SaiServer.Instance != null
+            && SaiServer.Instance.IsAuthenticated && SaiServer.Instance.AccessToken == accessToken;
         public bool RequiresTwoFactor => challenge != null && DateTime.UtcNow < challengeExpiresAt;
         public string AccessToken => accessToken;
         public string RefreshToken => refreshToken;
@@ -49,6 +52,8 @@ namespace SaiGame.Services
         public void CheckLinked(Action<bool> onResult = null, Action<string> onError = null)
         {
             LogButton("Check Link");
+            if (!CanStart(false, onError)) return;
+            this.linkState = SteamLinkState.Unknown;
             StartTicketOperation(false, onError, ticket =>
                 PostTicket<SteamLinkStatusResponse>(StatusEndpoint, NewTicketRequest(ticket), result =>
                 {
@@ -65,8 +70,23 @@ namespace SaiGame.Services
         {
             LogButton("Sign In With Linked Steam");
             if (IsBusy) { Fail("STEAM_OPERATION_IN_PROGRESS", onError); return; }
+            if (linkState != SteamLinkState.Linked) { Fail(linkState == SteamLinkState.NotLinked ? NotLinkedCode : "STEAM_LINK_CHECK_REQUIRED", onError); return; }
             ResetSignInState();
             StartTicketOperation(false, onError, ticket => SendSignIn(ticket, onSuccess, onError));
+        }
+
+        // Retries Claim Game and keeps its result on this login component.
+        public void ClaimGame(Action<SteamLinkResponse> onSuccess = null, Action<string> onError = null)
+        {
+            LogButton("Claim Game");
+            if (linkState != SteamLinkState.Linked || !HasActiveSteamSession) { Fail("STEAM_LOGIN_REQUIRED", onError); return; }
+            StartTicketOperation(true, onError, ticket =>
+                PostTicket<SteamLinkResponse>(ClaimEndpoint, NewTicketRequest(ticket), result =>
+                {
+                    ApplyClaimGameResult(result.ownership, result.reward);
+                    Succeed("Claim Game", ClaimGameStatus(result.reward));
+                    onSuccess?.Invoke(result);
+                }, onError));
         }
 
         // Games using another Steam wrapper can supply a fresh ticket directly.
@@ -74,6 +94,7 @@ namespace SaiGame.Services
         public void SignInWithTicket(string hexTicket, Action<SteamLinkResponse> onSuccess = null, Action<string> onError = null)
         {
             if (!CanStart(false, onError)) return;
+            if (linkState != SteamLinkState.Linked) { Fail(linkState == SteamLinkState.NotLinked ? NotLinkedCode : "STEAM_LINK_CHECK_REQUIRED", onError); return; }
             if (string.IsNullOrEmpty(hexTicket)) { Fail("STEAM_INVALID_TICKET", onError); return; }
             ResetSignInState();
             StartOperation(SendSignIn(hexTicket, onSuccess, onError));
@@ -156,7 +177,7 @@ namespace SaiGame.Services
             {
                 BeginOperation();
                 yield return RequestTicketThen(provider, ticket =>
-                    PostTicket<SteamLinkResponse>(SteamLink.ClaimEndpoint, NewTicketRequest(ticket),
+                    PostTicket<SteamLinkResponse>(ClaimEndpoint, NewTicketRequest(ticket),
                         claimed => { completed.ownership = claimed.ownership; completed.reward = claimed.reward; },
                         errorCode => { }, false),
                     errorCode => { }, false);

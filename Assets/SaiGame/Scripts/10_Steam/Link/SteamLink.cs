@@ -10,11 +10,12 @@ namespace SaiGame.Services
     public class SteamLink : SteamTicketService
     {
         public const string LinkEndpoint = "/api/v1/player/auth/steam/link";
-        public const string ClaimEndpoint = "/api/v1/player/auth/steam/rewards/claim";
 
         [SerializeField] protected SteamLogin steamLogin;
 
         protected override string LogTag => "[SteamLink]";
+        public bool CanLink => steamLogin != null && !steamLogin.IsBusy
+            && steamLogin.LinkState == SteamLinkState.NotLinked;
 
         protected override void LoadComponents()
         {
@@ -30,6 +31,12 @@ namespace SaiGame.Services
             string twoFactorCode = null, string recoveryCode = null)
         {
             LogButton("Link Steam");
+            if (!CanLink)
+            {
+                Fail(this.steamLogin != null && this.steamLogin.LinkState == SteamLinkState.Linked
+                    ? "STEAM_ALREADY_LINKED" : "STEAM_LINK_CHECK_REQUIRED", onError);
+                return;
+            }
             StartTicketOperation(true, onError, ticket =>
             {
                 SteamTicketRequest request = NewTicketRequest(ticket);
@@ -37,26 +44,15 @@ namespace SaiGame.Services
                 request.recovery_code = recoveryCode?.Trim();
                 return PostTicket<SteamLinkResponse>(LinkEndpoint, request, result =>
                 {
-                    ApplyClaimGameResult(result.ownership, result.reward);
+                    ClearResult();
+                    this.ownership = result.ownership;
                     if (this.steamLogin == null) this.steamLogin = GetComponent<SteamLogin>();
                     if (this.steamLogin != null && result.ownership != null) this.steamLogin.MarkLinked(result.ownership.steam_id);
-                    Succeed("Link Steam", ClaimGameStatus(result.reward));
+                    Succeed("Link Steam", "linked: sign in with SteamLogin to start the game session");
                     onSuccess?.Invoke(result);
                 }, onError);
             });
         }
 
-        // Claim Game: grants the game's Steam owner items to the signed-in account.
-        public void ClaimGame(Action<SteamLinkResponse> onSuccess = null, Action<string> onError = null)
-        {
-            LogButton("Claim Game");
-            StartTicketOperation(true, onError, ticket =>
-                PostTicket<SteamLinkResponse>(ClaimEndpoint, NewTicketRequest(ticket), result =>
-                {
-                    ApplyClaimGameResult(result.ownership, result.reward);
-                    Succeed("Claim Game", ClaimGameStatus(result.reward));
-                    onSuccess?.Invoke(result);
-                }, onError));
-        }
     }
 }

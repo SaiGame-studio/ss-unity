@@ -714,8 +714,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2869456026570005504}
-  - component: {fileID: 2302586159097302283}
   - component: {fileID: 7419283546617730215}
+  - component: {fileID: 2302586159097302283}
   - component: {fileID: 5293678567489229214}
   - component: {fileID: 276369035625675369}
   m_Layer: 0
@@ -740,32 +740,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 8277413932139228352}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2302586159097302283
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5773730568387480150}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 347ad581da8345e983fc74ad8293f290, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SteamLink
-  isBusy: 0
-  ownership:
-    steam_id: 
-    app_id: 0
-    owns_app: 0
-    permanent: 0
-    owner_steam_id: 
-  reward:
-    status: 
-    message_code: 
-  lastError: 
-  ticketProvider: {fileID: 5293678567489229214}
-  ticketTimeoutSeconds: 30
-  steamLogin: {fileID: 7419283546617730215}
 --- !u!114 &7419283546617730215
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -785,7 +759,7 @@ MonoBehaviour:
     owns_app: 0
     permanent: 0
     owner_steam_id: 
-  reward:
+  claimGame:
     status: 
     message_code: 
   lastError: 
@@ -806,6 +780,32 @@ MonoBehaviour:
     created_at: 0
   signInTime: 0
   requiresTwoFactor: 0
+--- !u!114 &2302586159097302283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5773730568387480150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 347ad581da8345e983fc74ad8293f290, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.Services.SteamLink
+  isBusy: 0
+  ownership:
+    steam_id: 
+    app_id: 0
+    owns_app: 0
+    permanent: 0
+    owner_steam_id: 
+  claimGame:
+    status: 
+    message_code: 
+  lastError: 
+  ticketProvider: {fileID: 5293678567489229214}
+  ticketTimeoutSeconds: 30
+  steamLogin: {fileID: 7419283546617730215}
 --- !u!114 &5293678567489229214
 MonoBehaviour:
   m_ObjectHideFlags: 0
