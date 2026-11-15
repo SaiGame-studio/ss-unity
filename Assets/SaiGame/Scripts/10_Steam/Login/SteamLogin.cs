@@ -13,6 +13,12 @@ namespace SaiGame.Services
         public const string SignInEndpoint = "/api/v1/player/auth/steam";
         public const string StatusEndpoint = "/api/v1/player/auth/steam/status";
         public const string ClaimEndpoint = "/api/v1/player/auth/steam/rewards/claim";
+        public const string CheckClaimEndpoint = "/api/v1/player/auth/steam/rewards/check";
+        private SteamClaimStatus checkedClaim;
+        private string checkedClaimToken;
+        public SteamClaimStatus CheckedClaim => HasActiveSteamSession && checkedClaimToken == accessToken ? checkedClaim : null;
+        public bool CanClaimGame => CheckedClaim != null && CheckedClaim.can_claim;
+
         private const string TwoFactorEndpoint = "/api/v1/auth/2fa/verify";
         private const string TwoFactorRequiredCode = "TWO_FACTOR_REQUIRED";
         private const string NotLinkedCode = "STEAM_NOT_LINKED";
@@ -54,6 +60,8 @@ namespace SaiGame.Services
             LogButton("Check Link");
             if (!CanStart(false, onError)) return;
             this.linkState = SteamLinkState.Unknown;
+            checkedClaim = null;
+            checkedClaimToken = null;
             StartTicketOperation(false, onError, ticket =>
                 PostTicket<SteamLinkStatusResponse>(StatusEndpoint, NewTicketRequest(ticket), result =>
                 {
@@ -75,11 +83,36 @@ namespace SaiGame.Services
             StartTicketOperation(false, onError, ticket => SendSignIn(ticket, onSuccess, onError));
         }
 
+        // Reads claim status without granting items. A failed check leaves Claim Game disabled.
+        public void CheckClaim(Action<SteamClaimStatus> onSuccess = null, Action<string> onError = null)
+        {
+            LogButton("Check Claim");
+            if (!CanStart(true, onError)) return;
+            ClearResult();
+            checkedClaim = null;
+            checkedClaimToken = null;
+            if (linkState != SteamLinkState.Linked || !HasActiveSteamSession) { Fail("STEAM_LOGIN_REQUIRED", onError); return; }
+            string sessionToken = accessToken;
+            StartTicketOperation(true, onError, ticket =>
+                PostTicket<SteamClaimStatus>(CheckClaimEndpoint, NewTicketRequest(ticket), result =>
+                {
+                    if (!HasActiveSteamSession || accessToken != sessionToken) { Fail("STEAM_LOGIN_REQUIRED", onError); return; }
+                    checkedClaim = result;
+                    checkedClaimToken = sessionToken;
+                    Succeed("Check Claim", result.claimed ? "already claimed" : result.can_claim ? "ready to claim" : result.message_code);
+                    onSuccess?.Invoke(result);
+                }, onError));
+        }
+
         // Retries Claim Game and keeps its result on this login component.
         public void ClaimGame(Action<SteamLinkResponse> onSuccess = null, Action<string> onError = null)
         {
             LogButton("Claim Game");
             if (linkState != SteamLinkState.Linked || !HasActiveSteamSession) { Fail("STEAM_LOGIN_REQUIRED", onError); return; }
+            if (!CanStart(true, onError)) return;
+            if (!CanClaimGame) { Fail("STEAM_CLAIM_CHECK_REQUIRED", onError); return; }
+            checkedClaim = null;
+            checkedClaimToken = null;
             StartTicketOperation(true, onError, ticket =>
                 PostTicket<SteamLinkResponse>(ClaimEndpoint, NewTicketRequest(ticket), result =>
                 {
@@ -190,6 +223,8 @@ namespace SaiGame.Services
         {
             SetTwoFactorChallenge(null);
             ClearResult();
+            checkedClaim = null;
+            checkedClaimToken = null;
         }
 
         private void SetTwoFactorChallenge(LoginResponse value)
@@ -201,6 +236,8 @@ namespace SaiGame.Services
 
         public void SetLoginData(string access, string refresh, int expires, UserData user = null)
         {
+            checkedClaim = null;
+            checkedClaimToken = null;
             this.accessToken = access;
             this.refreshToken = refresh;
             this.expiresIn = expires;
@@ -232,6 +269,8 @@ namespace SaiGame.Services
             this.userData = null;
             this.signInTime = 0;
             ClearResult();
+            checkedClaim = null;
+            checkedClaimToken = null;
             SetTwoFactorChallenge(null);
         }
     }

@@ -113,19 +113,27 @@ namespace SaiGame.Services
         {
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("step 3: claim game", EditorStyles.boldLabel);
+            SteamClaimStatus check = steamLogin.CheckedClaim;
             string claimStatus = steamLogin.ClaimGameResult?.status;
-            bool claimed = claimStatus == "granted" || claimStatus == "already_granted"
-                || claimStatus == "transferred";
-            SteamEditorUtility.DrawStatus(claimed, claimed
-                ? $"game claimed ({claimStatus})"
-                : string.IsNullOrEmpty(claimStatus) ? "claim status unknown: sign in or press Claim Game"
-                : $"game not claimed ({claimStatus})");
+            bool claimed = check != null && check.claimed || claimStatus == "granted"
+                || claimStatus == "already_granted" || claimStatus == "transferred";
+            SteamEditorUtility.DrawStatus(claimed, claimed ? "game already claimed"
+                : check == null ? "claim status unknown: press Check Claim"
+                : check.can_claim ? "ready to claim" : $"cannot claim ({check.message_code})");
             using (new EditorGUI.DisabledScope(!Application.isPlaying || busy
-                || steamLogin.LinkState != SteamLinkState.Linked || !steamLogin.HasActiveSteamSession || claimed))
+                || steamLogin.LinkState != SteamLinkState.Linked || !steamLogin.HasActiveSteamSession))
             {
-                if (SteamEditorUtility.SteamButton("Claim Game", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
-                    steamLogin.ClaimGame(result => SteamEditorUtility.LogResult("Claim Game checked", result),
+                EditorGUILayout.BeginHorizontal();
+                if (SteamEditorUtility.SteamButton("Check Claim", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
+                    steamLogin.CheckClaim(result => SteamEditorUtility.LogInfo(result.claimed ? "Game already claimed" : result.can_claim ? "Game ready to claim" : result.message_code),
                         SteamEditorUtility.LogError);
+                using (new EditorGUI.DisabledScope(!steamLogin.CanClaimGame || steamLogin.IsBusy))
+                {
+                    if (SteamEditorUtility.SteamButton("Claim Game", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
+                        steamLogin.ClaimGame(result => SteamEditorUtility.LogResult("Claim Game completed", result),
+                            SteamEditorUtility.LogError);
+                }
+                EditorGUILayout.EndHorizontal();
             }
         }
 
