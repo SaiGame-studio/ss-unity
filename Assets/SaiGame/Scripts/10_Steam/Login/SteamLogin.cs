@@ -167,21 +167,8 @@ namespace SaiGame.Services
             var completed = new SteamLinkResponse
             {
                 user = result.user, access_token = result.access_token,
-                refresh_token = result.refresh_token, expires_in = result.expires_in,
-                reward = new SteamClaimGameResult { status = "pending", message_code = "STEAM_REWARD_PENDING" }
+                refresh_token = result.refresh_token, expires_in = result.expires_in
             };
-            // Obtain a fresh ticket after 2FA. Optional Claim Game failure must not
-            // turn a completed sign-in into failure.
-            ISteamTicketProvider provider = TicketProvider;
-            if (provider != null)
-            {
-                BeginOperation();
-                yield return RequestTicketThen(provider, ticket =>
-                    PostTicket<SteamLinkResponse>(ClaimEndpoint, NewTicketRequest(ticket),
-                        claimed => { completed.ownership = claimed.ownership; completed.reward = claimed.reward; },
-                        errorCode => { }, false),
-                    errorCode => { }, false);
-            }
             ApplyClaimGameResult(completed.ownership, completed.reward);
             OnSignedIn?.Invoke(completed);
             Succeed("Verify Two Factor", ClaimGameStatus(completed.reward));

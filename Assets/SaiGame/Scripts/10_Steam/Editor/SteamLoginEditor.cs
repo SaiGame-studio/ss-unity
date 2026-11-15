@@ -73,20 +73,8 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("step 1: check steam link", EditorStyles.boldLabel);
-            switch (steamLogin.LinkState)
-            {
-                case SteamLinkState.Linked:
-                    SteamEditorUtility.DrawStatus(true, $"steam account linked{SteamIdSuffix(steamLogin)}");
-                    break;
-                case SteamLinkState.NotLinked:
-                    SteamEditorUtility.DrawStatus(false, $"steam account not linked{SteamIdSuffix(steamLogin)}");
-                    EditorGUILayout.HelpBox("Complete the three steps in SteamLink, then return here to sign in.", MessageType.Info);
-                    SteamEditorUtility.DrawSelectButton(steamLink, nameof(SteamLink));
-                    break;
-                default:
-                    SteamEditorUtility.DrawStatus(false, "link not checked yet: press Check Link");
-                    break;
-            }
+            if (steamLogin.LinkState == SteamLinkState.NotLinked)
+                EditorGUILayout.HelpBox("Complete the three steps in SteamLink, then return here to sign in.", MessageType.Info);
             using (new EditorGUI.DisabledScope(!Application.isPlaying || busy))
             {
                 if (SteamEditorUtility.SteamButton("Check Link", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
@@ -94,6 +82,7 @@ namespace SaiGame.Services
                         SteamEditorUtility.LogError);
             }
 
+            this.DrawLinkStatus(steamLogin, server);
             this.DrawStep2SignIn(steamLogin, busy);
             this.DrawStep3ClaimGame(steamLogin, busy);
             if (!Application.isPlaying)
@@ -161,9 +150,25 @@ namespace SaiGame.Services
             EditorGUILayout.EndHorizontal();
         }
 
-        private static string SteamIdSuffix(SteamLogin steamLogin)
+        private void DrawLinkStatus(SteamLogin steamLogin, SaiServer server)
         {
-            return string.IsNullOrEmpty(steamLogin.SteamId) ? "" : $" (steam id <b>{steamLogin.SteamId}</b>)";
+            SteamLink steamLink = server != null ? server.SteamLink : steamLogin.GetComponent<SteamLink>();
+            EditorGUILayout.BeginHorizontal();
+            switch (steamLogin.LinkState)
+            {
+                case SteamLinkState.Linked:
+                    SteamEditorUtility.DrawStatus(true, "steam account linked");
+                    break;
+                case SteamLinkState.NotLinked:
+                    SteamEditorUtility.DrawStatus(false, "steam account not linked");
+                    break;
+                default:
+                    EditorGUILayout.LabelField("link status unknown: run Check Link");
+                    break;
+            }
+            GUILayout.FlexibleSpace();
+            SteamEditorUtility.DrawSelectButton(steamLink, nameof(SteamLink));
+            EditorGUILayout.EndHorizontal();
         }
     }
 }

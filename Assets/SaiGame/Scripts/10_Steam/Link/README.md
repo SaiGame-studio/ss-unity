@@ -94,9 +94,8 @@ as needed. `Ownership` and `ClaimGameResult` expose the latest backend result.
 
 If `RequiresTwoFactor` is true, call `VerifyTwoFactor(code, ...)` on
 `SteamLogin`, not on the separate password login component. The Steam
-component completes the existing backend challenge and attempts Claim Game
-with a fresh ticket before firing `OnSignedIn`. A failed Claim Game attempt
-does not invalidate a successful sign-in; inspect `ClaimGameResult.status` and retry.
+component completes the existing backend challenge before firing `OnSignedIn`.
+Neither sign-in nor 2FA performs Claim Game. Call `ClaimGame` explicitly after sign-in.
 
 Steam never creates an account. If the SteamID is not linked yet, the error
 callback receives `STEAM_NOT_LINKED`. Ask the player to sign in or register
@@ -126,7 +125,7 @@ resolution; repeatedly retrying cannot overwrite the existing link.
 ## Claim Game
 
 Claim Game grants the items the studio set in Game Settings > Steam to a player
-whose Steam account owns the game. It runs automatically on Steam sign-in, never on link.
+whose Steam account owns the game. It runs only through an explicit `SteamLogin.ClaimGame` call.
 Call it to retry a pending Claim Game after freeing inventory space, or after
 signing in with `SteamLogin`. The active SaiAuth token must match the SteamLogin token:
 
@@ -198,7 +197,7 @@ conditions too (`STEAM_LINK_CHECK_REQUIRED`, `STEAM_ALREADY_LINKED`, or `STEAM_N
   select `SteamLink`.
 - **step 2: sign in with linked steam**: available only after a successful link
   check or linking. Complete 2FA here if required. Sign-in automatically sets the
-  Steam session on SaiAuth and attempts Claim Game.
+  Steam session on SaiAuth without claiming items.
 - **step 3: claim game**: shows the latest SteamLogin claim result. Claim Game is
   disabled for `granted`, `already_granted`, and `transferred`, and until the active
   session uses the SteamLogin token. Unknown status is not treated as claimed.
