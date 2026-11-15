@@ -7,7 +7,7 @@ namespace SaiGame.Services
 {
     // Shared base of SteamLink and SteamLogin: gets a Steam Web API ticket from
     // the running Steam client, sends it to the Sai Server, and tracks the busy
-    // state, last error, ownership, and reward of the last operation.
+    // state, last error, ownership, and Claim Game result of the last operation.
     public abstract class SteamTicketService : SaiBehaviour
     {
         public const string TicketIdentity = "ss-go";
@@ -19,14 +19,15 @@ namespace SaiGame.Services
         // SteamAPI runs once per process, so its AppID is resolved once for all services.
         private static bool appIdResolved;
 
-        public event Action<SteamRewardResult> OnRewardResult;
+        public event Action<SteamClaimGameResult> OnClaimGameResult;
         public event Action<string> OnFailed;
 
         [Header("Steam State")]
         [FormerlySerializedAs("isLoggingIn")]
         [SerializeField] protected bool isBusy;
         [SerializeField] protected SteamOwnership ownership;
-        [SerializeField] protected SteamRewardResult reward;
+        [FormerlySerializedAs("reward")]
+        [SerializeField] protected SteamClaimGameResult claimGame;
         [Tooltip("message_code of the last failed operation.")]
         [SerializeField] protected string lastError;
 
@@ -43,7 +44,7 @@ namespace SaiGame.Services
 
         public bool IsBusy => isBusy;
         public SteamOwnership Ownership => ownership;
-        public SteamRewardResult Reward => reward;
+        public SteamClaimGameResult ClaimGameResult => claimGame;
         public string LastError => lastError;
         public ISteamTicketProvider TicketProvider => ticketProvider as ISteamTicketProvider;
 
@@ -184,17 +185,17 @@ namespace SaiGame.Services
             steamworks.UseAppId((uint)info.steam_app_id);
         }
 
-        protected void ApplyRewardResult(SteamOwnership newOwnership, SteamRewardResult newReward)
+        protected void ApplyClaimGameResult(SteamOwnership newOwnership, SteamClaimGameResult result)
         {
             if (newOwnership != null) this.ownership = newOwnership;
-            this.reward = newReward;
-            if (newReward != null) OnRewardResult?.Invoke(newReward);
+            this.claimGame = result;
+            if (result != null) OnClaimGameResult?.Invoke(result);
         }
 
         protected void ClearResult()
         {
             this.ownership = null;
-            this.reward = null;
+            this.claimGame = null;
             this.lastError = "";
         }
 
@@ -241,6 +242,6 @@ namespace SaiGame.Services
                 Debug.Log($"<color={LogColor}><b>{LogTag} ► {action}</b></color>", gameObject);
         }
 
-        protected static string RewardStatus(SteamRewardResult value) => value != null ? "reward: " + value.status : "reward: none";
+        protected static string ClaimGameStatus(SteamClaimGameResult value) => value != null ? "claim game: " + value.status : "claim game: none";
     }
 }

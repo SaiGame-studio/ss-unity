@@ -11,6 +11,11 @@ login the player does is the Sai account (Google or password), once:
    into the linked Sai account with no input ("Sign In With Linked Steam").
    `SteamLogin.CheckLinked` asks whether the running Steam account is linked
    without signing in.
+3. **Unlink.** Only on Sai Play (account page). The SDK has no unlink. After
+   an unlink, the Steam account cannot be linked to another Sai account, and
+   the Sai account cannot link another Steam account, for 30 days
+   (`STEAM_RELINK_COOLDOWN`). Unlinking revokes what is left of the Claim Game
+   items; the next Sai account linked to that Steam account receives them.
 
 Steam support is optional: the SDK compiles and runs without
 Steamworks.NET; games that do not ship on Steam can ignore this folder.
@@ -19,8 +24,8 @@ Steamworks.NET; games that do not ship on Steam can ignore this folder.
 
 1. **Backend (once per game).** In Sai Server, open the game's
    **Settings > Steam**, enter the Steam AppID, publisher Web API key, and
-   reward items, then enable Steam. The server must have migrations through
-   271 and `GAME_SECRETS_ENCRYPTION_KEY` set (see
+   Claim Game items, then enable Steam. The server must have migrations through
+   273 and `GAME_SECRETS_ENCRYPTION_KEY` set (see
    `ss-go/docs/api/steam-login-rewards.md`). Never put the publisher key in the
    game, the Inspector, or a client `.env`.
 2. **Steamworks.NET.** The SDK does not bundle a Steam wrapper. In the game
@@ -78,20 +83,20 @@ SaiServer.Instance.SteamLogin.CheckLinked(
 
 // Signs into the Sai account linked to the running Steam account.
 SaiServer.Instance.SteamLogin.SignIn(
-    result => UnityEngine.Debug.Log("Signed in with linked Steam: " + result.reward.status),
+    result => UnityEngine.Debug.Log("Signed in with linked Steam, claim game: " + result.reward.status),
     error => UnityEngine.Debug.LogWarning(error));
 ```
 
 Successful sign-in pushes the access token, refresh token, expiry, and user into
 SaiServer/SaiAuth using the existing session storage behavior. Subscribe to
-`OnSignedIn`, `OnTwoFactorRequired`, `OnRewardResult`, or `OnFailed`
-as needed. `Ownership` and `Reward` expose the latest backend result.
+`OnSignedIn`, `OnTwoFactorRequired`, `OnClaimGameResult`, or `OnFailed`
+as needed. `Ownership` and `ClaimGameResult` expose the latest backend result.
 
 If `RequiresTwoFactor` is true, call `VerifyTwoFactor(code, ...)` on
 `SteamLogin`, not on the separate password login component. The Steam
-component completes the existing backend challenge and attempts the reward
-with a fresh ticket before firing `OnSignedIn`. A failed reward attempt
-does not invalidate a successful sign-in; inspect `Reward.status` and retry.
+component completes the existing backend challenge and attempts Claim Game
+with a fresh ticket before firing `OnSignedIn`. A failed Claim Game attempt
+does not invalidate a successful sign-in; inspect `ClaimGameResult.status` and retry.
 
 Steam never creates an account. If the SteamID is not linked yet, the error
 callback receives `STEAM_NOT_LINKED`. Ask the player to sign in or register
@@ -99,7 +104,7 @@ with Google/password, then link Steam once:
 
 ```csharp
 SaiServer.Instance.SteamLink.Link(
-    result => UnityEngine.Debug.Log("Steam linked: " + result.reward.status),
+    result => UnityEngine.Debug.Log("Steam linked, claim game: " + result.reward.status),
     error => UnityEngine.Debug.LogWarning(error));
 ```
 
@@ -116,23 +121,30 @@ After linking, `SignIn` signs into that same account. Linking never merges
 or transfers accounts. A conflict requires account
 resolution; repeatedly retrying cannot overwrite the existing link.
 
-Retry a pending reward after freeing inventory space, or check rewards after
+## Claim Game
+
+Claim Game grants the items the studio set in Game Settings > Steam to a player
+whose Steam account owns the game. It runs automatically on link and on sign-in.
+Call it to retry a pending Claim Game after freeing inventory space, or after
 restoring an existing SaiAuth session:
 
 ```csharp
-SaiServer.Instance.SteamLink.ClaimRewards(
-    result => UnityEngine.Debug.Log("Steam reward: " + result.reward.status),
+SaiServer.Instance.SteamLink.ClaimGame(
+    result => UnityEngine.Debug.Log("Claim game: " + result.reward.status),
     error => UnityEngine.Debug.LogWarning(error));
 ```
 
 All operations get a fresh ticket and leave AppID, SteamID, eligibility, item
 IDs, and quantities to the backend. Status values are `granted`,
-`already_granted`, `pending`, `ineligible`, or `not_configured`.
-Each Steam owner receives the configured items once per game. The backend checks
-the inventory transaction log; there is no reward code to enter or send. Editing
-reward items does not grant again to owners who already received their reward.
-Family Sharing can authenticate with an active license but cannot claim the
-permanent ownership reward. Steam key activations with permanent ownership
+`transferred`, `already_granted`, `pending`, `ineligible`, or `not_configured`.
+Claim Game items belong to the Steam account: granted once per game, they move
+with the Steam account. Unlinking (on Sai Play) revokes what is left of them, and
+the next linked Sai account receives exactly that (status `transferred`); items
+already used do not move. The backend checks the
+inventory transaction log; there is no code to enter or send. Editing the items
+does not grant again to players who already claimed the game. The JSON key of
+the result is still `reward`. Family Sharing can authenticate with an active
+license but cannot Claim Game. Steam key activations with permanent ownership
 also qualify; the response is not a purchase receipt.
 
 The Steam transport requires HTTPS (HTTP is allowed only for loopback local
@@ -143,7 +155,7 @@ development certificate bypass or depend on a preloaded GamerProgress.
 `SignInWithTicket(hexTicket, ...)` is available for external wrappers. The caller
 owns cancellation of that ticket handle and must keep it valid until the
 response. Without a configured provider, a completed 2FA login reports a
-pending reward; use a provider and `ClaimRewards` to obtain it.
+pending Claim Game; use a provider and `ClaimGame` to obtain it.
 
 `Cancel` or disabling the component stops the current operation and
 cancels provider-owned tickets. Requests that already reached the backend may
@@ -167,7 +179,7 @@ previous one is done:
   SteamAPI runs as a different AppID.
 - **step 2: sai server sign in**: whether a Sai account is signed in, with
   Password Login (`SaiAuth`) and Google Login (`GoogleBackendLogin`).
-- **step 3: link steam**: Link Steam and Claim Rewards. A code field appears
+- **step 3: link steam**: Link Steam and Claim Game. A code field appears
   only when the server asks for one (2FA).
 
 `SteamLogin` signs in with the linked account:

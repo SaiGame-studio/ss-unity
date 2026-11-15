@@ -114,10 +114,10 @@ namespace SaiGame.Services
                 }
                 if (string.IsNullOrEmpty(result.access_token) || result.user == null) { Fail("STEAM_INVALID_RESPONSE", onError); return; }
                 ApplySession(result);
-                ApplyRewardResult(result.ownership, result.reward);
+                ApplyClaimGameResult(result.ownership, result.reward);
                 if (result.ownership != null) this.steamId = result.ownership.steam_id;
                 OnSignedIn?.Invoke(result);
-                Succeed("Sign In With Linked Steam", RewardStatus(result.reward));
+                Succeed("Sign In With Linked Steam", ClaimGameStatus(result.reward));
                 onSuccess?.Invoke(result);
             }, error =>
             {
@@ -147,9 +147,9 @@ namespace SaiGame.Services
             {
                 user = result.user, access_token = result.access_token,
                 refresh_token = result.refresh_token, expires_in = result.expires_in,
-                reward = new SteamRewardResult { status = "pending", message_code = "STEAM_REWARD_PENDING" }
+                reward = new SteamClaimGameResult { status = "pending", message_code = "STEAM_REWARD_PENDING" }
             };
-            // Obtain a fresh ticket after 2FA. Optional reward failure must not
+            // Obtain a fresh ticket after 2FA. Optional Claim Game failure must not
             // turn a completed sign-in into failure.
             ISteamTicketProvider provider = TicketProvider;
             if (provider != null)
@@ -161,9 +161,9 @@ namespace SaiGame.Services
                         errorCode => { }, false),
                     errorCode => { }, false);
             }
-            ApplyRewardResult(completed.ownership, completed.reward);
+            ApplyClaimGameResult(completed.ownership, completed.reward);
             OnSignedIn?.Invoke(completed);
-            Succeed("Verify Two Factor", RewardStatus(completed.reward));
+            Succeed("Verify Two Factor", ClaimGameStatus(completed.reward));
             onSuccess?.Invoke(completed);
         }
 

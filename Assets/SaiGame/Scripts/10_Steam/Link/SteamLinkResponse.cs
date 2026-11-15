@@ -6,6 +6,7 @@ namespace SaiGame.Services
     public class SteamLinkResponse : LoginResponse
     {
         public SteamOwnership ownership;
-        public SteamRewardResult reward;
+        // Claim Game result; the JSON key is "reward" on the Sai Server.
+        public SteamClaimGameResult reward;
     }
 }

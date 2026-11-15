@@ -37,24 +37,24 @@ namespace SaiGame.Services
                 request.recovery_code = recoveryCode?.Trim();
                 return PostTicket<SteamLinkResponse>(LinkEndpoint, request, result =>
                 {
-                    ApplyRewardResult(result.ownership, result.reward);
+                    ApplyClaimGameResult(result.ownership, result.reward);
                     if (this.steamLogin == null) this.steamLogin = GetComponent<SteamLogin>();
                     if (this.steamLogin != null && result.ownership != null) this.steamLogin.MarkLinked(result.ownership.steam_id);
-                    Succeed("Link Steam", RewardStatus(result.reward));
+                    Succeed("Link Steam", ClaimGameStatus(result.reward));
                     onSuccess?.Invoke(result);
                 }, onError);
             });
         }
 
-        // Checks and grants the Steam ownership reward to the signed-in account.
-        public void ClaimRewards(Action<SteamLinkResponse> onSuccess = null, Action<string> onError = null)
+        // Claim Game: grants the game's Steam owner items to the signed-in account.
+        public void ClaimGame(Action<SteamLinkResponse> onSuccess = null, Action<string> onError = null)
         {
-            LogButton("Claim Rewards");
+            LogButton("Claim Game");
             StartTicketOperation(true, onError, ticket =>
                 PostTicket<SteamLinkResponse>(ClaimEndpoint, NewTicketRequest(ticket), result =>
                 {
-                    ApplyRewardResult(result.ownership, result.reward);
-                    Succeed("Claim Rewards", RewardStatus(result.reward));
+                    ApplyClaimGameResult(result.ownership, result.reward);
+                    Succeed("Claim Game", ClaimGameStatus(result.reward));
                     onSuccess?.Invoke(result);
                 }, onError));
         }

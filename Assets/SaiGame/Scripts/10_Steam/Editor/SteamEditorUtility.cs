@@ -148,7 +148,7 @@ namespace SaiGame.Services
             using (new EditorGUI.DisabledScope(true))
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("ownership"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("reward"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("claimGame"), new GUIContent("claim game"));
             }
         }
 
@@ -167,8 +167,8 @@ namespace SaiGame.Services
         public static void LogResult(string message, SteamLinkResponse result)
         {
             if (!ShowDebug) return;
-            string reward = result != null && result.reward != null ? result.reward.status : "none";
-            Debug.Log($"[Editor] {message} (reward: {reward})");
+            string claimGame = result != null && result.reward != null ? result.reward.status : "none";
+            Debug.Log($"[Editor] {message} (claim game: {claimGame})");
         }
     }
 }

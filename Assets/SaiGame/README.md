@@ -6,7 +6,7 @@ A comprehensive game backend integration SDK for Unity, providing a service laye
 
 ## Online Tutorials
 
-Steam account link and ownership rewards: [SDK setup](Scripts/10_Steam/Link/README.md).
+Steam account link and Claim Game: [SDK setup](Scripts/10_Steam/Link/README.md).
 
 Full tutorials and documentation are available at: https://admin.saigame.studio/tutorials
 
@@ -47,7 +47,7 @@ Assets/SaiGame/
 │   ├── 8_Battle/           # Battle session management
 │   ├── 9_LuaScript/        # Battle Lua script management
 │   ├── 10_Steam/           # Steam (Steamworks.NET): shared SteamAPI provider
-│   │   ├── Link/           #   Steam account link, sign in with linked Steam, ownership rewards
+│   │   ├── Link/           #   Steam account link, sign in with linked Steam, Claim Game
 │   │   ├── Achievement/    #   Steam achievements and stats
 │   │   └── Editor/         #   Steam inspectors
 │   ├── Common/             # Base behaviours, singletons, encryption, endpoint options
@@ -75,7 +75,7 @@ Assets/SaiGame/
 | **Leaderboard** | View top rankings and local player rank |
 | **Battle** | Battle sessions, scripts, and history |
 | **LuaScript** | Load, create, update, delete, and download the game's battle Lua scripts |
-| **Steam** | Steam account link and ownership rewards ([guide](Scripts/10_Steam/Link/README.md)) |
+| **Steam** | Steam account link and Claim Game ([guide](Scripts/10_Steam/Link/README.md)) |
 | **SteamAchievement** | Steam achievements and stats: load, unlock, progress, stats ([guide](Scripts/10_Steam/Achievement/README.md)) |
 
 
@@ -115,7 +115,7 @@ Assets/SaiGame/
 
 ### v0.2.60
 - Steam achievements and stats (`SteamAchievements`)
-- Steam account link (`SteamLink`): link once, then sign in with the linked Steam account; 2FA and ownership rewards; Steamworks.NET is optional
+- Steam account link (`SteamLink`): link once, then sign in with the linked Steam account; 2FA and Claim Game; Steamworks.NET is optional
 - TLS certificate validation is enforced except for loopback servers
 - Token-bearing auth requests are excluded from logs; JSON logging is off in the prefab
 - The prefab ships with an empty Game ID

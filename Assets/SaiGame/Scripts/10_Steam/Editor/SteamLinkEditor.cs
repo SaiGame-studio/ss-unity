@@ -130,8 +130,8 @@ namespace SaiGame.Services
             {
                 if (GUILayout.Button("Link Steam", GUILayout.Height(30)))
                     this.Link(steamLink);
-                if (GUILayout.Button("Claim Rewards", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
-                    steamLink.ClaimRewards(result => SteamEditorUtility.LogResult("Steam reward checked", result), SteamEditorUtility.LogError);
+                if (GUILayout.Button("Claim Game", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
+                    steamLink.ClaimGame(result => SteamEditorUtility.LogResult("Claim Game checked", result), SteamEditorUtility.LogError);
             }
         }
 
