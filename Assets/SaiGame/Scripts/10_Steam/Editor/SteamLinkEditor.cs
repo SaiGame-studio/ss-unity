@@ -164,7 +164,7 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("two factor verification", EditorStyles.boldLabel);
             TwoFactorStatusResponse status = steamLink.TwoFactorStatus;
             if (status == null)
-                EditorGUILayout.HelpBox("Status unknown. Sign in and press Check Two Factor Status to query the backend for this session.", MessageType.None);
+                EditorGUILayout.HelpBox("Status unknown. Sign in and press Check 2FA to query the backend for this session.", MessageType.None);
             else
             {
                 using (new EditorGUI.DisabledScope(true))
@@ -182,9 +182,14 @@ namespace SaiGame.Services
             }
             using (new EditorGUI.DisabledScope(!Application.isPlaying || !signedIn || steamLink.IsBusy))
             {
-                if (GUILayout.Button("Check Two Factor Status", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
-                    steamLink.CheckTwoFactorStatus(_ => Repaint(), SteamEditorUtility.LogError);
+                if (SteamEditorUtility.SteamButton("Check 2FA", GUILayout.Height(SteamEditorUtility.ButtonHeight), GUILayout.ExpandWidth(true)))
+                    steamLink.CheckTwoFactorStatus(result => { this.linkCode = ""; SteamEditorUtility.LogInfo(result.verification_required ? "2FA code required" : "2FA code not required"); Repaint(); }, SteamEditorUtility.LogError);
             }
+            bool linkNeedsCode = status != null ? status.verification_required
+                : steamLink.LastError == SteamErrorGuidance.LinkTwoFactorRequired
+                    || steamLink.LastError == SteamErrorGuidance.InvalidTwoFactorCode;
+            using (new EditorGUI.DisabledScope(!Application.isPlaying || !signedIn || steamLink.IsBusy || !linkNeedsCode))
+                this.linkCode = EditorGUILayout.TextField("authenticator or recovery code", this.linkCode);
         }
 
         // Step 3: link the running Steam account to the signed-in Sai account.
@@ -195,15 +200,9 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("step 3: link steam", EditorStyles.boldLabel);
             SteamEditorUtility.DrawProviderProblems(steamLink);
 
-            bool linkNeedsCode = steamLink.LastError == SteamErrorGuidance.LinkTwoFactorRequired
-                || steamLink.LastError == SteamErrorGuidance.InvalidTwoFactorCode
-                || (steamLink.TwoFactorStatus != null && steamLink.TwoFactorStatus.verification_required);
-            if (linkNeedsCode)
-                this.linkCode = EditorGUILayout.TextField("authenticator or recovery code", this.linkCode);
-
             using (new EditorGUI.DisabledScope(!Application.isPlaying || steamLink.IsBusy))
             {
-                if (GUILayout.Button("Link Steam", GUILayout.Height(30)))
+                if (SteamEditorUtility.SteamButton("Link Steam", GUILayout.Height(30)))
                     this.Link(steamLink);
             }
             EditorGUILayout.HelpBox("Linking does not start a Steam game session or claim items. Sign in with SteamLogin after linking.", MessageType.Info);
@@ -226,7 +225,8 @@ namespace SaiGame.Services
 
         private void Link(SteamLink steamLink)
         {
-            string code = this.linkCode.Trim();
+            TwoFactorStatusResponse status = steamLink.TwoFactorStatus;
+            string code = status != null && !status.verification_required ? "" : this.linkCode.Trim();
             bool authenticator = code.Length == AuthenticatorCodeLength && IsDigits(code);
             steamLink.Link(result =>
             {

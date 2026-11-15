@@ -157,10 +157,7 @@ namespace SaiGame.Services
             using (new EditorGUI.DisabledScope(!Application.isPlaying || busy
                 || steamLogin.LinkState != SteamLinkState.Linked))
             {
-                if (SteamEditorUtility.SteamButton("Sign In With Linked Steam", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
-                    steamLogin.SignIn(result => SteamEditorUtility.LogResult("Signed in with the linked Steam account", result),
-                        SteamEditorUtility.LogError);
-                if (steamLogin.RequiresTwoFactor) this.DrawTwoFactor(steamLogin);
+                this.DrawTwoFactor(steamLogin);
                 using (new EditorGUI.DisabledScope(!steamLogin.IsAuthenticated))
                 {
                     if (SteamEditorUtility.SteamButton("Set Token To SaiAuth", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
@@ -201,14 +198,20 @@ namespace SaiGame.Services
             }
         }
 
-        // Shown only when the linked Sai account has 2FA and the server asks for a code.
+        // Sign-in returns a two-factor challenge when the linked account requires verification.
         private void DrawTwoFactor(SteamLogin steamLogin)
         {
-            EditorGUILayout.BeginHorizontal();
-            this.signInCode = EditorGUILayout.TextField("authenticator code", this.signInCode);
-            using (new EditorGUI.DisabledScope(steamLogin.IsBusy))
+            using (new EditorGUI.DisabledScope(steamLogin.RequiresTwoFactor || steamLogin.IsBusy))
             {
-                if (SteamEditorUtility.SteamButton("Verify", GUILayout.Width(80)))
+                if (SteamEditorUtility.SteamButton("Login (Check 2FA)", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
+                    steamLogin.SignIn(result => SteamEditorUtility.LogResult("Signed in with the linked Steam account", result),
+                        SteamEditorUtility.LogError);
+            }
+            using (new EditorGUI.DisabledScope(!steamLogin.RequiresTwoFactor || steamLogin.IsBusy))
+                this.signInCode = EditorGUILayout.TextField("authenticator code", this.signInCode);
+            using (new EditorGUI.DisabledScope(!steamLogin.RequiresTwoFactor || steamLogin.IsBusy))
+            {
+                if (SteamEditorUtility.SteamButton("2FA Login", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
                 {
                     steamLogin.VerifyTwoFactor(this.signInCode, result =>
                     {
@@ -217,7 +220,6 @@ namespace SaiGame.Services
                     }, SteamEditorUtility.LogError);
                 }
             }
-            EditorGUILayout.EndHorizontal();
         }
 
         private void DrawLinkStatus(SteamLogin steamLogin, SaiServer server)

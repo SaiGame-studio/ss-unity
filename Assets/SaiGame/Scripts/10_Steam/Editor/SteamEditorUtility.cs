@@ -168,12 +168,12 @@ namespace SaiGame.Services
 
         public static void LogInfo(string message)
         {
-            if (ShowDebug) Debug.Log($"[Editor] {message}");
+            if (ShowDebug) Debug.Log($"<color={SteamTicketService.LogColor}>[Editor] {message}</color>");
         }
 
         public static void LogError(string error)
         {
-            if (ShowDebug) Debug.LogWarning($"[Editor] Steam request failed: {error}");
+            if (ShowDebug) Debug.LogWarning($"<color={SteamTicketService.LogColor}>[Editor] Steam request failed: {error}</color>");
         }
 
         public static void LogResult(string message, SteamLinkResponse result)
@@ -182,7 +182,7 @@ namespace SaiGame.Services
             string claimGame = result != null && result.reward != null ? result.reward.status : "none";
             string code = result?.reward?.message_code;
             string detail = string.IsNullOrEmpty(code) ? "" : $" | message_code={code}";
-            string log = $"[Editor] {message} (claim game: {claimGame}{detail})";
+            string log = $"<color={SteamTicketService.LogColor}>[Editor] {message} (claim game: {claimGame}{detail})</color>";
             if (claimGame == "pending" || claimGame == "ineligible")
                 Debug.LogWarning(log + " | Claim Game did not complete. Check the reason code and backend logs.");
             else
