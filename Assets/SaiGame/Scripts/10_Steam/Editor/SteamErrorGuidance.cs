@@ -31,7 +31,7 @@ namespace SaiGame.Services
             {
                 case NotLinked: return "This Steam account is not linked to an account yet. Link it with SteamLink first.";
                 case TwoFactorRequired: return "Enter the Authenticator code of the linked account, then press Verify.";
-                case LinkTwoFactorRequired: return "Your account has 2FA. Enter an Authenticator or recovery code, then press Link Steam.";
+                case LinkTwoFactorRequired: return "Sign in again with password or Google and complete two-factor verification, then press Link Steam.";
                 case InvalidTwoFactorCode: return "The code is invalid, expired, or already used. Enter a new code.";
                 case LinkReauthRequired: return "Your sign-in is older than 10 minutes. Logout, sign in again in step 2, then press Link Steam.";
                 case LinkConflict: return "This Steam account or your account is already linked to another account. Unlinking is done on Sai Play.";

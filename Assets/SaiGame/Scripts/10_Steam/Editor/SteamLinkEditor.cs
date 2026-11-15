@@ -13,13 +13,6 @@ namespace SaiGame.Services
     {
         private const string PREF_SETTINGS = "SteamLinkEditor.showSteamSettings";
         private const string PREF_LAST_RESULT = "SteamLinkEditor.showLastResult";
-        private const string SaiAuthUsernameField = "username";
-        private const string SaiAuthPasswordField = "password";
-
-        // An Authenticator code is 6 digits; any other value is sent as a recovery code.
-        private const int AuthenticatorCodeLength = 6;
-
-        private string linkCode = "";
 
         private static bool ShowSettings
         {
@@ -70,8 +63,6 @@ namespace SaiGame.Services
                 using (new EditorGUI.DisabledScope(!appIdReady))
                     signedIn = this.DrawStep2SignIn(server);
             }
-
-            this.DrawTwoFactorStatus(steamLink, signedIn);
 
             serializedObject.Update();
             EditorGUILayout.Space(10);
@@ -132,9 +123,9 @@ namespace SaiGame.Services
             using (new EditorGUI.DisabledScope(!Application.isPlaying))
             {
                 EditorGUILayout.BeginHorizontal();
-                using (new EditorGUI.DisabledScope(saiAuth == null || signedIn))
+                using (new EditorGUI.DisabledScope(saiAuth == null))
                 {
-                    if (GUILayout.Button("Password Login", GUILayout.Height(SteamEditorUtility.ButtonHeight))) PasswordLogin(saiAuth);
+                    if (GUILayout.Button("Password Login", GUILayout.Height(SteamEditorUtility.ButtonHeight))) SteamEditorUtility.Select(saiAuth);
                 }
                 SteamEditorUtility.DrawSelectButton(saiAuth, nameof(SaiAuth));
                 EditorGUILayout.EndHorizontal();
@@ -158,40 +149,6 @@ namespace SaiGame.Services
             return signedIn;
         }
 
-        private void DrawTwoFactorStatus(SteamLink steamLink, bool signedIn)
-        {
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("two factor verification", EditorStyles.boldLabel);
-            TwoFactorStatusResponse status = steamLink.TwoFactorStatus;
-            if (status == null)
-                EditorGUILayout.HelpBox("Status unknown. Sign in and press Check 2FA to query the backend for this session.", MessageType.None);
-            else
-            {
-                using (new EditorGUI.DisabledScope(true))
-                {
-                    EditorGUILayout.Toggle("two factor enabled", status.enabled);
-                    EditorGUILayout.Toggle("verification required", status.verification_required);
-                    EditorGUILayout.Toggle("verification available", status.available);
-                    EditorGUILayout.TextField("last checked (UTC)", steamLink.TwoFactorStatusCheckedAt.ToString("yyyy-MM-dd HH:mm:ss"));
-                }
-                string message = !status.enabled ? "Two-factor authentication is not enabled for this account."
-                    : status.verification_required ? "Enter an Authenticator or recovery code when linking Steam."
-                    : "This session has recent two-factor verification. Another code is not currently required.";
-                EditorGUILayout.HelpBox(message + " This is the last backend snapshot; refresh to recheck. No remaining grace time is returned by the backend.",
-                    status.verification_required ? MessageType.Warning : MessageType.Info);
-            }
-            using (new EditorGUI.DisabledScope(!Application.isPlaying || !signedIn || steamLink.IsBusy))
-            {
-                if (SteamEditorUtility.SteamButton("Check 2FA", GUILayout.Height(SteamEditorUtility.ButtonHeight), GUILayout.ExpandWidth(true)))
-                    steamLink.CheckTwoFactorStatus(result => { this.linkCode = ""; SteamEditorUtility.LogInfo(result.verification_required ? "2FA code required" : "2FA code not required"); Repaint(); }, SteamEditorUtility.LogError);
-            }
-            bool linkNeedsCode = status != null ? status.verification_required
-                : steamLink.LastError == SteamErrorGuidance.LinkTwoFactorRequired
-                    || steamLink.LastError == SteamErrorGuidance.InvalidTwoFactorCode;
-            using (new EditorGUI.DisabledScope(!Application.isPlaying || !signedIn || steamLink.IsBusy || !linkNeedsCode))
-                this.linkCode = EditorGUILayout.TextField("authenticator or recovery code", this.linkCode);
-        }
-
         // Step 3: link the running Steam account to the signed-in Sai account.
         // SteamAPI starts automatically on the first request.
         private void DrawStep3Link(SteamLink steamLink)
@@ -208,38 +165,10 @@ namespace SaiGame.Services
             EditorGUILayout.HelpBox("Linking does not start a Steam game session or claim items. Sign in with SteamLogin after linking.", MessageType.Info);
         }
 
-        // Signs in with the username and password set on the SaiAuth component (.env or its Inspector).
-        private static void PasswordLogin(SaiAuth saiAuth)
-        {
-            var auth = new SerializedObject(saiAuth);
-            string username = auth.FindProperty(SaiAuthUsernameField).stringValue;
-            string password = auth.FindProperty(SaiAuthPasswordField).stringValue;
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-            {
-                Debug.LogWarning("[Editor] Set username and password on SaiAuth (or USERNAME / PASSWORD in .env) first.", saiAuth);
-                SteamEditorUtility.Select(saiAuth);
-                return;
-            }
-            saiAuth.Login(username, password, response => SteamEditorUtility.LogInfo("Signed in with password"), SteamEditorUtility.LogError);
-        }
-
         private void Link(SteamLink steamLink)
         {
-            TwoFactorStatusResponse status = steamLink.TwoFactorStatus;
-            string code = status != null && !status.verification_required ? "" : this.linkCode.Trim();
-            bool authenticator = code.Length == AuthenticatorCodeLength && IsDigits(code);
-            steamLink.Link(result =>
-            {
-                this.linkCode = "";
-                SteamEditorUtility.LogResult("Steam linked", result);
-            }, SteamEditorUtility.LogError, authenticator ? code : null, authenticator || code.Length == 0 ? null : code);
-        }
-
-        private static bool IsDigits(string value)
-        {
-            foreach (char c in value)
-                if (c < '0' || c > '9') return false;
-            return true;
+            steamLink.Link(result => SteamEditorUtility.LogResult("Steam linked", result),
+                SteamEditorUtility.LogError);
         }
     }
 }
