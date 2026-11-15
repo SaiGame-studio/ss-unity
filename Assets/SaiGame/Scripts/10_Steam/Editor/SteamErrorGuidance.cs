@@ -29,20 +29,20 @@ namespace SaiGame.Services
         {
             switch (error)
             {
-                case NotLinked: return "This Steam account is not linked to a Sai account yet. Link it with SteamLink first.";
-                case TwoFactorRequired: return "Enter the Authenticator code of the linked Sai account, then press Verify.";
-                case LinkTwoFactorRequired: return "This Sai account has 2FA. Enter an Authenticator or recovery code, then press Link Steam.";
+                case NotLinked: return "This Steam account is not linked to an account yet. Link it with SteamLink first.";
+                case TwoFactorRequired: return "Enter the Authenticator code of the linked account, then press Verify.";
+                case LinkTwoFactorRequired: return "Your account has 2FA. Enter an Authenticator or recovery code, then press Link Steam.";
                 case InvalidTwoFactorCode: return "The code is invalid, expired, or already used. Enter a new code.";
                 case LinkReauthRequired: return "Your sign-in is older than 10 minutes. Logout, sign in again in step 2, then press Link Steam.";
-                case LinkConflict: return "This Steam account or this Sai account is already linked to another account. Unlinking is done on Sai Play.";
-                case RelinkCooldown: return "This Steam account or this Sai account is waiting for the server-configured relink cooldown. Link the same pair again, or wait.";
-                case LinkBlocked: return "This Steam account was linked before to a banned Sai account and cannot be linked.";
+                case LinkConflict: return "This Steam account or your account is already linked to another account. Unlinking is done on Sai Play.";
+                case RelinkCooldown: return "This Steam account or your account is waiting for the server-configured relink cooldown. Link the same pair again, or wait.";
+                case LinkBlocked: return "This Steam account was linked before to a banned account and cannot be linked.";
                 case GameNotOwned: return "This Steam account does not own the game.";
                 case NotLoggedOn: return "Start the Steam client and sign in to Steam, then try again.";
                 case NotInitialized: return "SteamAPI could not start. Check that the Steam client is running and the Steam App ID.";
                 case ProviderRequired: return "Assign a ticket provider in steam settings.";
                 case SteamworksMissing: return "Install the Steamworks.NET package (com.rlabrecque.steamworks.net).";
-                case Unauthorized: return "Sign in to a Sai account first.";
+                case Unauthorized: return "Sign in to an account first.";
                 case NotConfigured: return "Steam is disabled for this game or has no App ID. Enable Steam and set the App ID in Game Settings > Steam on the Sai Server dashboard.";
                 case PublisherKeyMissing: return "The game has no Steam publisher Web API key. Save it in Game Settings > Steam on the Sai Server dashboard.";
                 case PublisherKeyRejected: return "Steam rejected the game's publisher Web API key. Check that it is a publisher key with the General permission for this App ID, then save it again.";

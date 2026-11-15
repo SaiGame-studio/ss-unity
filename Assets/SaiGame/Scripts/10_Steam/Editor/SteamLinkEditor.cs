@@ -116,7 +116,7 @@ namespace SaiGame.Services
             UserData user = saiAuth != null ? saiAuth.CurrentUser : null;
 
             SteamEditorUtility.DrawStatus(signedIn, signedIn
-                ? $"signed in: <b>{(user != null ? user.username + " (" + user.email + ")" : "Sai account")}</b>"
+                ? $"signed in: <b>{(user != null ? user.username + " (" + user.email + ")" : "account")}</b>"
                 : "not signed in (required to link)");
 
             using (new EditorGUI.DisabledScope(!Application.isPlaying))
