@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Serialization;
 
 namespace SaiGame.Services
 {
@@ -19,7 +20,9 @@ namespace SaiGame.Services
 
         [SerializeField] protected SaiAuth saiAuth;
         [SerializeField] protected GoogleBackendLogin googleBackendLogin;
-        [SerializeField] protected SteamBackendLogin steamBackendLogin;
+        [FormerlySerializedAs("steamBackendLogin")]
+        [SerializeField] protected SteamLink steamLink;
+        [SerializeField] protected SteamLogin steamLogin;
         [SerializeField] protected SteamAchievements steamAchievements;
         [SerializeField] protected GamerProgress gamerProgress;
         [SerializeField] protected Mailbox mailbox;
@@ -195,7 +198,8 @@ namespace SaiGame.Services
         public SaiAuth SaiAuth => saiAuth;
 
         public GoogleBackendLogin GoogleBackendLogin => this.googleBackendLogin;
-        public SteamBackendLogin SteamBackendLogin => this.steamBackendLogin;
+        public SteamLink SteamLink => this.steamLink;
+        public SteamLogin SteamLogin => this.steamLogin;
         public SteamAchievements SteamAchievements => this.steamAchievements;
 
         public string GameId => this.NormalizeInput(this.gameId);
@@ -287,9 +291,10 @@ namespace SaiGame.Services
                     || path == "/api/v1/auth/login" || path == "/api/v1/auth/2fa/verify"
                     || path == "/api/v1/auth/refresh" || path == "/api/v1/auth/logout"
                     || path == "/api/v1/client/auth/google/session"
-                    || path == SteamBackendLogin.LoginEndpoint
-                    || path == SteamBackendLogin.LinkEndpoint
-                    || path == SteamBackendLogin.ClaimEndpoint
+                    || path == SteamLogin.SignInEndpoint
+                    || path == SteamLogin.StatusEndpoint
+                    || path == SteamLink.LinkEndpoint
+                    || path == SteamLink.ClaimEndpoint
                     || path == gamePath + "/gamer-progress"))
                 || (method == "GET" && (path == "/api/v1/auth/me" || path == "/api/v1/time"
                     || path.StartsWith("/api/v1/client/auth/google/session/", StringComparison.Ordinal)
@@ -374,9 +379,10 @@ namespace SaiGame.Services
                 || path == "/api/v1/auth/2fa/verify"
                 || path == "/api/v1/auth/refresh" || path == "/api/v1/auth/logout"
                 || path.StartsWith(GOOGLE_SESSION_ENDPOINT, StringComparison.Ordinal)
-                || path == SteamBackendLogin.LoginEndpoint
-                || path == SteamBackendLogin.LinkEndpoint
-                || path == SteamBackendLogin.ClaimEndpoint;
+                || path == SteamLogin.SignInEndpoint
+                || path == SteamLogin.StatusEndpoint
+                || path == SteamLink.LinkEndpoint
+                || path == SteamLink.ClaimEndpoint;
         }
 
         // Certificate validation is skipped only for a local development server.
@@ -513,7 +519,8 @@ namespace SaiGame.Services
             this.SyncLegacyServerFieldsFromEndpoint();
             this.LoadSaiAuth();
             this.LoadGoogleBackendLogin();
-            this.LoadSteamBackendLogin();
+            this.LoadSteamLink();
+            this.LoadSteamLogin();
             this.LoadSteamAchievements();
 
             this.RegisterLoginListeners();
@@ -556,10 +563,10 @@ namespace SaiGame.Services
                 this.googleBackendLogin.OnLoginSuccess += this.HandleLoginSuccess;
             }
 
-            if (this.steamBackendLogin != null)
+            if (this.steamLogin != null)
             {
-                this.steamBackendLogin.OnLoginSuccess -= this.HandleLoginSuccess;
-                this.steamBackendLogin.OnLoginSuccess += this.HandleLoginSuccess;
+                this.steamLogin.OnSignedIn -= this.HandleLoginSuccess;
+                this.steamLogin.OnSignedIn += this.HandleLoginSuccess;
             }
         }
 
@@ -571,8 +578,8 @@ namespace SaiGame.Services
             if (this.googleBackendLogin != null)
                 this.googleBackendLogin.OnLoginSuccess -= this.HandleLoginSuccess;
 
-            if (this.steamBackendLogin != null)
-                this.steamBackendLogin.OnLoginSuccess -= this.HandleLoginSuccess;
+            if (this.steamLogin != null)
+                this.steamLogin.OnSignedIn -= this.HandleLoginSuccess;
 
             base.OnDestroy();
         }
@@ -640,12 +647,24 @@ namespace SaiGame.Services
                 Debug.Log(transform.name + ": LoadGoogleBackendLogin", gameObject);
         }
 
-        protected virtual void LoadSteamBackendLogin()
+        protected virtual void LoadSteamLink()
         {
-            if (this.steamBackendLogin != null) return;
-            this.steamBackendLogin = GetComponentInChildren<SteamBackendLogin>();
+            if (this.steamLink != null) return;
+            this.steamLink = GetComponentInChildren<SteamLink>();
             if (this.showDebugLog)
-                Debug.Log(transform.name + ": LoadSteamBackendLogin", gameObject);
+                Debug.Log(transform.name + ": LoadSteamLink", gameObject);
+        }
+
+        // SteamLogin sits next to SteamLink on the Steam child. A prefab saved
+        // before SteamLogin existed gets it added at runtime.
+        protected virtual void LoadSteamLogin()
+        {
+            if (this.steamLogin != null) return;
+            this.steamLogin = GetComponentInChildren<SteamLogin>();
+            if (this.steamLogin == null && Application.isPlaying && this.steamLink != null)
+                this.steamLogin = this.steamLink.gameObject.AddComponent<SteamLogin>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadSteamLogin", gameObject);
         }
 
         protected virtual void LoadSteamAchievements()

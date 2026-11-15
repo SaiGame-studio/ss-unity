@@ -28,7 +28,7 @@ namespace SaiGame.Services
         [SerializeField] protected UserData userData;
         [SerializeField] protected float loginTime;
 
-        [SerializeField] protected bool autoLogin = true;
+        [SerializeField] protected bool autoLogin = false;
         [Tooltip("Save tokens in PlayerPrefs and restore the session on startup without a password.")]
         [SerializeField] private bool persistTokens = true;
 

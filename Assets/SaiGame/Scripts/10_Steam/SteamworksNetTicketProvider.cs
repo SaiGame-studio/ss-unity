@@ -33,6 +33,9 @@ namespace SaiGame.Services
         public string InitError => initError;
 
 #if SAI_STEAMWORKS_AVAILABLE
+        // Read by SteamAPI at initialization, as when Steam launches the game.
+        private const string SteamAppIdVariable = "SteamAppId";
+
         private bool ownsSteamApi;
         private Callback<GetTicketForWebApiResponse_t> callback;
         private HAuthTicket ticket = HAuthTicket.Invalid;
@@ -99,6 +102,32 @@ namespace SaiGame.Services
             if (initializeSteamApi) InitializeSteam();
             else RefreshState();
             return steamInitialized;
+        }
+
+        // The AppID SteamAPI runs as, or 0 while it is not initialized.
+        public uint RunningAppId
+        {
+            get
+            {
+                try { return IsSteamApiReady() ? SteamUtils.GetAppID().m_AppId : 0; }
+                catch (Exception) { return 0; }
+            }
+        }
+
+        // Points SteamAPI at the game's AppID from the Sai Server before it is
+        // initialized, so Editor and non-Steam launches need no steam_appid.txt.
+        // Once SteamAPI runs, only warns when it runs as a different AppID.
+        public void UseAppId(uint appId)
+        {
+            if (appId == 0) return;
+            if (!IsSteamApiReady())
+            {
+                Environment.SetEnvironmentVariable(SteamAppIdVariable, appId.ToString());
+                return;
+            }
+            uint running = SteamUtils.GetAppID().m_AppId;
+            if (running != appId)
+                Debug.LogWarning($"[SteamworksNetTicketProvider] SteamAPI runs as AppID {running}, but the Sai Server has AppID {appId} for this game. Signing in and linking with Steam will fail; fix steam_appid.txt or the game's Steam settings, then restart.", gameObject);
         }
 
         // Steamworks.NET throws InvalidOperationException from any interface
@@ -183,6 +212,10 @@ namespace SaiGame.Services
         public void RefreshState() { }
 
         public bool EnsureSteamReady() => false;
+
+        public uint RunningAppId => 0;
+
+        public void UseAppId(uint appId) { }
 
         public void RequestTicket(string identity, Action<string> onSuccess, Action<string> onError)
         {

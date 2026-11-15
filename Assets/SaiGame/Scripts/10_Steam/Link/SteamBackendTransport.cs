@@ -11,19 +11,32 @@ namespace SaiGame.Services
     {
         public static IEnumerator Post(string endpoint, string body, Action<string> onSuccess, Action<string> onError)
         {
+            return Send(UnityWebRequest.kHttpVerbPOST, endpoint, body, onSuccess, onError);
+        }
+
+        public static IEnumerator Get(string endpoint, Action<string> onSuccess, Action<string> onError)
+        {
+            return Send(UnityWebRequest.kHttpVerbGET, endpoint, null, onSuccess, onError);
+        }
+
+        private static IEnumerator Send(string method, string endpoint, string body, Action<string> onSuccess, Action<string> onError)
+        {
             var server = SaiServer.Instance;
             if (server == null) { onError?.Invoke("SAI_SERVER_GAME_REQUIRED"); yield break; }
             if (!Uri.TryCreate(server.BaseUrl, UriKind.Absolute, out Uri baseUri) ||
                 (baseUri.Scheme != Uri.UriSchemeHttps && !(baseUri.Scheme == Uri.UriSchemeHttp && baseUri.IsLoopback)))
             { onError?.Invoke("STEAM_HTTPS_REQUIRED"); yield break; }
 
-            using (var request = new UnityWebRequest(server.BaseUrl.TrimEnd('/') + endpoint, "POST"))
+            using (var request = new UnityWebRequest(server.BaseUrl.TrimEnd('/') + endpoint, method))
             {
-                request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                if (body != null)
+                {
+                    request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                    request.SetRequestHeader("Content-Type", "application/json");
+                }
                 request.downloadHandler = new DownloadHandlerBuffer();
                 request.timeout = 30;
                 request.redirectLimit = 0;
-                request.SetRequestHeader("Content-Type", "application/json");
                 request.SetRequestHeader(SaiServer.CLIENT_ID_HEADER, server.GameId);
                 request.SetRequestHeader(SaiServer.CLIENT_VERSION_HEADER, SaiServer.CLIENT_NAME + "/" + SaiServer.PACKAGE_VERSION);
                 if (server.HasValidAccessToken) request.SetRequestHeader("Authorization", "Bearer " + server.AccessToken);

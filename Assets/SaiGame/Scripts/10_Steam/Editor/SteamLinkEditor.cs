@@ -3,284 +3,169 @@ using UnityEngine;
 
 namespace SaiGame.Services
 {
-    [CustomEditor(typeof(SteamBackendLogin))]
-    public class SteamBackendLoginEditor : Editor
+    // Steam is not a separate login: the Steam client running the game already
+    // identifies the player. This Inspector walks through the link in order:
+    // Step 1 the game's Steam AppID, Step 2 signing in to a Sai account,
+    // Step 3 linking the running Steam account to it. Each step is enabled only
+    // when the previous one is done. Signing in afterwards is SteamLogin.
+    [CustomEditor(typeof(SteamLink))]
+    public class SteamLinkEditor : Editor
     {
-        private const string PREF_STEAM_SETTINGS = "SteamBackendLoginEditor.showSteamSettings";
+        private const string PREF_SETTINGS = "SteamLinkEditor.showSteamSettings";
+        private const string PREF_LAST_RESULT = "SteamLinkEditor.showLastResult";
+        private const string SaiAuthUsernameField = "username";
+        private const string SaiAuthPasswordField = "password";
 
-        private const string NotLinked = "STEAM_NOT_LINKED";
-        private const string TwoFactorRequired = "TWO_FACTOR_REQUIRED";
-        private const string LinkTwoFactorRequired = "STEAM_LINK_TWO_FACTOR_REQUIRED";
-        private const string LinkReauthRequired = "STEAM_LINK_REAUTH_REQUIRED";
-        private const string LinkConflict = "STEAM_LINK_CONFLICT";
-        private const string InvalidTwoFactorCode = "TWO_FACTOR_INVALID_CODE";
-        private const string GameNotOwned = "STEAM_GAME_NOT_OWNED";
-        private const string NotLoggedOn = "STEAM_NOT_LOGGED_ON";
-        private const string NotInitialized = "STEAM_NOT_INITIALIZED";
-        private const string ProviderRequired = "STEAM_TICKET_PROVIDER_REQUIRED";
-        private const string SteamworksMissing = "STEAMWORKS_NET_MISSING";
-        private const string Unauthorized = "UNAUTHORIZED";
+        // An Authenticator code is 6 digits; any other value is sent as a recovery code.
+        private const int AuthenticatorCodeLength = 6;
 
-        private string loginTwoFactorCode = "";
-        private string linkTwoFactorCode = "";
-        private string linkRecoveryCode = "";
+        private string linkCode = "";
 
-        private bool showSteamSettings
+        private static bool ShowSettings
         {
-            get => EditorPrefs.GetBool(PREF_STEAM_SETTINGS, true);
-            set => EditorPrefs.SetBool(PREF_STEAM_SETTINGS, value);
+            get => EditorPrefs.GetBool(PREF_SETTINGS, false);
+            set => EditorPrefs.SetBool(PREF_SETTINGS, value);
+        }
+
+        private static bool ShowLastResult
+        {
+            get => EditorPrefs.GetBool(PREF_LAST_RESULT, false);
+            set => EditorPrefs.SetBool(PREF_LAST_RESULT, value);
         }
 
         public override bool RequiresConstantRepaint() => Application.isPlaying;
 
         public override void OnInspectorGUI()
         {
+            SteamLink steamLink = (SteamLink)target;
+            SaiServer server = SteamEditorUtility.FindServer(steamLink);
+
+            EditorGUILayout.LabelField("step 1: steam app id", EditorStyles.boldLabel);
+            bool appIdReady = SteamEditorUtility.DrawAppId(steamLink, server);
+
+            bool signedIn;
+            using (new EditorGUI.DisabledScope(!appIdReady))
+                signedIn = this.DrawStep2SignIn(server);
+
+            using (new EditorGUI.DisabledScope(!appIdReady || !signedIn))
+                this.DrawStep3Link(steamLink);
+
+            if (steamLink.IsBusy && GUILayout.Button("Cancel", EditorStyles.miniButton))
+                steamLink.Cancel();
+            SteamEditorUtility.DrawLastError(steamLink);
+
             serializedObject.Update();
-
-            SteamBackendLogin login = (SteamBackendLogin)target;
-
-            EditorGUILayout.LabelField("authentication data", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("accessToken"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("refreshToken"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("expiresIn"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("userData"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("loginTime"));
-
-            EditorGUILayout.Space();
-
-            EditorGUILayout.LabelField("steam state", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("isLoggingIn"), new GUIContent("is logging in"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("requiresTwoFactor"), new GUIContent("requires two factor"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("ownership"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("reward"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("lastError"), new GUIContent("last error"));
-
-            EditorGUILayout.Space();
-
-            bool steamSettings = EditorGUILayout.Foldout(this.showSteamSettings, "steam settings", true);
-            if (steamSettings != this.showSteamSettings) this.showSteamSettings = steamSettings;
-            if (this.showSteamSettings)
+            EditorGUILayout.Space(10);
+            bool showResult = EditorGUILayout.Foldout(ShowLastResult, "last result", true);
+            if (showResult != ShowLastResult) ShowLastResult = showResult;
+            if (showResult) { EditorGUI.indentLevel++; SteamEditorUtility.DrawResult(serializedObject); EditorGUI.indentLevel--; }
+            bool showSettings = EditorGUILayout.Foldout(ShowSettings, "steam settings", true);
+            if (showSettings != ShowSettings) ShowSettings = showSettings;
+            if (showSettings)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("ticketProvider"), new GUIContent("ticket provider"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("ticketTimeoutSeconds"), new GUIContent("ticket timeout seconds"));
+                SteamEditorUtility.DrawTicketSettings(serializedObject);
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("steamLogin"), new GUIContent("steam login"));
                 EditorGUI.indentLevel--;
             }
-
             serializedObject.ApplyModifiedProperties();
-
-            this.DrawSteamClient(login);
-            this.DrawSignedInAccount();
-            this.DrawActions(login);
-            this.DrawTwoFactor(login);
-            this.DrawLink(login);
-            this.DrawLastError(login);
         }
 
-        private void DrawSteamClient(SteamBackendLogin login)
+        // Step 2: a signed-in Sai account, by password (SaiAuth) or Google (GoogleBackendLogin).
+        private bool DrawStep2SignIn(SaiServer server)
         {
             EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("steam client", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("step 2: sai server sign in", EditorStyles.boldLabel);
 
-            SteamworksNetTicketProvider provider = login.TicketProvider as SteamworksNetTicketProvider;
-            if (login.TicketProvider == null)
-            {
-                EditorGUILayout.HelpBox("Assign a ticket provider (for example SteamworksNetTicketProvider) in steam settings.", MessageType.Warning);
-                return;
-            }
-            if (provider == null)
-            {
-                EditorGUILayout.HelpBox("Using a custom ISteamTicketProvider.", MessageType.None);
-                return;
-            }
+            SaiAuth saiAuth = server != null ? server.SaiAuth : null;
+            GoogleBackendLogin google = server != null ? server.GoogleBackendLogin : null;
+            bool signedIn = Application.isPlaying && server != null && server.IsAuthenticated;
+            UserData user = saiAuth != null ? saiAuth.CurrentUser : null;
 
-            if (!Application.isPlaying)
-            {
-                EditorGUILayout.HelpBox("Steam client status appears in Play Mode.", MessageType.None);
-                return;
-            }
-
-            using (new EditorGUI.DisabledScope(true))
-            {
-                EditorGUILayout.Toggle("steamworks available", provider.SteamworksAvailable);
-                EditorGUILayout.Toggle("steam initialized", provider.SteamInitialized);
-                EditorGUILayout.TextField("local steam id", provider.LocalSteamId);
-            }
-
-            if (!string.IsNullOrEmpty(provider.InitError))
-                EditorGUILayout.HelpBox(provider.InitError + "\n" + Guidance(provider.InitError), MessageType.Warning);
-
-            using (new EditorGUI.DisabledScope(!provider.SteamworksAvailable))
-            {
-                EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button("Initialize Steam", GUILayout.Height(20))) provider.InitializeSteam();
-                if (GUILayout.Button("Refresh Steam State", GUILayout.Height(20))) provider.RefreshState();
-                EditorGUILayout.EndHorizontal();
-            }
-        }
-
-        private void DrawSignedInAccount()
-        {
-            if (!Application.isPlaying) return;
-
-            SaiServer server = SaiServer.Instance;
-            UserData user = server != null && server.SaiAuth != null ? server.SaiAuth.CurrentUser : null;
-
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("signed in account", EditorStyles.boldLabel);
-            using (new EditorGUI.DisabledScope(true))
-            {
-                EditorGUILayout.TextField("sai account", user != null ? user.username + " (" + user.email + ")" : "not signed in");
-            }
-        }
-
-        private void DrawActions(SteamBackendLogin login)
-        {
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("actions", EditorStyles.boldLabel);
-            EditorGUILayout.Space(5);
+            SteamEditorUtility.DrawStatus(signedIn, signedIn
+                ? $"signed in: <b>{(user != null ? user.username + " (" + user.email + ")" : "Sai account")}</b>"
+                : "not signed in (required to link)");
 
             using (new EditorGUI.DisabledScope(!Application.isPlaying))
             {
                 EditorGUILayout.BeginHorizontal();
-
-                using (new EditorGUI.DisabledScope(login.IsLoggingIn))
+                using (new EditorGUI.DisabledScope(saiAuth == null || signedIn))
                 {
-                    GUI.backgroundColor = Color.green;
-                    if (GUILayout.Button("Login With Steam", GUILayout.Height(25)))
-                        login.StartLogin(result => this.LogSuccess("Steam login completed", result), this.LogError);
-                    GUI.backgroundColor = Color.white;
+                    if (GUILayout.Button("Password Login", GUILayout.Height(SteamEditorUtility.ButtonHeight))) PasswordLogin(saiAuth);
                 }
-
-                GUI.backgroundColor = new Color(1f, 0.7f, 0.3f);
-                if (GUILayout.Button("Cancel Login", GUILayout.Height(25)))
-                    login.CancelLogin();
-                GUI.backgroundColor = Color.white;
-
-                GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
-                if (GUILayout.Button("Clear Auth Data", GUILayout.Height(25)))
-                    login.ClearAuthData();
-                GUI.backgroundColor = Color.white;
-
+                SteamEditorUtility.DrawSelectButton(saiAuth, nameof(SaiAuth));
                 EditorGUILayout.EndHorizontal();
-
-                EditorGUILayout.Space(5);
 
                 EditorGUILayout.BeginHorizontal();
-
-                GUI.backgroundColor = new Color(0.4f, 0.7f, 1f);
-                if (GUILayout.Button("Set Token To SaiAuth", GUILayout.Height(25)))
-                    login.SetTokenToSaiAuth();
-                GUI.backgroundColor = Color.white;
-
-                using (new EditorGUI.DisabledScope(login.IsLoggingIn))
+                using (new EditorGUI.DisabledScope(google == null || signedIn || google.IsLoggingIn))
                 {
-                    GUI.backgroundColor = new Color(0.5f, 0.8f, 1f);
-                    if (GUILayout.Button("Claim Rewards", GUILayout.Height(25)))
-                        login.ClaimRewards(result => this.LogSuccess("Steam reward checked", result), this.LogError);
-                    GUI.backgroundColor = Color.white;
+                    if (GUILayout.Button("Google Login", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
+                        google.StartLogin(response => SteamEditorUtility.LogInfo("Signed in with Google"), SteamEditorUtility.LogError);
                 }
-
+                SteamEditorUtility.DrawSelectButton(google, nameof(GoogleBackendLogin));
                 EditorGUILayout.EndHorizontal();
+
+                if (signedIn && saiAuth != null && GUILayout.Button("Logout", EditorStyles.miniButton))
+                    saiAuth.Logout();
             }
+            if (!Application.isPlaying)
+                EditorGUILayout.HelpBox("Sign in appears in Play Mode.", MessageType.None);
+            return signedIn;
         }
 
-        private void DrawTwoFactor(SteamBackendLogin login)
+        // Step 3: link the running Steam account to the signed-in Sai account.
+        // SteamAPI starts automatically on the first request.
+        private void DrawStep3Link(SteamLink steamLink)
         {
-            if (!Application.isPlaying || !login.RequiresTwoFactor) return;
-
             EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("two factor login", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("This account requires an Authenticator code to finish Steam login.", MessageType.Warning);
-            EditorGUILayout.BeginHorizontal();
-            this.loginTwoFactorCode = EditorGUILayout.TextField("authenticator code", this.loginTwoFactorCode);
-            using (new EditorGUI.DisabledScope(login.IsLoggingIn))
+            EditorGUILayout.LabelField("step 3: link steam", EditorStyles.boldLabel);
+            SteamEditorUtility.DrawProviderProblems(steamLink);
+
+            bool linkNeedsCode = steamLink.LastError == SteamErrorGuidance.LinkTwoFactorRequired
+                || steamLink.LastError == SteamErrorGuidance.InvalidTwoFactorCode;
+            if (linkNeedsCode)
+                this.linkCode = EditorGUILayout.TextField("authenticator or recovery code", this.linkCode);
+
+            using (new EditorGUI.DisabledScope(!Application.isPlaying || steamLink.IsBusy))
             {
-                if (GUILayout.Button("Verify", GUILayout.Width(80)))
-                {
-                    login.VerifyTwoFactor(this.loginTwoFactorCode, result =>
-                    {
-                        this.loginTwoFactorCode = "";
-                        if (this.ShowDebug) Debug.Log("[Editor] Steam login completed with 2FA");
-                    }, this.LogError);
-                }
-            }
-            EditorGUILayout.EndHorizontal();
-        }
-
-        private void DrawLink(SteamBackendLogin login)
-        {
-            if (!Application.isPlaying) return;
-
-            SaiServer server = SaiServer.Instance;
-            bool signedIn = server != null && server.IsAuthenticated;
-
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("link steam to signed in account", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox(
-                "Steam never creates an account. Sign in first with the GoogleBackendLogin or SaiAuth Inspector, then link. " +
-                "Accounts with 2FA enter an Authenticator or recovery code. " +
-                "Accounts without 2FA must have signed in within the last 10 minutes.", MessageType.None);
-
-            this.linkTwoFactorCode = EditorGUILayout.TextField("authenticator code", this.linkTwoFactorCode);
-            this.linkRecoveryCode = EditorGUILayout.TextField("recovery code", this.linkRecoveryCode);
-
-            using (new EditorGUI.DisabledScope(!signedIn || login.IsLoggingIn))
-            {
-                GUI.backgroundColor = new Color(0.4f, 0.7f, 1f);
-                if (GUILayout.Button(signedIn ? "Link Steam" : "Link Steam (sign in first)", GUILayout.Height(25)))
-                {
-                    login.LinkAccount(result =>
-                    {
-                        this.linkTwoFactorCode = "";
-                        this.linkRecoveryCode = "";
-                        this.LogSuccess("Steam linked", result);
-                    }, this.LogError, this.linkTwoFactorCode, this.linkRecoveryCode);
-                }
-                GUI.backgroundColor = Color.white;
+                if (GUILayout.Button("Link Steam", GUILayout.Height(30)))
+                    this.Link(steamLink);
+                if (GUILayout.Button("Claim Rewards", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
+                    steamLink.ClaimRewards(result => SteamEditorUtility.LogResult("Steam reward checked", result), SteamEditorUtility.LogError);
             }
         }
 
-        private void DrawLastError(SteamBackendLogin login)
+        // Signs in with the username and password set on the SaiAuth component (.env or its Inspector).
+        private static void PasswordLogin(SaiAuth saiAuth)
         {
-            if (string.IsNullOrEmpty(login.LastError)) return;
-
-            EditorGUILayout.Space(10);
-            EditorGUILayout.HelpBox(login.LastError + "\n" + Guidance(login.LastError), MessageType.Error);
-        }
-
-        private static string Guidance(string error)
-        {
-            switch (error)
+            var auth = new SerializedObject(saiAuth);
+            string username = auth.FindProperty(SaiAuthUsernameField).stringValue;
+            string password = auth.FindProperty(SaiAuthPasswordField).stringValue;
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
-                case NotLinked: return "This Steam account is not linked. Sign in with Google or password, then press Link Steam.";
-                case TwoFactorRequired: return "Enter the Authenticator code in two factor login, then press Verify.";
-                case LinkTwoFactorRequired: return "This account has 2FA. Enter an Authenticator or recovery code, then press Link Steam.";
-                case InvalidTwoFactorCode: return "The code is invalid, expired, or already used. Enter a new code.";
-                case LinkReauthRequired: return "Your sign-in is older than 10 minutes. Sign in again, then press Link Steam.";
-                case LinkConflict: return "This Steam account or this user is already linked to another account.";
-                case GameNotOwned: return "This Steam account does not own the game.";
-                case NotLoggedOn: return "Start the Steam client and sign in, then press Refresh Steam State.";
-                case NotInitialized: return "SteamAPI is not initialized. Initialize it in the game, or enable initialize steam api on SteamworksNetTicketProvider. Check steam_appid.txt when testing in the Editor.";
-                case ProviderRequired: return "Assign a ticket provider in steam settings.";
-                case SteamworksMissing: return "Install the Steamworks.NET package (com.rlabrecque.steamworks.net).";
-                case Unauthorized: return "Sign in with Google or password first.";
-                default: return "";
+                Debug.LogWarning("[Editor] Set username and password on SaiAuth (or USERNAME / PASSWORD in .env) first.", saiAuth);
+                SteamEditorUtility.Select(saiAuth);
+                return;
             }
+            saiAuth.Login(username, password, response => SteamEditorUtility.LogInfo("Signed in with password"), SteamEditorUtility.LogError);
         }
 
-        private bool ShowDebug => SaiServer.Instance == null || SaiServer.Instance.ShowDebug;
-
-        private void LogSuccess(string message, SteamLoginResponse result)
+        private void Link(SteamLink steamLink)
         {
-            if (!this.ShowDebug) return;
-            string reward = result != null && result.reward != null ? result.reward.status : "none";
-            Debug.Log($"[Editor] {message} (reward: {reward})");
+            string code = this.linkCode.Trim();
+            bool authenticator = code.Length == AuthenticatorCodeLength && IsDigits(code);
+            steamLink.Link(result =>
+            {
+                this.linkCode = "";
+                SteamEditorUtility.LogResult("Steam linked", result);
+            }, SteamEditorUtility.LogError, authenticator ? code : null, authenticator || code.Length == 0 ? null : code);
         }
 
-        private void LogError(string error)
+        private static bool IsDigits(string value)
         {
-            if (this.ShowDebug) Debug.LogWarning($"[Editor] Steam operation failed: {error}");
+            foreach (char c in value)
+                if (c < '0' || c > '9') return false;
+            return true;
         }
     }
 }

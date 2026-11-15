@@ -10,14 +10,14 @@ than Windows, macOS, and Linux standalone, every call fails with
 
 ## Setup
 
-1. Complete the Steamworks.NET part of the [Steam login setup](../Login/README.md).
-   Steam login itself is not required for achievements.
+1. Complete the Steamworks.NET part of the [Steam account link setup](../Link/README.md).
+   Linking a Steam account is not required for achievements.
 2. Define achievements (and stats for progress-based achievements) in the
    Steamworks partner site for the AppID, then publish the changes. Unpublished
    achievements are not visible to the client.
 3. The `SaiServer` prefab already contains `SteamAchievements` on its `Steam`
    child object, wired to `SteamworksNetTicketProvider` on the same object. SteamAPI is prepared the same
-   way as for Steam login: a SteamAPI initialized by the game is reused and never
+   way as for Steam account link: a SteamAPI initialized by the game is reused and never
    shut down; otherwise the provider initializes it when
    **Initialize Steam Api** is on.
 4. `SteamAPI.RunCallbacks` must run every frame (the provider does this when it
