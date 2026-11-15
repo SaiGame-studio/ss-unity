@@ -5,8 +5,8 @@ using UnityEngine;
 namespace SaiGame.Services
 {
     // Signs into the Sai account linked to the running Steam account, with no
-    // input. CheckLinked asks the Sai Server whether that Steam account is linked
-    // without signing in; until it is, link it with SteamLink.
+    // input. CheckLinked asks whether that Steam account is linked and can
+    // automatically sign in when enabled; otherwise link it with SteamLink.
     [DefaultExecutionOrder(-99)]
     public class SteamLogin : SteamTicketService
     {
@@ -29,6 +29,8 @@ namespace SaiGame.Services
         [Header("Link")]
         [SerializeField] protected SteamLinkState linkState;
         [SerializeField] protected string steamId;
+        [Tooltip("Automatically sign in when Check Link confirms the Steam account is linked.")]
+        [SerializeField] private bool autoSignInOnCheckLinkSuccess = true;
 
         [Header("Session")]
         [SerializeField] protected string accessToken;
@@ -54,7 +56,7 @@ namespace SaiGame.Services
         public int ExpiresIn => expiresIn;
         public UserData CurrentUser => userData;
 
-        // Asks the Sai Server whether the running Steam account is linked. Never signs in.
+        // Checks the Steam link and optionally signs in after a successful linked result.
         public void CheckLinked(Action<bool> onResult = null, Action<string> onError = null)
         {
             LogButton("Check Link");
@@ -69,6 +71,8 @@ namespace SaiGame.Services
                     this.linkState = result.linked ? SteamLinkState.Linked : SteamLinkState.NotLinked;
                     Succeed("Check Link", result.linked ? "linked" : "not linked");
                     onResult?.Invoke(result.linked);
+                    if (autoSignInOnCheckLinkSuccess && result.linked && !IsBusy && !HasActiveSteamSession)
+                        SignIn(onError: onError);
                 }, onError));
         }
 

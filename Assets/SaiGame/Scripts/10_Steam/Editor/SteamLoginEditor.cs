@@ -81,6 +81,14 @@ namespace SaiGame.Services
             }
 
             this.DrawLinkStatus(steamLogin, server);
+            serializedObject.Update();
+            EditorGUILayout.Space(10);
+            SerializedProperty autoSignIn = serializedObject.FindProperty("autoSignInOnCheckLinkSuccess");
+            EditorGUILayout.BeginHorizontal();
+            autoSignIn.boolValue = EditorGUILayout.Toggle(GUIContent.none, autoSignIn.boolValue, GUILayout.Width(18));
+            EditorGUILayout.LabelField("auto sign in on check link success", EditorStyles.wordWrappedLabel);
+            EditorGUILayout.EndHorizontal();
+            serializedObject.ApplyModifiedProperties();
             this.DrawStep2SignIn(steamLogin, busy);
             this.DrawStep3ClaimGame(steamLogin, busy);
             if (!Application.isPlaying)
