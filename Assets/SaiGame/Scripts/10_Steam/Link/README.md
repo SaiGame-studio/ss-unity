@@ -109,8 +109,18 @@ SaiServer.Instance.SteamLink.Link(
 
 Linking requires proof of the account owner, not only a session:
 
+For debugging, select the `SteamLink` component in Play Mode and use **Check Two
+Factor Status** after signing in. Its Inspector shows enrollment, whether the
+current session requires verification, availability, and the UTC check time.
+This calls `GET /api/v1/auth/2fa/status`; it does not request a Steam ticket.
+The display is a snapshot, not a countdown or permission to bypass a backend
+challenge. Refresh it to recheck the 10-minute verification window. The code input
+also appears when the snapshot requires verification or a link request reports
+`STEAM_LINK_TWO_FACTOR_REQUIRED` / `TWO_FACTOR_INVALID_CODE`.
+
 - Accounts with 2FA pass a code: `Link(onSuccess, onError, "123456")`,
-  or a recovery code as the fourth argument. Without one the error is
+  or a recovery code as the fourth argument. A session verified within the
+  backend's fixed 10-minute grace window can omit it. Outside that window the error is
   `STEAM_LINK_TWO_FACTOR_REQUIRED`; a wrong code is `TWO_FACTOR_INVALID_CODE`.
 - Accounts without 2FA must have signed in with Google/password within the last
   10 minutes. A restored or refreshed old session gets

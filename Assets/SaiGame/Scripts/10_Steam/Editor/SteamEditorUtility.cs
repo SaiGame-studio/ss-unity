@@ -180,7 +180,13 @@ namespace SaiGame.Services
         {
             if (!ShowDebug) return;
             string claimGame = result != null && result.reward != null ? result.reward.status : "none";
-            Debug.Log($"[Editor] {message} (claim game: {claimGame})");
+            string code = result?.reward?.message_code;
+            string detail = string.IsNullOrEmpty(code) ? "" : $" | message_code={code}";
+            string log = $"[Editor] {message} (claim game: {claimGame}{detail})";
+            if (claimGame == "pending" || claimGame == "ineligible")
+                Debug.LogWarning(log + " | Claim Game did not complete. Check the reason code and backend logs.");
+            else
+                Debug.Log(log);
         }
     }
 }

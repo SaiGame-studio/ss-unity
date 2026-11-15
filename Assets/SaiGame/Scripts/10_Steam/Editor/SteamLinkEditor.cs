@@ -71,6 +71,8 @@ namespace SaiGame.Services
                     signedIn = this.DrawStep2SignIn(server);
             }
 
+            this.DrawTwoFactorStatus(steamLink, signedIn);
+
             serializedObject.Update();
             EditorGUILayout.Space(10);
             SerializedProperty autoLink = serializedObject.FindProperty("autoLinkOnLoginSuccess");
@@ -151,7 +153,38 @@ namespace SaiGame.Services
             }
             if (!Application.isPlaying)
                 EditorGUILayout.HelpBox("Sign in appears in Play Mode.", MessageType.None);
+            if (saiAuth != null && saiAuth.RequiresTwoFactor)
+                EditorGUILayout.HelpBox("Password sign-in requires two-factor verification. Select SaiAuth to enter the Authenticator or recovery code.", MessageType.Warning);
             return signedIn;
+        }
+
+        private void DrawTwoFactorStatus(SteamLink steamLink, bool signedIn)
+        {
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("two factor verification", EditorStyles.boldLabel);
+            TwoFactorStatusResponse status = steamLink.TwoFactorStatus;
+            if (status == null)
+                EditorGUILayout.HelpBox("Status unknown. Sign in and press Check Two Factor Status to query the backend for this session.", MessageType.None);
+            else
+            {
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    EditorGUILayout.Toggle("two factor enabled", status.enabled);
+                    EditorGUILayout.Toggle("verification required", status.verification_required);
+                    EditorGUILayout.Toggle("verification available", status.available);
+                    EditorGUILayout.TextField("last checked (UTC)", steamLink.TwoFactorStatusCheckedAt.ToString("yyyy-MM-dd HH:mm:ss"));
+                }
+                string message = !status.enabled ? "Two-factor authentication is not enabled for this account."
+                    : status.verification_required ? "Enter an Authenticator or recovery code when linking Steam."
+                    : "This session has recent two-factor verification. Another code is not currently required.";
+                EditorGUILayout.HelpBox(message + " This is the last backend snapshot; refresh to recheck. No remaining grace time is returned by the backend.",
+                    status.verification_required ? MessageType.Warning : MessageType.Info);
+            }
+            using (new EditorGUI.DisabledScope(!Application.isPlaying || !signedIn || steamLink.IsBusy))
+            {
+                if (GUILayout.Button("Check Two Factor Status", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
+                    steamLink.CheckTwoFactorStatus(_ => Repaint(), SteamEditorUtility.LogError);
+            }
         }
 
         // Step 3: link the running Steam account to the signed-in Sai account.
@@ -163,7 +196,8 @@ namespace SaiGame.Services
             SteamEditorUtility.DrawProviderProblems(steamLink);
 
             bool linkNeedsCode = steamLink.LastError == SteamErrorGuidance.LinkTwoFactorRequired
-                || steamLink.LastError == SteamErrorGuidance.InvalidTwoFactorCode;
+                || steamLink.LastError == SteamErrorGuidance.InvalidTwoFactorCode
+                || (steamLink.TwoFactorStatus != null && steamLink.TwoFactorStatus.verification_required);
             if (linkNeedsCode)
                 this.linkCode = EditorGUILayout.TextField("authenticator or recovery code", this.linkCode);
 

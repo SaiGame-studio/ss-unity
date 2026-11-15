@@ -248,6 +248,7 @@ namespace SaiGame.Services
                 Debug.Log($"<color={LogColor}><b>{LogTag} ► {action}</b></color>", gameObject);
         }
 
-        protected static string ClaimGameStatus(SteamClaimGameResult value) => value != null ? "claim game: " + value.status : "claim game: none";
+        protected static string ClaimGameStatus(SteamClaimGameResult value) => value == null ? "claim game: none"
+            : "claim game: " + value.status + (string.IsNullOrEmpty(value.message_code) ? "" : " | message_code=" + value.message_code);
     }
 }

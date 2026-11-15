@@ -56,7 +56,7 @@ namespace SaiGame.Services
 
         // Environment overrides (drawn under "Load .env on Play" by SaiServerEditor)
         [Tooltip("When Load .env on Play is on, SERVER_ENDPOINT from .env replaces the server endpoint at game start")]
-        [SerializeField] protected bool envOverrideServerEndpoint = true;
+        [SerializeField] protected bool envOverrideServerEndpoint = false;
         // Runtime-only base URL override (e.g. from .env SERVER_ENDPOINT); never saved to the scene
         [NonSerialized] private string serverEndpointOverride = "";
         [Tooltip("When Load .env on Play is on, GAME_ID from .env replaces the Game Id at game start")]
