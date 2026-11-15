@@ -100,6 +100,7 @@ namespace SaiGame.Services
             using (new EditorGUI.DisabledScope(true))
             {
                 EditorGUILayout.Toggle("Is Login", saiAuth.IsAuthenticated);
+                EditorGUILayout.Toggle("Requires Two Factor", saiAuth.RequiresTwoFactor);
             }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("accessToken"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("refreshToken"));

@@ -767,6 +767,10 @@ MonoBehaviour:
   ticketTimeoutSeconds: 30
   linkState: 0
   steamId: 
+  autoCheckOnStart: 0
+  autoSignInOnCheckLinkSuccess: 0
+  autoCheckClaimOnSignInSuccess: 0
+  autoClaimGameOnCheckClaimSuccess: 0
   accessToken: 
   refreshToken: 
   expiresIn: 0
@@ -806,6 +810,7 @@ MonoBehaviour:
   ticketProvider: {fileID: 5293678567489229214}
   ticketTimeoutSeconds: 30
   steamLogin: {fileID: 7419283546617730215}
+  autoLinkOnLoginSuccess: 0
 --- !u!114 &5293678567489229214
 MonoBehaviour:
   m_ObjectHideFlags: 0
