@@ -73,8 +73,6 @@ namespace SaiGame.Services
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("step 1: check steam link", EditorStyles.boldLabel);
-            if (steamLogin.LinkState == SteamLinkState.NotLinked)
-                EditorGUILayout.HelpBox("Complete the three steps in SteamLink, then return here to sign in.", MessageType.Info);
             using (new EditorGUI.DisabledScope(!Application.isPlaying || busy))
             {
                 if (SteamEditorUtility.SteamButton("Check Link", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
@@ -169,6 +167,8 @@ namespace SaiGame.Services
             GUILayout.FlexibleSpace();
             SteamEditorUtility.DrawSelectButton(steamLink, nameof(SteamLink));
             EditorGUILayout.EndHorizontal();
+            if (steamLogin.LinkState == SteamLinkState.NotLinked)
+                EditorGUILayout.HelpBox("Switch to SteamLink to continue linking, then return here to sign in.", MessageType.None);
         }
     }
 }

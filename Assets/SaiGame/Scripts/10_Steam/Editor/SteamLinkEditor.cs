@@ -58,8 +58,6 @@ namespace SaiGame.Services
             GUILayout.FlexibleSpace();
             SteamEditorUtility.DrawSelectButton(steamLogin, nameof(SteamLogin));
             EditorGUILayout.EndHorizontal();
-            if (linkState == SteamLinkState.Linked)
-                EditorGUILayout.HelpBox("SteamLink is disabled because this Steam account is already linked. No further linking is needed. Continue with Sign In With Linked Steam in SteamLogin.", MessageType.Info);
             EditorGUILayout.Space(10);
 
             using (new EditorGUI.DisabledScope(!steamLink.CanLink))
@@ -73,6 +71,16 @@ namespace SaiGame.Services
 
                 using (new EditorGUI.DisabledScope(!appIdReady || !signedIn))
                     this.DrawStep3Link(steamLink);
+            }
+
+            if (linkState == SteamLinkState.Linked)
+            {
+                EditorGUILayout.HelpBox("Steam account linked successfully. Return to SteamLogin and use Sign In With Linked Steam to continue.", MessageType.Info);
+                using (new EditorGUI.DisabledScope(steamLogin == null))
+                {
+                    if (GUILayout.Button("Continue with SteamLogin", GUILayout.Height(SteamEditorUtility.ButtonHeight)))
+                        SteamEditorUtility.Select(steamLogin);
+                }
             }
 
             if (steamLink.IsBusy && GUILayout.Button("Cancel", EditorStyles.miniButton))
