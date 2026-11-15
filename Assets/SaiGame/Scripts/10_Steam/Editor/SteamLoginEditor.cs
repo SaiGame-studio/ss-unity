@@ -33,15 +33,7 @@ namespace SaiGame.Services
             SteamLogin steamLogin = (SteamLogin)target;
             SaiServer server = SteamEditorUtility.FindServer(steamLogin);
 
-            // The session created by the last Steam sign-in, shown as on GoogleBackendLogin.
-            serializedObject.Update();
-            EditorGUILayout.LabelField("authentication data", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("accessToken"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("refreshToken"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("expiresIn"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("userData"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("signInTime"));
-            serializedObject.ApplyModifiedProperties();
+            this.DrawFullAuto(steamLogin, server);
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("steam app id", EditorStyles.boldLabel);
@@ -64,12 +56,57 @@ namespace SaiGame.Services
             serializedObject.ApplyModifiedProperties();
         }
 
+        private void DrawFullAuto(SteamLogin steamLogin, SaiServer server)
+        {
+            serializedObject.Update();
+            SerializedProperty[] autoProperties =
+            {
+                serializedObject.FindProperty("autoCheckOnStart"),
+                serializedObject.FindProperty("autoSignInOnCheckLinkSuccess"),
+                serializedObject.FindProperty("autoCheckClaimOnSignInSuccess"),
+                serializedObject.FindProperty("autoClaimGameOnCheckClaimSuccess")
+            };
+
+            SteamLink steamLink = server != null ? server.SteamLink : steamLogin.GetComponent<SteamLink>();
+            SerializedObject linkObject = steamLink != null ? new SerializedObject(steamLink) : null;
+            linkObject?.Update();
+            SerializedProperty autoLink = linkObject?.FindProperty("autoLinkOnLoginSuccess");
+            bool allEnabled = autoLink == null || autoLink.boolValue;
+            bool anyEnabled = autoLink != null && autoLink.boolValue;
+            foreach (SerializedProperty property in autoProperties)
+            {
+                allEnabled &= property.boolValue;
+                anyEnabled |= property.boolValue;
+            }
+
+            bool previousMixedValue = EditorGUI.showMixedValue;
+            EditorGUI.showMixedValue = anyEnabled && !allEnabled;
+            EditorGUI.BeginChangeCheck();
+            bool fullAuto = EditorGUILayout.ToggleLeft("full auto", allEnabled, EditorStyles.wordWrappedLabel);
+            bool changed = EditorGUI.EndChangeCheck();
+            EditorGUI.showMixedValue = previousMixedValue;
+            if (!changed) return;
+
+            foreach (SerializedProperty property in autoProperties)
+                property.boolValue = fullAuto;
+            if (autoLink != null) autoLink.boolValue = fullAuto;
+            serializedObject.ApplyModifiedProperties();
+            linkObject?.ApplyModifiedProperties();
+        }
+
         private void DrawSignIn(SteamLogin steamLogin, SaiServer server, bool appIdReady)
         {
             SteamEditorUtility.DrawProviderProblems(steamLogin);
             SteamLink steamLink = server != null ? server.SteamLink : steamLogin.GetComponent<SteamLink>();
             bool busy = steamLogin.IsBusy || (steamLink != null && steamLink.IsBusy);
             bool operationsDisabled = !appIdReady || busy;
+
+            serializedObject.Update();
+            EditorGUILayout.Space(10);
+            SerializedProperty autoCheckOnStart = serializedObject.FindProperty("autoCheckOnStart");
+            autoCheckOnStart.boolValue = EditorGUILayout.ToggleLeft("auto check on start",
+                autoCheckOnStart.boolValue, EditorStyles.wordWrappedLabel);
+            serializedObject.ApplyModifiedProperties();
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("step 1: check steam link", EditorStyles.boldLabel);
@@ -88,6 +125,15 @@ namespace SaiGame.Services
                 autoSignIn.boolValue, EditorStyles.wordWrappedLabel);
             serializedObject.ApplyModifiedProperties();
             this.DrawStep2SignIn(steamLogin, operationsDisabled);
+            serializedObject.Update();
+            EditorGUILayout.Space(10);
+            SerializedProperty autoCheckClaim = serializedObject.FindProperty("autoCheckClaimOnSignInSuccess");
+            autoCheckClaim.boolValue = EditorGUILayout.ToggleLeft("auto check claim",
+                autoCheckClaim.boolValue, EditorStyles.wordWrappedLabel);
+            SerializedProperty autoClaimGame = serializedObject.FindProperty("autoClaimGameOnCheckClaimSuccess");
+            autoClaimGame.boolValue = EditorGUILayout.ToggleLeft("auto claim game",
+                autoClaimGame.boolValue, EditorStyles.wordWrappedLabel);
+            serializedObject.ApplyModifiedProperties();
             this.DrawStep3ClaimGame(steamLogin, operationsDisabled);
             if (!Application.isPlaying)
                 EditorGUILayout.HelpBox("Steam operations are available in Play Mode.", MessageType.None);

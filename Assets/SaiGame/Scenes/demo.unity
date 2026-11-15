@@ -440,13 +440,29 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2302586159097302283, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoLinkOnLoginSuccess
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_Name
       value: SaiServer
       objectReference: {fileID: 0}
     - target: {fileID: 7419283546617730215, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: autoSignInOnCheckLinkSuccess
+      propertyPath: autoCheckOnStart
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7419283546617730215, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoSignInOnCheckLinkSuccess
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7419283546617730215, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoCheckClaimOnSignInSuccess
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7419283546617730215, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoClaimGameOnCheckClaimSuccess
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalPosition.x

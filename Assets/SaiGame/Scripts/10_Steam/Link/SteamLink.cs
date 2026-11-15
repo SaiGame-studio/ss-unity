@@ -12,6 +12,11 @@ namespace SaiGame.Services
         public const string LinkEndpoint = "/api/v1/player/auth/steam/link";
 
         [SerializeField] protected SteamLogin steamLogin;
+        [Tooltip("Automatically link Steam after a successful Sai account login when Check Link confirms Steam is not linked.")]
+        [SerializeField] private bool autoLinkOnLoginSuccess = false;
+
+        private SaiAuth saiAuth;
+        private GoogleBackendLogin googleBackendLogin;
 
         protected override string LogTag => "[SteamLink]";
         public bool CanLink => steamLogin != null && !steamLogin.IsBusy
@@ -21,6 +26,30 @@ namespace SaiGame.Services
         {
             base.LoadComponents();
             if (this.steamLogin == null) this.steamLogin = GetComponent<SteamLogin>();
+        }
+
+        private void OnEnable()
+        {
+            SaiServer server = SaiServer.Instance;
+            if (server == null) return;
+            saiAuth = server.SaiAuth;
+            googleBackendLogin = server.GoogleBackendLogin;
+            if (saiAuth != null) saiAuth.OnLoginSuccess += HandleLoginSuccess;
+            if (googleBackendLogin != null) googleBackendLogin.OnLoginSuccess += HandleLoginSuccess;
+        }
+
+        protected override void OnDisable()
+        {
+            if (saiAuth != null) saiAuth.OnLoginSuccess -= HandleLoginSuccess;
+            if (googleBackendLogin != null) googleBackendLogin.OnLoginSuccess -= HandleLoginSuccess;
+            base.OnDisable();
+        }
+
+        private void HandleLoginSuccess(LoginResponse response)
+        {
+            if (autoLinkOnLoginSuccess && !IsBusy && CanLink && SaiServer.Instance != null
+                && SaiServer.Instance.IsAuthenticated && SaiServer.Instance.AccessToken == response.access_token)
+                Link();
         }
 
         // Links the running Steam account to the signed-in Sai account.

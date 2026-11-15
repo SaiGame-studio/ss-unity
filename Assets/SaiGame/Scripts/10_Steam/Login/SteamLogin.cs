@@ -29,8 +29,16 @@ namespace SaiGame.Services
         [Header("Link")]
         [SerializeField] protected SteamLinkState linkState;
         [SerializeField] protected string steamId;
+        [Tooltip("Automatically check whether the Steam account is linked when this component starts.")]
+        [SerializeField] private bool autoCheckOnStart = false;
         [Tooltip("Automatically sign in when Check Link confirms the Steam account is linked.")]
         [SerializeField] private bool autoSignInOnCheckLinkSuccess = false;
+
+        [Header("Claim")]
+        [Tooltip("Automatically check claim status after a successful Steam sign-in, including two-factor verification.")]
+        [SerializeField] private bool autoCheckClaimOnSignInSuccess = false;
+        [Tooltip("Automatically claim the game after Check Claim succeeds and the game can be claimed.")]
+        [SerializeField] private bool autoClaimGameOnCheckClaimSuccess = false;
 
         [Header("Session")]
         [SerializeField] protected string accessToken;
@@ -55,6 +63,12 @@ namespace SaiGame.Services
         public string RefreshToken => refreshToken;
         public int ExpiresIn => expiresIn;
         public UserData CurrentUser => userData;
+
+        protected override void Start()
+        {
+            base.Start();
+            if (autoCheckOnStart) CheckLinked();
+        }
 
         // Checks the Steam link and optionally signs in after a successful linked result.
         public void CheckLinked(Action<bool> onResult = null, Action<string> onError = null)
@@ -105,6 +119,8 @@ namespace SaiGame.Services
                     checkedClaimToken = sessionToken;
                     Succeed("Check Claim", result.claimed ? "already claimed" : result.can_claim ? "ready to claim" : result.message_code);
                     onSuccess?.Invoke(result);
+                    if (autoClaimGameOnCheckClaimSuccess && !IsBusy && CanClaimGame && !result.claimed)
+                        ClaimGame(onError: onError);
                 }, onError));
         }
 
@@ -177,6 +193,7 @@ namespace SaiGame.Services
                 OnSignedIn?.Invoke(result);
                 Succeed("Sign In With Linked Steam", ClaimGameStatus(result.reward));
                 onSuccess?.Invoke(result);
+                AutoCheckClaim(onError);
             }, error =>
             {
                 if (error == NotLinkedCode) this.linkState = SteamLinkState.NotLinked;
@@ -210,6 +227,13 @@ namespace SaiGame.Services
             OnSignedIn?.Invoke(completed);
             Succeed("Verify Two Factor", ClaimGameStatus(completed.reward));
             onSuccess?.Invoke(completed);
+            AutoCheckClaim(onError);
+        }
+
+        private void AutoCheckClaim(Action<string> onError)
+        {
+            if (autoCheckClaimOnSignInSuccess && !IsBusy && HasActiveSteamSession)
+                CheckClaim(onError: onError);
         }
 
         private void ApplySession(LoginResponse result)

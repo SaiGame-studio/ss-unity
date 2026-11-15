@@ -60,18 +60,26 @@ namespace SaiGame.Services
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space(10);
 
+            bool appIdReady;
+            bool signedIn;
             using (new EditorGUI.DisabledScope(!steamLink.CanLink))
             {
                 EditorGUILayout.LabelField("step 1: steam app id", EditorStyles.boldLabel);
-                bool appIdReady = SteamEditorUtility.DrawAppId(steamLink, server);
+                appIdReady = SteamEditorUtility.DrawAppId(steamLink, server);
 
-                bool signedIn;
                 using (new EditorGUI.DisabledScope(!appIdReady))
                     signedIn = this.DrawStep2SignIn(server);
-
-                using (new EditorGUI.DisabledScope(!appIdReady || !signedIn))
-                    this.DrawStep3Link(steamLink);
             }
+
+            serializedObject.Update();
+            EditorGUILayout.Space(10);
+            SerializedProperty autoLink = serializedObject.FindProperty("autoLinkOnLoginSuccess");
+            autoLink.boolValue = EditorGUILayout.ToggleLeft("auto link on login success",
+                autoLink.boolValue, EditorStyles.wordWrappedLabel);
+            serializedObject.ApplyModifiedProperties();
+
+            using (new EditorGUI.DisabledScope(!steamLink.CanLink || !appIdReady || !signedIn))
+                this.DrawStep3Link(steamLink);
 
             if (linkState == SteamLinkState.Linked)
             {
