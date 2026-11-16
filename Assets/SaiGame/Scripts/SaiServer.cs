@@ -4,13 +4,14 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Serialization;
 
 namespace SaiGame.Services
 {
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.59";
+        public const string PACKAGE_VERSION = "0.2.60c";
         public const string PACKAGE_NAME = "Sai Server";
         // Optional headers that tell the server which client sent a request; the client ID is the game ID.
         public const string CLIENT_ID_HEADER = "X-Client-ID";
@@ -19,6 +20,10 @@ namespace SaiGame.Services
 
         [SerializeField] protected SaiAuth saiAuth;
         [SerializeField] protected GoogleBackendLogin googleBackendLogin;
+        [FormerlySerializedAs("steamBackendLogin")]
+        [SerializeField] protected SteamLink steamLink;
+        [SerializeField] protected SteamLogin steamLogin;
+        [SerializeField] protected SteamAchievements steamAchievements;
         [SerializeField] protected GamerProgress gamerProgress;
         [SerializeField] protected Mailbox mailbox;
         [SerializeField] protected ItemDefinitions itemDefinitions;
@@ -51,7 +56,7 @@ namespace SaiGame.Services
 
         // Environment overrides (drawn under "Load .env on Play" by SaiServerEditor)
         [Tooltip("When Load .env on Play is on, SERVER_ENDPOINT from .env replaces the server endpoint at game start")]
-        [SerializeField] protected bool envOverrideServerEndpoint = true;
+        [SerializeField] protected bool envOverrideServerEndpoint = false;
         // Runtime-only base URL override (e.g. from .env SERVER_ENDPOINT); never saved to the scene
         [NonSerialized] private string serverEndpointOverride = "";
         [Tooltip("When Load .env on Play is on, GAME_ID from .env replaces the Game Id at game start")]
@@ -67,6 +72,7 @@ namespace SaiGame.Services
         [SerializeField] protected string gameId = "";
         private const string PREF_SERVER_ENDPOINT = "SaiGame_ServerEndpoint";
         public const string PRODUCTION_BASE_URL = "https://api.saigame.studio";
+        private const string GOOGLE_SESSION_ENDPOINT = "/api/v1/client/auth/google/session";
 
         [Header("API Settings")]
         [SerializeField] protected int requestTimeout = 30;
@@ -192,6 +198,9 @@ namespace SaiGame.Services
         public SaiAuth SaiAuth => saiAuth;
 
         public GoogleBackendLogin GoogleBackendLogin => this.googleBackendLogin;
+        public SteamLink SteamLink => this.steamLink;
+        public SteamLogin SteamLogin => this.steamLogin;
+        public SteamAchievements SteamAchievements => this.steamAchievements;
 
         public string GameId => this.NormalizeInput(this.gameId);
 
@@ -253,7 +262,8 @@ namespace SaiGame.Services
 
             request.downloadHandler = new DownloadHandlerBuffer();
             request.timeout = requestTimeout;
-            request.certificateHandler = new AllowAllCertificateHandler();
+            if (IsLoopbackUrl(url))
+                request.certificateHandler = new AllowAllCertificateHandler();
 
             request.SetRequestHeader(CLIENT_VERSION_HEADER, $"{CLIENT_NAME}/{PACKAGE_VERSION}");
             if (!string.IsNullOrEmpty(GameId))
@@ -281,6 +291,10 @@ namespace SaiGame.Services
                     || path == "/api/v1/auth/login" || path == "/api/v1/auth/2fa/verify"
                     || path == "/api/v1/auth/refresh" || path == "/api/v1/auth/logout"
                     || path == "/api/v1/client/auth/google/session"
+                    || path == SteamLogin.SignInEndpoint
+                    || path == SteamLogin.StatusEndpoint
+                    || path == SteamLink.LinkEndpoint
+                    || path == SteamLogin.ClaimEndpoint
                     || path == gamePath + "/gamer-progress"))
                 || (method == "GET" && (path == "/api/v1/auth/me" || path == "/api/v1/time"
                     || path.StartsWith("/api/v1/client/auth/google/session/", StringComparison.Ordinal)
@@ -302,14 +316,15 @@ namespace SaiGame.Services
 
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "GET"))
             {
-                if (this.showUrlRequest)
+                // The Google poll URL contains the login session ID.
+                if (this.showUrlRequest && !IsSensitiveAuthRequest(endpoint))
                     Debug.Log($"[SaiServer] GET {request.url}");
 
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
-                    if (this.showJsonResponse)
+                    if (this.showJsonResponse && !IsSensitiveAuthRequest(endpoint))
                         Debug.Log($"[SaiServer] GET Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
@@ -335,14 +350,14 @@ namespace SaiGame.Services
 
                 if (this.showUrlRequest)
                     Debug.Log($"[SaiServer] POST {request.url}");
-                if (this.showJsonRequest && !IsPasswordAuthenticationRequest(endpoint))
+                if (this.showJsonRequest && !IsSensitiveAuthRequest(endpoint))
                     Debug.Log($"[SaiServer] POST Request Body\n{jsonData}");
 
                 yield return request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
-                    if (this.showJsonResponse)
+                    if (this.showJsonResponse && !IsSensitiveAuthRequest(endpoint))
                         Debug.Log($"[SaiServer] POST Response\n{request.downloadHandler.text}");
                     onSuccess?.Invoke(request.downloadHandler.text);
                 }
@@ -355,10 +370,25 @@ namespace SaiGame.Services
             }
         }
 
-        private static bool IsPasswordAuthenticationRequest(string endpoint)
+        // Requests whose body or response carries a password, ticket, token, or
+        // login session ID. Their bodies are never written to the log.
+        private static bool IsSensitiveAuthRequest(string endpoint)
         {
-            return endpoint == "/api/v1/auth/login" || endpoint == "/api/v1/auth/register"
-                || endpoint == "/api/v1/auth/2fa/verify";
+            string path = (endpoint ?? string.Empty).Split('?')[0];
+            return path == "/api/v1/auth/login" || path == "/api/v1/auth/register"
+                || path == "/api/v1/auth/2fa/verify"
+                || path == "/api/v1/auth/refresh" || path == "/api/v1/auth/logout"
+                || path.StartsWith(GOOGLE_SESSION_ENDPOINT, StringComparison.Ordinal)
+                || path == SteamLogin.SignInEndpoint
+                || path == SteamLogin.StatusEndpoint
+                || path == SteamLink.LinkEndpoint
+                || path == SteamLogin.ClaimEndpoint;
+        }
+
+        // Certificate validation is skipped only for a local development server.
+        private static bool IsLoopbackUrl(string url)
+        {
+            return Uri.TryCreate(url, UriKind.Absolute, out Uri uri) && uri.IsLoopback;
         }
 
         public IEnumerator PutRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)
@@ -489,6 +519,9 @@ namespace SaiGame.Services
             this.SyncLegacyServerFieldsFromEndpoint();
             this.LoadSaiAuth();
             this.LoadGoogleBackendLogin();
+            this.LoadSteamLink();
+            this.LoadSteamLogin();
+            this.LoadSteamAchievements();
 
             this.RegisterLoginListeners();
             this.LoadGamerProgress();
@@ -529,6 +562,12 @@ namespace SaiGame.Services
                 this.googleBackendLogin.OnLoginSuccess -= this.HandleLoginSuccess;
                 this.googleBackendLogin.OnLoginSuccess += this.HandleLoginSuccess;
             }
+
+            if (this.steamLogin != null)
+            {
+                this.steamLogin.OnSignedIn -= this.HandleLoginSuccess;
+                this.steamLogin.OnSignedIn += this.HandleLoginSuccess;
+            }
         }
 
         protected override void OnDestroy()
@@ -538,6 +577,9 @@ namespace SaiGame.Services
 
             if (this.googleBackendLogin != null)
                 this.googleBackendLogin.OnLoginSuccess -= this.HandleLoginSuccess;
+
+            if (this.steamLogin != null)
+                this.steamLogin.OnSignedIn -= this.HandleLoginSuccess;
 
             base.OnDestroy();
         }
@@ -603,6 +645,34 @@ namespace SaiGame.Services
             this.googleBackendLogin = GetComponentInChildren<GoogleBackendLogin>();
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadGoogleBackendLogin", gameObject);
+        }
+
+        protected virtual void LoadSteamLink()
+        {
+            if (this.steamLink != null) return;
+            this.steamLink = GetComponentInChildren<SteamLink>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadSteamLink", gameObject);
+        }
+
+        // SteamLogin sits next to SteamLink on the Steam child. A prefab saved
+        // before SteamLogin existed gets it added at runtime.
+        protected virtual void LoadSteamLogin()
+        {
+            if (this.steamLogin != null) return;
+            this.steamLogin = GetComponentInChildren<SteamLogin>();
+            if (this.steamLogin == null && Application.isPlaying && this.steamLink != null)
+                this.steamLogin = this.steamLink.gameObject.AddComponent<SteamLogin>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadSteamLogin", gameObject);
+        }
+
+        protected virtual void LoadSteamAchievements()
+        {
+            if (this.steamAchievements != null) return;
+            this.steamAchievements = GetComponentInChildren<SteamAchievements>();
+            if (this.showDebugLog)
+                Debug.Log(transform.name + ": LoadSteamAchievements", gameObject);
         }
 
         protected virtual void LoadPlayerEvent()
@@ -932,7 +1002,8 @@ namespace SaiGame.Services
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
                 request.timeout = 5;
-                request.certificateHandler = new AllowAllCertificateHandler();
+                if (IsLoopbackUrl(url))
+                    request.certificateHandler = new AllowAllCertificateHandler();
                 yield return request.SendWebRequest();
 
                 bool success = request.result == UnityWebRequest.Result.Success;

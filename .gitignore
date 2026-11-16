@@ -95,3 +95,5 @@ crashlytics-build.properties
 .Trashes
 ehthumbs.db
 Thumbs.db
+# Steamworks.NET local test AppID (written on package import)
+/steam_appid.txt

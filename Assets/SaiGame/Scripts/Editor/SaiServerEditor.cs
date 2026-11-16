@@ -16,6 +16,24 @@ namespace SaiGame.Services
         // Relative to the project root (Unity's working directory).
         private const string BUILD_ENV_EXAMPLE_PATH = "Assets/SaiGame/env.build.example.txt";
         private const float CREATE_ENV_BUTTON_WIDTH = 110f;
+        private void DrawGameName(SaiServer saiServer)
+        {
+            PublicGameInfoLookup.Update(saiServer);
+            EditorGUILayout.BeginHorizontal();
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.TextField(
+                    new GUIContent("Game Name", "Read only. The game name the server returns for this Game Id (public game info)."),
+                    PublicGameInfoLookup.GameName);
+            }
+            using (new EditorGUI.DisabledScope(PublicGameInfoLookup.IsLoading || string.IsNullOrEmpty(saiServer.GameId)))
+            {
+                if (GUILayout.Button("Refresh", EditorStyles.miniButton, GUILayout.Width(PublicGameInfoLookup.RefreshButtonWidth)))
+                    PublicGameInfoLookup.Refresh(saiServer);
+            }
+            EditorGUILayout.EndHorizontal();
+            PublicGameInfoLookup.DrawStatus();
+        }
 
         public override void OnInspectorGUI()
         {
@@ -90,6 +108,7 @@ namespace SaiGame.Services
                 // ── Root (SaiServer) ────────────────────────────────────────
                 EditorGUILayout.LabelField("Root Object", EditorStyles.miniBoldLabel);
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("saiAuth"),              new GUIContent("Sai Auth"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("googleBackendLogin"),   new GUIContent("Google Backend Login"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("gamerProgress"),        new GUIContent("Gamer Progress"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("mailbox"),              new GUIContent("Mailbox"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("playerEvent"),          new GUIContent("Player Event"));
@@ -125,6 +144,13 @@ namespace SaiGame.Services
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("battleSessions"),       new GUIContent("Battle Sessions"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("battleScript"),         new GUIContent("Battle Script"));
 
+                // ── Steam child ──────────────────────────────────────────────
+                EditorGUILayout.Space(2);
+                EditorGUILayout.LabelField("Steam Child Object", EditorStyles.miniBoldLabel);
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("steamLink"),            new GUIContent("Steam Link"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("steamLogin"),           new GUIContent("Steam Login"));
+                EditorGUILayout.PropertyField(this.serializedObject.FindProperty("steamAchievements"),    new GUIContent("Steam Achievements"));
+
                 EditorGUI.indentLevel--;
             }
 
@@ -149,6 +175,7 @@ namespace SaiGame.Services
             this.serializedObject.ApplyModifiedProperties();
 
             SaiServer saiServer = (SaiServer)target;
+            this.DrawGameName(saiServer);
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Environment", EditorStyles.boldLabel);

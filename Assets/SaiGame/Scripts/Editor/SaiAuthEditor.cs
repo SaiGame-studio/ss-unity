@@ -10,6 +10,31 @@ namespace SaiGame.Services
         private const string PREF_LOGIN_INPUTS = "SaiAuthEditor.showLoginInputs";
         private const string PREF_REGISTER_INPUTS = "SaiAuthEditor.showRegisterInputs";
         private const string PREF_SHOW_PASSWORDS = "SaiAuthEditor.showPasswords";
+        private const string LoginColor = "#00FF00";
+        private const string TwoFactorColor = "#66E6FF";
+        private const string LogoutColor = "#FFB34D";
+
+        private static bool AuthButton(string label, string colorCode, params GUILayoutOption[] options)
+        {
+            Color previous = GUI.backgroundColor;
+            ColorUtility.TryParseHtmlString(colorCode, out Color color);
+            GUI.backgroundColor = color;
+            bool pressed = GUILayout.Button(label, options);
+            GUI.backgroundColor = previous;
+            if (pressed && (SaiServer.Instance == null || SaiServer.Instance.ShowDebug))
+                Debug.Log($"<color={colorCode}>[Editor] {label}</color>");
+            return pressed;
+        }
+
+        private static void LogAuth(string message, string color, bool error = false, bool warning = false)
+        {
+            if (SaiServer.Instance != null && !SaiServer.Instance.ShowDebug) return;
+            string log = $"<color={color}>[Editor] {message}</color>";
+            if (warning) Debug.LogWarning(log);
+            else if (error) Debug.LogError(log);
+            else Debug.Log(log);
+        }
+
         private string twoFactorCode = string.Empty;
 
         private bool showAutoSettings
@@ -100,6 +125,7 @@ namespace SaiGame.Services
             using (new EditorGUI.DisabledScope(true))
             {
                 EditorGUILayout.Toggle("Is Login", saiAuth.IsAuthenticated);
+                EditorGUILayout.Toggle("Requires Two Factor", saiAuth.RequiresTwoFactor);
             }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("accessToken"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("refreshToken"));
@@ -132,39 +158,45 @@ namespace SaiGame.Services
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("username"), new GUIContent("Username"));
                 this.DrawPasswordPropertyField(serializedObject.FindProperty("password"), "Password");
-                this.twoFactorCode = EditorGUILayout.TextField("2FA Code", this.twoFactorCode);
                 EditorGUI.indentLevel--;
 
-                serializedObject.ApplyModifiedProperties();
-                EditorGUILayout.Space(2);
-                EditorGUILayout.BeginHorizontal();
-                GUI.backgroundColor = Color.green;
-                if (GUILayout.Button("Login", GUILayout.Height(25)))
+            }
+
+            using (new EditorGUI.DisabledScope(!Application.isPlaying))
+            {
+                using (new EditorGUI.DisabledScope(saiAuth.RequiresTwoFactor))
                 {
-                    saiAuth.Login(
-                        serializedObject.FindProperty("username").stringValue,
-                        serializedObject.FindProperty("password").stringValue,
-                        response => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] Login success! User: {response.user.username}, Token expires in: {response.expires_in}s"); },
-                        error => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.LogError($"[Editor] Login failed: {error}"); }
-                    );
+                    if (AuthButton("Login (Check 2FA)", LoginColor, GUILayout.Height(25)))
+                    {
+                        serializedObject.ApplyModifiedProperties();
+                        saiAuth.Login(
+                            serializedObject.FindProperty("username").stringValue,
+                            serializedObject.FindProperty("password").stringValue,
+                            response => { LogAuth("Login successful.", LoginColor); Repaint(); },
+                            error =>
+                            {
+                                bool requiresTwoFactor = error != null && error.StartsWith("TWO_FACTOR_REQUIRED:", System.StringComparison.Ordinal);
+                                LogAuth(requiresTwoFactor ? error : $"Login failed: {error}", LoginColor,
+                                    error: !requiresTwoFactor, warning: requiresTwoFactor);
+                                Repaint();
+                            });
+                    }
                 }
-                if (GUILayout.Button("2FA Login", GUILayout.Height(25)))
+                using (new EditorGUI.DisabledScope(!saiAuth.RequiresTwoFactor))
+                    this.twoFactorCode = EditorGUILayout.TextField("2FA Code", this.twoFactorCode);
+                using (new EditorGUI.DisabledScope(!saiAuth.RequiresTwoFactor))
                 {
-                    string code = this.twoFactorCode;
-                    this.twoFactorCode = string.Empty;
-                    saiAuth.VerifyTwoFactor(code,
-                        response => { Debug.Log("[Editor] 2FA login successful."); Repaint(); },
-                        error => { Debug.LogError($"[Editor] 2FA login failed: {error}"); Repaint(); });
+                    if (AuthButton("2FA Login", TwoFactorColor, GUILayout.Height(25)))
+                    {
+                        string code = this.twoFactorCode;
+                        this.twoFactorCode = string.Empty;
+                        saiAuth.VerifyTwoFactor(code,
+                            response => { LogAuth("2FA login successful.", TwoFactorColor); Repaint(); },
+                            error => { LogAuth($"2FA login failed: {error}", TwoFactorColor, true); Repaint(); });
+                    }
                 }
-                GUI.backgroundColor = new Color(1f, 0.7f, 0.3f);
-                if (GUILayout.Button("Logout", GUILayout.Height(25)))
-                {
+                if (AuthButton("Logout", LogoutColor, GUILayout.Height(25)))
                     saiAuth.Logout();
-                }
-                GUI.backgroundColor = Color.white;
-                EditorGUILayout.EndHorizontal();
-                if (saiAuth.RequiresTwoFactor)
-                    EditorGUILayout.HelpBox("Enter your Authenticator code to complete login. If the challenge expires, login again.", MessageType.Info);
             }
 
             EditorGUILayout.Space();
