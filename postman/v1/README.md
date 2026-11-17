@@ -7,7 +7,7 @@ saved example responses.
 
 | File | Content |
 | --- | --- |
-| `SaiGame.unity-api.postman_collection.json` | All APIs grouped by feature (94 requests) |
+| `SaiGame.unity-api.postman_collection.json` | All APIs grouped by feature (95 requests) |
 | `SaiGame.unity-api.postman_environment.json` | Environment template |
 
 ## Quick start

@@ -11,6 +11,52 @@
       "description": "Public endpoints the client calls without a session.",
       "item": [
         {
+          "name": "Health check",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/health",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Checks that the server is reachable. Unity sends a plain `UnityWebRequest.Get` with a 5 s timeout and no SaiGame headers; any 2xx counts as connected.\n\n**Unity caller:** `SaiServer.TestConnection`\n\n**Authentication:** none (public)"
+          },
+          "response": [
+            {
+              "name": "200 success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/health",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"healthy\"\n}"
+            }
+          ]
+        },
+        {
           "name": "Get public game info",
           "event": [],
           "request": {
@@ -506,7 +552,7 @@
                 "me"
               ]
             },
-            "description": "Returns the authenticated user.\n\n**Unity caller:** `SaiAuth.GetMe`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Returns the authenticated user.\n\n**Unity caller:** `SaiAuth.GetMyProfile`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -906,7 +952,7 @@
                 "status"
               ]
             },
-            "description": "Reads whether the account has authenticator 2FA. SteamLink uses it to decide whether a code is required before linking.\n\n**Unity caller:** `SteamLink (TwoFactorStatusEndpoint)`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Reads whether the account has authenticator 2FA. SteamLink uses it to decide whether a code is required before linking.\n\n**Unity caller:** `SteamLink.CheckTwoFactorStatus`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -1060,7 +1106,7 @@
                 "verify"
               ]
             },
-            "description": "Completes a login that returned `message_code: TWO_FACTOR_REQUIRED` (HTTP 200). **Login** saves `user_id` and `challenge_token`; put the 6-digit authenticator code in `code` (or a recovery code). The challenge expires after 5 minutes. Success returns the same body as **Login**.\n\n**Unity caller:** `SaiAuth.VerifyTwoFactor / SteamLogin.CompleteTwoFactor`\n\n**Authentication:** none (public)",
+            "description": "Completes a login that returned `message_code: TWO_FACTOR_REQUIRED` (HTTP 200). **Login** saves `user_id` and `challenge_token`; put the 6-digit authenticator code in `code` (or a recovery code). The challenge expires after 5 minutes. Success returns the same body as **Login**.\n\n**Unity caller:** `SaiAuth.VerifyTwoFactor` / `SteamLogin.VerifyTwoFactor`\n\n**Authentication:** none (public)",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"challenge_token\": \"{{challenge_token}}\",\n  \"code\": \"123456\"\n}",
@@ -1899,7 +1945,7 @@
                 "my-gamer-progress"
               ]
             },
-            "description": "**Destructive:** permanently deletes the player's progress for this game.\n\n**Unity caller:** `GamerProgress.DeleteProgress`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "**Destructive:** permanently deletes the player's progress for this game.\n\n**Unity caller:** `GamerProgress.ClearProgress`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -1994,7 +2040,7 @@
                 "categories"
               ]
             },
-            "description": "Returns all item category keys.\n\n**Unity caller:** `PlayerItem.GetCategories`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Returns all item category keys.\n\n**Unity caller:** `PlayerItem.GetItemCategories`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -2091,7 +2137,7 @@
               }
             ],
             "url": {
-              "raw": "{{api_url}}/api/v1/games/{{game_id}}/inventory?limit=100&include_metadata=true",
+              "raw": "{{api_url}}/api/v1/games/{{game_id}}/inventory?limit=100&include_metadata=true&offset=0",
               "host": [
                 "{{api_url}}"
               ],
@@ -2110,10 +2156,27 @@
                 {
                   "key": "include_metadata",
                   "value": "true"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Sent when `after` is empty."
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional category filter."
+                },
+                {
+                  "key": "after",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Cursor for the next page; replaces `offset`."
                 }
               ]
             },
-            "description": "Lists the player's items with metadata.\n\n**Unity caller:** `PlayerItem.GetInventory`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Lists the player's items with metadata. `offset` is sent unless `after` (cursor) is set; `category` and `after` are optional.\n\n**Unity caller:** `PlayerItem.GetItems` / `PlayerItem.LoadMoreItems`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -2140,7 +2203,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{api_url}}/api/v1/games/{{game_id}}/inventory?limit=100&include_metadata=true",
+                  "raw": "{{api_url}}/api/v1/games/{{game_id}}/inventory?limit=100&include_metadata=true&offset=0",
                   "host": [
                     "{{api_url}}"
                   ],
@@ -2159,6 +2222,23 @@
                     {
                       "key": "include_metadata",
                       "value": "true"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0",
+                      "description": "Sent when `after` is empty."
+                    },
+                    {
+                      "key": "category",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Optional category filter."
+                    },
+                    {
+                      "key": "after",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Cursor for the next page; replaces `offset`."
                     }
                   ]
                 }
@@ -2214,7 +2294,7 @@
                 "{{item_definition_id}}"
               ]
             },
-            "description": "Reads one item definition.\n\n**Unity caller:** `ItemDefinitions.GetById`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Reads one item definition.\n\n**Unity caller:** `ItemDefinitions.FetchById`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -2360,7 +2440,7 @@
                 }
               ]
             },
-            "description": "Looks up item definitions by `item_code`.\n\n**Unity caller:** `ItemDefinitions.GetByCode`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Looks up item definitions by `item_code`.\n\n**Unity caller:** `ItemDefinitions.FetchByCode`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -3624,7 +3704,7 @@
                 "equip"
               ]
             },
-            "description": "Equips an inventory item into a slot. `slot_data` is free-form JSON. Returns 204.\n\n**Unity caller:** `EquipmentSlot.Equip`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Equips an inventory item into a slot. `slot_data` is free-form JSON. Returns 204.\n\n**Unity caller:** `EquipmentSlot.EquipItem`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"item_id\": \"{{inventory_item_id}}\",\n  \"slot_key\": \"{{slot_key}}\",\n  \"slot_data\": {}\n}",
@@ -3739,7 +3819,7 @@
                 "equipped"
               ]
             },
-            "description": "Lists the player's equipped items.\n\n**Unity caller:** `EquipmentSlot.GetEquipped`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Lists the player's equipped items.\n\n**Unity caller:** `EquipmentSlot.GetEquippedItems`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -3836,7 +3916,7 @@
                 "unequip"
               ]
             },
-            "description": "Removes an item from its slot. Returns 204.\n\n**Unity caller:** `EquipmentSlot.Unequip`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Removes an item from its slot. Returns 204.\n\n**Unity caller:** `EquipmentSlot.UnequipItem`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"item_id\": \"{{inventory_item_id}}\"\n}",
@@ -3969,7 +4049,7 @@
                 "presets"
               ]
             },
-            "description": "Creates a preset (loadout) from a preset definition. Send `definition_id` **or** `code_name`; `name` is optional.\n\n**Unity caller:** `ItemPreset.CreatePreset`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Creates a preset (loadout) from a preset definition. Send `definition_id` **or** `code_name`; `name` is optional.\n\n**Unity caller:** `ItemPreset.CreatePresetByDefinitionId` / `ItemPreset.CreatePresetByCodeName`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"definition_id\": \"{{preset_definition_id}}\",\n  \"name\": \"Postman preset\"\n}",
@@ -4272,7 +4352,7 @@
                 "0"
               ]
             },
-            "description": "Puts an inventory item into slot index 0. The client re-reads the preset afterwards.\n\n**Unity caller:** `ItemPreset.SetSlot`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Puts an inventory item into slot index 0. The client re-reads the preset afterwards.\n\n**Unity caller:** `ItemPreset.AddItemToPreset`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"inventory_item_id\": \"{{inventory_item_id}}\"\n}",
@@ -4391,7 +4471,7 @@
                 "0"
               ]
             },
-            "description": "Clears slot 0. Returns 204.\n\n**Unity caller:** `ItemPreset.ClearSlot`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Clears slot 0. Returns 204.\n\n**Unity caller:** `ItemPreset.RemoveItemFromPreset`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -4813,7 +4893,7 @@
                 "{{generator_item_id}}"
               ]
             },
-            "description": "Reads one generator.\n\n**Unity caller:** `ItemGenerator.GetGenerator`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Reads one generator.\n\n**Unity caller:** `ItemGenerator.CheckGenerator`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -4911,7 +4991,7 @@
                 "collect"
               ]
             },
-            "description": "Collects produced units into the destination.\n\n**Unity caller:** `ItemGenerator.Collect`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Collects produced units into the destination.\n\n**Unity caller:** `ItemGenerator.CollectGenerator`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -5382,10 +5462,22 @@
                 {
                   "key": "page_size",
                   "value": "20"
+                },
+                {
+                  "key": "recipe_id",
+                  "value": "{{recipe_id}}",
+                  "disabled": true,
+                  "description": "Optional recipe filter."
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional status filter."
                 }
               ]
             },
-            "description": "Paginated crafting transactions.\n\n**Unity caller:** `ItemCrafting.GetHistory`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Paginated crafting transactions. Optional `recipe_id` and `status` filters.\n\n**Unity caller:** `ItemCrafting.GetCraftingHistory`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -5432,6 +5524,18 @@
                     {
                       "key": "page_size",
                       "value": "20"
+                    },
+                    {
+                      "key": "recipe_id",
+                      "value": "{{recipe_id}}",
+                      "disabled": true,
+                      "description": "Optional recipe filter."
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "disabled": true,
+                      "description": "Optional status filter."
                     }
                   ]
                 }
@@ -5492,7 +5596,7 @@
                 "{{gacha_pack_id}}"
               ]
             },
-            "description": "Opens a gacha pack into `container_id`. The client generates a random `idempotency_key`; a repeated key returns `is_duplicate: true`.\n\n**Unity caller:** `GachaPack.Open / PlayerContainer.OpenGacha`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Opens a gacha pack into `container_id`. The client generates a random `idempotency_key`; a repeated key returns `is_duplicate: true`.\n\n**Unity caller:** `GachaPack.OpenGachaPack` / `PlayerContainer.OpenGachaPack`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"idempotency_key\": \"{{$guid}}\",\n  \"container_id\": \"{{container_id}}\"\n}",
@@ -5613,7 +5717,7 @@
                 "{{gacha_code}}"
               ]
             },
-            "description": "Same as above, addressed by the pack code.\n\n**Unity caller:** `GachaPack.OpenByCode`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Same as above, addressed by the pack code.\n\n**Unity caller:** `GachaPack.OpenGachaPackByCode`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"idempotency_key\": \"{{$guid}}\",\n  \"container_id\": \"{{container_id}}\"\n}",
@@ -6234,7 +6338,7 @@
                 "claim"
               ]
             },
-            "description": "Grants the message attachments. `Mailbox.ClaimAll` calls this for every claimable message.\n\n**Unity caller:** `Mailbox.ClaimMessage / Mailbox.ClaimAll`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Grants the message attachments. `Mailbox.ClaimAll` calls this for every claimable message.\n\n**Unity caller:** `Mailbox.ClaimMessage` / `Mailbox.ClaimAllMessages`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -6885,7 +6989,7 @@
                 "purchase"
               ]
             },
-            "description": "Buys `quantity` of a shop item. Use a unique `idempotency_key` per purchase attempt.\n\n**Unity caller:** `Shop.Purchase`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Buys `quantity` of a shop item. Use a unique `idempotency_key` per purchase attempt.\n\n**Unity caller:** `Shop.PurchaseItem`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"shop_item_id\": \"{{shop_item_id}}\",\n  \"quantity\": 1,\n  \"idempotency_key\": \"{{$guid}}\"\n}",
@@ -7355,7 +7459,7 @@
                 }
               ]
             },
-            "description": "Returns assignments between two dates (YYYY-MM-DD) by pool key.\n\n**Unity caller:** `DailyTimeframe.Fetch`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Returns assignments between two dates (YYYY-MM-DD) by pool key.\n\n**Unity caller:** `DailyTimeframe.GetTimeframe`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -7465,7 +7569,7 @@
                 "start"
               ]
             },
-            "description": "Starts progress on a daily assignment.\n\n**Unity caller:** `QuestProgressor.StartDaily`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Starts progress on a daily assignment.\n\n**Unity caller:** `QuestProgressor.StartDailyQuestAssignment`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -7587,7 +7691,7 @@
                 "check"
               ]
             },
-            "description": "Re-evaluates the objective against the player's state.\n\n**Unity caller:** `QuestProgressor.CheckDaily`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Re-evaluates the objective against the player's state.\n\n**Unity caller:** `QuestProgressor.CheckDailyQuestAssignment`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -7709,7 +7813,7 @@
                 "claim"
               ]
             },
-            "description": "Claims rewards of a completed daily assignment.\n\n**Unity caller:** `QuestProgressor.ClaimDaily`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Claims rewards of a completed daily assignment.\n\n**Unity caller:** `QuestProgressor.ClaimDailyQuestAssignment`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -8015,7 +8119,7 @@
                 "{{chain_id}}"
               ]
             },
-            "description": "Reads one chain.\n\n**Unity caller:** `ChainQuest.GetChain`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Reads one chain.\n\n**Unity caller:** `ChainQuest.GetChains` (when the `chainId` inspector field is set)\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -8123,7 +8227,7 @@
                 "members"
               ]
             },
-            "description": "Quests in the chain with the player's status.\n\n**Unity caller:** `ChainQuest.GetMembers`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Quests in the chain with the player's status.\n\n**Unity caller:** `ChainQuest.GetChainMembers`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -8219,7 +8323,7 @@
                 "tree"
               ]
             },
-            "description": "Chain as a node graph (parsed with Newtonsoft in Unity).\n\n**Unity caller:** `ChainQuest.GetTree`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Chain as a node graph (parsed with Newtonsoft in Unity).\n\n**Unity caller:** `ChainQuest.GetChainTree`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -8411,7 +8515,7 @@
                 "start"
               ]
             },
-            "description": "Starts a (non-daily) quest.\n\n**Unity caller:** `QuestProgressor.Start`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Starts a (non-daily) quest.\n\n**Unity caller:** `QuestProgressor.StartQuest`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -8533,7 +8637,7 @@
                 "check"
               ]
             },
-            "description": "Re-evaluates the quest objective.\n\n**Unity caller:** `QuestProgressor.Check`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Re-evaluates the quest objective.\n\n**Unity caller:** `QuestProgressor.CheckQuest`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -8655,7 +8759,7 @@
                 "claim"
               ]
             },
-            "description": "Claims rewards of a completed quest.\n\n**Unity caller:** `QuestProgressor.Claim`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Claims rewards of a completed quest.\n\n**Unity caller:** `QuestProgressor.ClaimQuest`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -8896,7 +9000,7 @@
                 }
               ]
             },
-            "description": "Lists session quest pools (battle passes). The client pages until all are loaded.\n\n**Unity caller:** `BattlePass.GetAll`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Lists session quest pools (battle passes). The client pages until all are loaded.\n\n**Unity caller:** `BattlePass.GetBattlePasses`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -8997,7 +9101,7 @@
                 "{{battle_pass_id}}"
               ]
             },
-            "description": "Battle pass with its chains and state.\n\n**Unity caller:** `BattlePass.GetById`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Battle pass with its chains and state.\n\n**Unity caller:** `BattlePass.GetBattlePassChains`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -9294,7 +9398,7 @@
                 "leaderboards"
               ]
             },
-            "description": "Lists boards.\n\n**Unity caller:** `Leaderboard.GetBoards`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Lists boards.\n\n**Unity caller:** `Leaderboard.ListBoards`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -9484,7 +9588,7 @@
                 }
               ]
             },
-            "description": "Top N entries.\n\n**Unity caller:** `Leaderboard.GetTop`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Top N entries.\n\n**Unity caller:** `Leaderboard.GetTopRankings`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -9584,7 +9688,7 @@
                 "me"
               ]
             },
-            "description": "The player's rank and score in the current season.\n\n**Unity caller:** `Leaderboard.GetMyRank`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "The player's rank and score in the current season.\n\n**Unity caller:** `Leaderboard.GetLocalRanking`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
@@ -9689,7 +9793,7 @@
                 "run"
               ]
             },
-            "description": "Runs a server Lua script by name. The body is passed to the script as-is (the Unity inspector field `requestBody`, default `{}`); the response is whatever the script returns.\n\n**Unity caller:** `BattleScript.RunScript`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
+            "description": "Runs a server Lua script by name. The body is passed to the script as-is (the Unity inspector field `requestBody`, default `{ \"payload\": {} }`); the response is whatever the script returns.\n\n**Unity caller:** `BattleScript.RunScript`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"payload\": {}\n}",
@@ -9923,10 +10027,10 @@
                 "status"
               ]
             },
-            "description": "Whether this Steam account is linked to a SaiGame account.\n\n`ticket` is a hex Steam Web API auth ticket from `SteamUser.GetAuthTicketForWebApi` (see `SteamTicketService`); it is single-use and short-lived — set `steam_ticket` right before each request. Errors carry `message_code` (cooldown errors add `relink_available_at`, `retry_after_seconds`). Unity sends these with `redirectLimit = 0`, a 30 s timeout and HTTPS only (`SteamBackendTransport`).\n\n**Unity caller:** `SteamLogin.CheckStatus`\n\n**Authentication:** none (public)",
+            "description": "Whether this Steam account is linked to a SaiGame account.\n\n`ticket` is a hex Steam Web API auth ticket from `SteamUser.GetAuthTicketForWebApi` (see `SteamTicketService`); it is single-use and short-lived — set `steam_ticket` right before each request. Errors carry `message_code` (cooldown errors add `relink_available_at`, `retry_after_seconds`). Unity sends these with `redirectLimit = 0`, a 30 s timeout and HTTPS only (`SteamBackendTransport`).\n\n**Unity caller:** `SteamLogin.CheckLinked`\n\n**Authentication:** none (public)",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+              "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -9974,7 +10078,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -10032,7 +10136,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -10109,7 +10213,7 @@
             "description": "Signs in with a linked Steam account. Returns tokens like **Login**, or `TWO_FACTOR_REQUIRED` with a challenge (finish with /api/v1/auth/2fa/verify). Not linked → 403 `STEAM_NOT_LINKED`.\n\n`ticket` is a hex Steam Web API auth ticket from `SteamUser.GetAuthTicketForWebApi` (see `SteamTicketService`); it is single-use and short-lived — set `steam_ticket` right before each request. Errors carry `message_code` (cooldown errors add `relink_available_at`, `retry_after_seconds`). Unity sends these with `redirectLimit = 0`, a 30 s timeout and HTTPS only (`SteamBackendTransport`).\n\n**Unity caller:** `SteamLogin.SignIn`\n\n**Authentication:** none (public)",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+              "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -10156,7 +10260,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -10213,7 +10317,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -10270,7 +10374,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -10647,7 +10751,7 @@
             "description": "Whether the ownership reward is claimable.\n\n`ticket` is a hex Steam Web API auth ticket from `SteamUser.GetAuthTicketForWebApi` (see `SteamTicketService`); it is single-use and short-lived — set `steam_ticket` right before each request. Errors carry `message_code` (cooldown errors add `relink_available_at`, `retry_after_seconds`). Unity sends these with `redirectLimit = 0`, a 30 s timeout and HTTPS only (`SteamBackendTransport`).\n\n**Unity caller:** `SteamLogin.CheckClaim`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+              "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -10701,7 +10805,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -10765,7 +10869,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -10833,7 +10937,7 @@
             "description": "Claims the reward for owning the game on Steam.\n\n`ticket` is a hex Steam Web API auth ticket from `SteamUser.GetAuthTicketForWebApi` (see `SteamTicketService`); it is single-use and short-lived — set `steam_ticket` right before each request. Errors carry `message_code` (cooldown errors add `relink_available_at`, `retry_after_seconds`). Unity sends these with `redirectLimit = 0`, a 30 s timeout and HTTPS only (`SteamBackendTransport`).\n\n**Unity caller:** `SteamLogin.ClaimGame`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+              "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -10887,7 +10991,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -10951,7 +11055,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -11015,7 +11119,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\"\n}",
+                  "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"ticket\": \"{{steam_ticket}}\",\n  \"code\": \"\",\n  \"recovery_code\": \"\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -11094,7 +11198,7 @@
                 "session"
               ]
             },
-            "description": "Creates a login session. Unity opens `auth_url` with `Application.OpenURL` and polls every `poll_interval_seconds` until `expires_at`.\n\n**Unity caller:** `GoogleBackendLogin.Login`\n\n**Authentication:** none (public)",
+            "description": "Creates a login session. Unity opens `auth_url` with `Application.OpenURL` and polls every `poll_interval_seconds` until `expires_at`.\n\n**Unity caller:** `GoogleBackendLogin.StartLogin`\n\n**Authentication:** none (public)",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"platform\": \"windows\",\n  \"client_fingerprint\": \"{{$guid}}\"\n}",
@@ -11309,7 +11413,7 @@
                 "scripts"
               ]
             },
-            "description": "Lists the game's server scripts.\n\n**Unity caller:** `LuaScriptManager.Fetch`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
+            "description": "Lists the game's server scripts.\n\n**Unity caller:** `LuaScriptManager.LoadScripts`\n\n**Authentication:** `Authorization: Bearer {{access_token}}`"
           },
           "response": [
             {
