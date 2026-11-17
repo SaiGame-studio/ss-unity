@@ -8,7 +8,7 @@ A comprehensive game backend integration SDK for Unity, providing a service laye
 
 Steam account link and Claim Game: [SDK setup](Scripts/10_Steam/Link/README.md).
 
-Full tutorials and documentation are available at: https://admin.saigame.studio/tutorials
+Full tutorials and documentation are available at: https://server.saigame.studio/tutorials
 
 
 ## Architecture

@@ -1,5 +1,20 @@
 # SaiGame Unity Client
 
+The Unity SDK for [Sai Server](https://saigame.studio/products/sai-server/), the game backend platform by [SaiGame](https://saigame.studio/).
+
+## About Sai Server
+
+Sai Server gives your game accounts, cloud save, inventory, in-game economy, quests, leaderboards, analytics and server-side Lua logic, prebuilt and managed from one web admin. This SDK connects a Unity game to it: add the `SaiServer` prefab, set your Game ID, and the services are ready to call. Every game starts on a free base.
+
+- **Product page and pricing:** [saigame.studio/products/sai-server](https://saigame.studio/products/sai-server/)
+- **Why Sai Server:** [server.saigame.studio/why-sai-server](https://server.saigame.studio/why-sai-server)
+- **Tutorials:** [server.saigame.studio/tutorials](https://server.saigame.studio/tutorials), starting with [Create a Studio](https://server.saigame.studio/tutorials/basic/get-started/create-a-studio)
+- **API documentation:** [Postman docs](https://documenter.getpostman.com/view/401284/2sBYHbrbq5) for every HTTP API the SDK calls; import the collection from [postman/](https://github.com/SaiGame-studio/ss-unity/tree/main/postman) to call them by hand
+- **Download the SDK:** [Releases](https://github.com/SaiGame-studio/ss-unity/releases)
+- **Community:** [Discord](https://discord.gg/UU3YarmVde)
+
+## This repository
+
 Unity client and SDK for the SaiGame platform. It connects games to the SaiGame API at `https://api.saigame.studio` for authentication (password, Google, Steam), player progression, inventory, quests, shops, leaderboards, battle sessions, and battle Lua scripts.
 
 The SDK version declared by the runtime entry point is `0.2.60` ([SaiServer.cs](Assets/SaiGame/Scripts/SaiServer.cs)). The project is configured for Unity `6000.3.8f1` ([ProjectVersion.txt](ProjectSettings/ProjectVersion.txt)).
@@ -44,6 +59,7 @@ Assets/
       Editor/                   Custom inspectors and manual test tools
 Packages/                       Unity package manifest
 ProjectSettings/                Unity project configuration
+postman/v1/                     Postman collection of every HTTP API the SDK calls (see its README)
 ```
 
 The `SaiServer` prefab owns references to the service components and provides them through properties such as `SaiServer.Instance.DailyQuest` and `SaiServer.Instance.Leaderboard` ([SaiServer.cs](Assets/SaiGame/Scripts/SaiServer.cs)).
