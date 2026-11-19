@@ -54,6 +54,8 @@ namespace SaiGame.Services
         public bool HasValidAccessToken => this.IsAccessTokenValid;
         // A refresh token with this many seconds or less left is treated as expired and never used.
         private const double RefreshTokenMinRemainingSeconds = 10 * 60;
+        // SaiServer request errors include the HTTP status in this form.
+        private const string UnauthorizedResponseMarker = "Response Code: 401";
         public bool HasValidRefreshToken => !JwtExpiry.IsExpiringWithin(this.refreshToken, RefreshTokenMinRemainingSeconds);
         public bool IsAuthenticated => this.IsAccessTokenValid && this.HasUserData;
         public string AccessToken => accessToken;
@@ -145,19 +147,23 @@ namespace SaiGame.Services
             // Without auto login, tokens are only loaded: no API call, and the user is not logged in.
             if (!this.autoLogin) return true;
 
-            if (!this.IsAccessTokenValid)
-            {
-                // Never send an expired access token: drop it and refresh with the still-valid refresh token.
-                this.accessToken = string.Empty;
-                this.RefreshAuthToken(
-                    _ => this.LoadProfileAfterRestore(),
-                    error => this.OnLoginFailure?.Invoke(error));
-            }
-            else
-            {
-                this.StartTokenExpirationCheck();
-                this.LoadProfileAfterRestore();
-            }
+            // Always refresh on restore instead of reusing the saved access token: a session revoked
+            // while the game was closed (Steam unlink, password or 2FA change) is caught here once.
+            this.accessToken = string.Empty;
+            this.RefreshAuthToken(
+                _ => this.LoadProfileAfterRestore(),
+                error =>
+                {
+                    // The server rejected the saved session: drop it so it is never sent again.
+                    // Network errors keep the tokens for the next launch.
+                    if (error != null && error.Contains(UnauthorizedResponseMarker))
+                    {
+                        if (SaiServer.Instance != null && SaiServer.Instance.ShowDebug)
+                            Debug.LogWarning("<color=#00FFFF>[SaiAuth] Saved session was revoked — session cleared, falling back to login.</color>");
+                        this.ClearAuthData();
+                    }
+                    this.OnLoginFailure?.Invoke(error);
+                });
 
             return true;
         }
