@@ -935,9 +935,9 @@ MonoBehaviour:
   domainOption: 1
   port: 443
   useHttps: 1
-  envOverrideServerEndpoint: 1
+  envOverrideServerEndpoint: 0
   envOverrideGameId: 1
-  envOverrideCredentials: 1
+  envOverrideCredentials: 0
   buildEnvOverrideGameId: 1
   gameId: 
   requestTimeout: 30
@@ -975,7 +975,7 @@ MonoBehaviour:
     is_verified: 0
     created_at: 0
   loginTime: 0
-  autoLogin: 0
+  autoLogin: 1
   persistTokens: 1
   autoRefreshToken: 1
   refreshBeforeExpireMinutes: 5
