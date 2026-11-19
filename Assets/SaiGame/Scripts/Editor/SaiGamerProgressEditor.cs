@@ -6,6 +6,8 @@ namespace SaiGame.Services
     [CustomEditor(typeof(GamerProgress))]
     public class SaiGamerProgressEditor : Editor
     {
+        private string twoFactorCode = string.Empty;
+
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
@@ -111,14 +113,39 @@ namespace SaiGame.Services
             }
             GUI.backgroundColor = Color.white;
 
-            GUI.backgroundColor = Color.red;
-            if (GUILayout.Button("Clear Progress", GUILayout.Height(25)))
-            {
-                gamerProgress.ClearProgress();
-            }
-            GUI.backgroundColor = Color.white;
-
             EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(5);
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Check 2FA", GUILayout.Height(25), GUILayout.Width(100)))
+            {
+                gamerProgress.CheckTwoFactorStatus(
+                    status => { if (SaiServer.Instance == null || SaiServer.Instance.ShowDebug) Debug.Log($"[Editor] 2FA status: enabled={status.enabled}, verification_required={status.verification_required}"); Repaint(); },
+                    error => { Debug.LogError($"[Editor] Check 2FA failed: {error}"); Repaint(); });
+            }
+            EditorGUILayout.LabelField(TwoFactorStatusLabel(gamerProgress), EditorStyles.miniLabel);
+            EditorGUILayout.EndHorizontal();
+
+            using (new EditorGUI.DisabledScope(!gamerProgress.RequiresTwoFactorToClear))
+                this.twoFactorCode = EditorGUILayout.TextField(new GUIContent("2FA Code", "Authenticator code, required to clear progress when the account has 2FA enabled."), this.twoFactorCode);
+            using (new EditorGUI.DisabledScope(!gamerProgress.CanClearProgress(this.twoFactorCode)))
+            {
+                GUI.backgroundColor = Color.red;
+                if (GUILayout.Button("Clear Progress", GUILayout.Height(25)))
+                {
+                    string code = gamerProgress.RequiresTwoFactorToClear ? this.twoFactorCode : null;
+                    this.twoFactorCode = string.Empty;
+                    gamerProgress.ClearProgress(code);
+                }
+                GUI.backgroundColor = Color.white;
+            }
+        }
+
+        private static string TwoFactorStatusLabel(GamerProgress gamerProgress)
+        {
+            if (!gamerProgress.IsDataLoaded) return "load progress first";
+            if (!gamerProgress.IsTwoFactorStatusChecked) return "2fa status not checked";
+            return gamerProgress.RequiresTwoFactorToClear ? "2fa code required" : "2fa code not required";
         }
 
         private string BeautifyJson(string json)

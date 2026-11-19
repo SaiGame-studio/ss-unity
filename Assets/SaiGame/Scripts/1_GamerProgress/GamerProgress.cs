@@ -7,6 +7,8 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-99)]
     public class GamerProgress : SaiBehaviour
     {
+        public const string TwoFactorStatusEndpoint = "/api/v1/auth/2fa/status";
+
         // Events for other classes to listen to
         public event Action<GamerProgressData> OnCreateProgressSuccess;
         public event Action<string> OnCreateProgressFailure;
@@ -31,6 +33,23 @@ namespace SaiGame.Services
         public GamerProgressData CurrentProgress => currentProgress;
         public bool IsDataLoaded => isDataLoaded && HasProgress;
         public bool HasProgress => currentProgress != null && !string.IsNullOrEmpty(currentProgress.id);
+
+        private TwoFactorStatusResponse twoFactorStatus;
+        private string twoFactorStatusToken;
+
+        // Result of CheckTwoFactorStatus for the current session; null until checked. UI hint only, the server still enforces 2FA.
+        public TwoFactorStatusResponse TwoFactorStatus => SaiServer.Instance != null
+            && SaiServer.Instance.IsAuthenticated && SaiServer.Instance.AccessToken == twoFactorStatusToken
+            ? twoFactorStatus : null;
+        public bool IsTwoFactorStatusChecked => TwoFactorStatus != null;
+        public bool RequiresTwoFactorToClear => TwoFactorStatus != null && TwoFactorStatus.verification_required;
+
+        // True when progress is loaded, 2FA status was checked, and a code is given if the server requires one.
+        public bool CanClearProgress(string twoFactorCode)
+        {
+            return IsDataLoaded && IsTwoFactorStatusChecked
+                && (!RequiresTwoFactorToClear || !string.IsNullOrWhiteSpace(twoFactorCode));
+        }
 
         protected override void Awake()
         {
@@ -85,6 +104,7 @@ namespace SaiGame.Services
         protected virtual void HandleLoginSuccess(LoginResponse response)
         {
             this.isDataLoaded = false;
+            this.twoFactorStatus = null;
             this.currentProgress = null;
             if (!autoLoadOnLogin) return;
 
@@ -470,7 +490,56 @@ namespace SaiGame.Services
             );
         }
 
+        public void CheckTwoFactorStatus(Action<TwoFactorStatusResponse> onSuccess = null, Action<string> onError = null)
+        {
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
+                Debug.Log("<color=#66E6FF><b>[GamerProgress] ► Check 2FA</b></color>", gameObject);
+            if (SaiServer.Instance == null || !SaiServer.Instance.IsAuthenticated)
+            {
+                onError?.Invoke("Login first before checking 2FA status.");
+                return;
+            }
+
+            this.twoFactorStatus = null;
+            StartCoroutine(CheckTwoFactorStatusCoroutine(SaiServer.Instance.AccessToken, onSuccess, onError));
+        }
+
+        private IEnumerator CheckTwoFactorStatusCoroutine(string token, Action<TwoFactorStatusResponse> onSuccess, Action<string> onError)
+        {
+            string response = null;
+            string error = null;
+            yield return SaiServer.Instance.GetRequest(TwoFactorStatusEndpoint, value => response = value, value => error = value);
+
+            TwoFactorStatusResponse status = null;
+            if (error == null)
+            {
+                try { status = JsonUtility.FromJson<TwoFactorStatusResponse>(response); }
+                catch (Exception) { error = "TWO_FACTOR_INVALID_RESPONSE"; }
+            }
+            if (SaiServer.Instance == null || !SaiServer.Instance.IsAuthenticated || SaiServer.Instance.AccessToken != token)
+                error = "TWO_FACTOR_SESSION_CHANGED";
+            if (error != null || status == null)
+            {
+                onError?.Invoke(error ?? "TWO_FACTOR_INVALID_RESPONSE");
+                if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                    Debug.LogWarning($"<color=#66CCFF>[GamerProgress] CheckTwoFactorStatus</color> → <b><color=#FF4444>onError</color></b> callback | GamerProgress.cs › CheckTwoFactorStatusCoroutine | {error}");
+                yield break;
+            }
+
+            this.twoFactorStatus = status;
+            this.twoFactorStatusToken = token;
+            onSuccess?.Invoke(status);
+            if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
+                Debug.Log($"<color=#66CCFF>[GamerProgress] CheckTwoFactorStatus</color> → <b><color=#00FF88>onSuccess</color></b> callback | enabled={status.enabled}, verification_required={status.verification_required}");
+        }
+
         public void ClearProgress()
+        {
+            ClearProgress(null);
+        }
+
+        // twoFactorCode is the Authenticator code, required only when the account has 2FA enabled.
+        public void ClearProgress(string twoFactorCode)
         {
             if (SaiServer.Instance != null && SaiServer.Instance.ShowButtonsLog)
                 Debug.Log("<color=#FF6666><b>[GamerProgress] ► Clear Progress</b></color>", gameObject);
@@ -489,15 +558,17 @@ namespace SaiGame.Services
                 return;
             }
 
-            StartCoroutine(ClearProgressCoroutine());
+            StartCoroutine(ClearProgressCoroutine(twoFactorCode));
         }
 
-        private IEnumerator ClearProgressCoroutine()
+        private IEnumerator ClearProgressCoroutine(string twoFactorCode)
         {
             string gameId = SaiServer.Instance.GameId;
             string endpoint = $"/api/v1/games/{gameId}/my-gamer-progress";
+            string code = twoFactorCode?.Trim();
+            string jsonData = string.IsNullOrEmpty(code) ? null : JsonUtility.ToJson(new DeleteGamerProgressRequest { code = code });
 
-            yield return SaiServer.Instance.DeleteRequest(endpoint,
+            yield return SaiServer.Instance.DeleteRequest(endpoint, jsonData,
                 response =>
                 {
                     ClearLocalProgress();
@@ -507,7 +578,7 @@ namespace SaiGame.Services
                 },
                 error =>
                 {
-                    ClearLocalProgress();
+                    // Keep local data so the delete can be retried, e.g. after an invalid 2FA code.
                     OnDeleteProgressFailure?.Invoke(error);
                     if (SaiServer.Instance != null && SaiServer.Instance.ShowCallbackLog)
                         Debug.LogWarning($"<color=#66CCFF>[GamerProgress] ClearProgress</color> → <b><color=#FF4444>onError</color></b> callback (network) | GamerProgress.cs › ClearProgressCoroutine | {error}");
@@ -518,6 +589,7 @@ namespace SaiGame.Services
         private void ClearLocalProgress()
         {
             this.isDataLoaded = false;
+            this.twoFactorStatus = null;
             this.currentProgress = new GamerProgressData
             {
                 id = "",
