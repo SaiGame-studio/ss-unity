@@ -42,7 +42,8 @@ namespace SaiGame.Services
             && SaiServer.Instance.IsAuthenticated && SaiServer.Instance.AccessToken == twoFactorStatusToken
             ? twoFactorStatus : null;
         public bool IsTwoFactorStatusChecked => TwoFactorStatus != null;
-        public bool RequiresTwoFactorToClear => TwoFactorStatus != null && TwoFactorStatus.verification_required;
+        // The server always asks for a code to clear progress when 2FA is enabled, even right after a 2FA login.
+        public bool RequiresTwoFactorToClear => TwoFactorStatus != null && TwoFactorStatus.enabled;
 
         // True when progress is loaded, 2FA status was checked, and a code is given if the server requires one.
         public bool CanClearProgress(string twoFactorCode)
