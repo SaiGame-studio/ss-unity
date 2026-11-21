@@ -6,6 +6,8 @@ namespace SaiGame.LevelPlaySample
     public static class LevelPlayDashboardLinks
     {
         private const string AppsUrl = "https://platform.ironsrc.com/partners/next/mediation/apps?visibility=shown";
+        // LevelPlay Setup > Networks (from Chartboost's LevelPlay mediation docs).
+        private const string NetworksUrl = "https://platform.ironsrc.com/partners/next/networks";
         private const string AdUnitsUrlFormat = "https://platform.ironsrc.com/partners/next/adUnits/{0}?visibility=show";
 
         public const string AppKeyTooltip =
@@ -16,6 +18,8 @@ namespace SaiGame.LevelPlaySample
             "Enter the App Key first.";
 
         public static void OpenAppKeys() => Application.OpenURL(AppsUrl);
+
+        public static void OpenNetworks() => Application.OpenURL(NetworksUrl);
 
         public static void OpenAdUnits(string appKey)
         {

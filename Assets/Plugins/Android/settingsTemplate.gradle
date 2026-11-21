@@ -19,40 +19,7 @@ dependencyResolutionManagement {
 // Android Resolver Repos Start
         def unityProjectPath = $/file:///**DIR_UNITYPROJECT**/$.replace("\\", "/")
         maven {
-            url "https://maven.google.com/" // Assets/LevelPlay/Editor/IronSourceSDKDependencies.xml:12, Assets/LevelPlay/Editor/ISAdMobAdapterDependencies.xml:8
-        }
-        maven {
-            url "https://artifactory.bidmachine.io/bidmachine" // Assets/LevelPlay/Editor/ISBidMachineAdapterDependencies.xml:8
-        }
-        maven {
-            url "https://cboost.jfrog.io/artifactory/chartboost-ads/" // Assets/LevelPlay/Editor/ISChartboostAdapterDependencies.xml:8
-        }
-        maven {
-            url "https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_oversea/" // Assets/LevelPlay/Editor/ISMintegralAdapterDependencies.xml:8
-        }
-        maven {
-            url "https://maven.ogury.co" // Assets/LevelPlay/Editor/ISOguryAdapterDependencies.xml:8
-        }
-        maven {
-            url "https://artifact.bytedance.com/repository/pangle/" // Assets/LevelPlay/Editor/ISPangleAdapterDependencies.xml:8
-        }
-        maven {
-            url "https://repo.pubmatic.com/artifactory/public-repos" // Assets/LevelPlay/Editor/ISPubMaticAdapterDependencies.xml:8
-        }
-        maven {
-            url "https://s3.amazonaws.com/smaato-sdk-releases/" // Assets/LevelPlay/Editor/ISSmaatoAdapterDependencies.xml:8
-        }
-        maven {
-            url "https://aa-sdk.s3-eu-west-1.amazonaws.com/android_repo/" // Assets/LevelPlay/Editor/ISSuperAwesomeAdapterDependencies.xml:8
-        }
-        maven {
-            url "https://verve.jfrog.io/artifactory/verve-gradle-release" // Assets/LevelPlay/Editor/ISVerveAdapterDependencies.xml:8
-        }
-        maven {
-            url "https://framework.voodoo-adn.com/android/release/apps" // Assets/LevelPlay/Editor/ISVoodooAdapterDependencies.xml:8
-        }
-        maven {
-            url "https://ysonetwork.s3.eu-west-3.amazonaws.com/sdk/android" // Assets/LevelPlay/Editor/ISYSOAdapterDependencies.xml:8
+            url "https://maven.google.com/" // Assets/LevelPlay/Editor/IronSourceSDKDependencies.xml:12
         }
         mavenLocal()
 // Android Resolver Repos End
