@@ -26,7 +26,19 @@ namespace SaiGame.LevelPlaySample
                 DrawPlatformFields("Android", "android");
                 DrawPlatformFields("iOS", "ios");
             }
+
+            bool layoutChanged = false;
+            if (ads.Format == SaiAdFormat.Banner)
+            {
+                EditorGUI.BeginChangeCheck();
+                DrawBannerLayout(serializedObject.FindProperty("bannerLayout"));
+                layoutChanged = EditorGUI.EndChangeCheck();
+            }
             serializedObject.ApplyModifiedProperties();
+
+            // Re-show a visible banner so layout edits apply live in Play Mode.
+            if (layoutChanged && Application.isPlaying && ads.IsBannerVisible)
+                ads.ShowBanner();
 
             var package = PackageInfo.FindForAssetPath(LevelPlayPackagePath);
             EditorGUILayout.Space();
@@ -92,6 +104,32 @@ namespace SaiGame.LevelPlaySample
             }
 
             menu.DropDown(rect);
+        }
+
+        private static void DrawBannerLayout(SerializedProperty layout)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Banner layout", EditorStyles.boldLabel);
+
+            var position = layout.FindPropertyRelative("position");
+            EditorGUILayout.PropertyField(position);
+            if ((SaiBannerPosition)position.intValue == SaiBannerPosition.Custom)
+                EditorGUILayout.PropertyField(layout.FindPropertyRelative("customPosition"), new GUIContent("Offset from top left"));
+
+            var size = layout.FindPropertyRelative("size");
+            EditorGUILayout.PropertyField(size);
+            switch ((SaiBannerSize)size.intValue)
+            {
+                case SaiBannerSize.Adaptive:
+                    EditorGUILayout.PropertyField(layout.FindPropertyRelative("adaptiveWidth"));
+                    break;
+                case SaiBannerSize.Custom:
+                    EditorGUILayout.PropertyField(layout.FindPropertyRelative("customWidth"));
+                    EditorGUILayout.PropertyField(layout.FindPropertyRelative("customHeight"));
+                    break;
+            }
+
+            EditorGUILayout.PropertyField(layout.FindPropertyRelative("respectSafeArea"));
         }
 
         private static string GetFormatLabel(SaiAdFormat value)

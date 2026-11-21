@@ -34,8 +34,26 @@ Work through `AdsManager` only, after the game's consent setup:
 - `ShowBanner(name)` and `HideBanner(name)` show or hide it explicitly.
 - `TryGetAd(name, out ad)` returns the `UnityAds` component when needed.
 
-Showing a different managed banner hides the previous one. The banner
-uses the bottom center of the screen and respects the safe area.
+Showing a different managed banner hides the previous one.
+
+## Banner layout
+
+Each `UnityAds` has a **Banner layout** section:
+
+- **Position**: one of nine screen anchors, or **Custom** with an offset of
+  the banner's top-left corner from the top-left corner of the screen.
+- **Size**: Banner (320x50), Large (320x90), Medium Rectangle (300x250),
+  Leaderboard (728x90), Adaptive (optional width), or Custom width and height.
+- **Respect safe area**: keeps the banner clear of notches and rounded corners.
+
+Change it at runtime through the manager; a visible banner is recreated
+with the new layout:
+
+- `SetBannerPosition(name, SaiBannerPosition.TopCenter)`
+- `SetBannerPosition(name, new Vector2(x, y))`
+- `SetBannerLayout(name, layout)` for position, size and safe area together.
+
+Edits in the Inspector apply live to a visible banner in Play Mode.
 
 ## Verify on a device
 

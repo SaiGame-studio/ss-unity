@@ -60,6 +60,34 @@ namespace SaiGame.LevelPlaySample
                 ad.ShowHide();
         }
 
+        public bool SetBannerPosition(string name, SaiBannerPosition position)
+        {
+            if (!TryGetAd(name, out var ad))
+                return false;
+
+            ad.SetBannerPosition(position);
+            return true;
+        }
+
+        // Offset of the banner's top-left corner from the top-left corner of the screen.
+        public bool SetBannerPosition(string name, Vector2 offset)
+        {
+            if (!TryGetAd(name, out var ad))
+                return false;
+
+            ad.SetBannerPosition(offset);
+            return true;
+        }
+
+        public bool SetBannerLayout(string name, BannerAdLayout layout)
+        {
+            if (!TryGetAd(name, out var ad))
+                return false;
+
+            ad.SetBannerLayout(layout);
+            return true;
+        }
+
         public bool ShowBanner(string name)
         {
             return TryGetAd(name, out var ad) && ShowBanner(ad);

@@ -14,6 +14,8 @@ namespace SaiGame.LevelPlaySample
         private SaiAdFormat format = SaiAdFormat.Banner;
         [SerializeField] private string androidUnitId;
         [SerializeField] private string iosUnitId;
+        [SerializeField, Tooltip("Position, size and safe area of the banner.")]
+        private BannerAdLayout bannerLayout = new BannerAdLayout();
 
         private readonly BannerAdSession banner = new BannerAdSession();
         private AdsManager manager;
@@ -67,7 +69,39 @@ namespace SaiGame.LevelPlaySample
                 ShowBannerDirectly();
         }
 
-        internal void ShowBannerDirectly() => banner.Show(AppKey, SelectedBannerUnitId);
+        internal void ShowBannerDirectly() => banner.Show(AppKey, SelectedBannerUnitId, bannerLayout);
+
+        // Returns a copy; use the Set methods to apply changes.
+        public BannerAdLayout BannerLayout => bannerLayout.Clone();
+
+        public void SetBannerPosition(SaiBannerPosition position)
+        {
+            bannerLayout.Position = position;
+            RefreshVisibleBanner();
+        }
+
+        // Offset of the banner's top-left corner from the top-left corner of the screen.
+        public void SetBannerPosition(Vector2 offset)
+        {
+            bannerLayout.Position = SaiBannerPosition.Custom;
+            bannerLayout.CustomPosition = offset;
+            RefreshVisibleBanner();
+        }
+
+        public void SetBannerLayout(BannerAdLayout layout)
+        {
+            if (layout == null)
+                return;
+
+            bannerLayout = layout.Clone();
+            RefreshVisibleBanner();
+        }
+
+        private void RefreshVisibleBanner()
+        {
+            if (IsBannerVisible)
+                ShowBanner();
+        }
 
         public void HideBanner()
         {

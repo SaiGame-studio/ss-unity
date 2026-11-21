@@ -29,18 +29,26 @@ namespace SaiGame.LevelPlaySample
         private bool loaded;
         private bool wantsVisible;
         private bool showRequested;
+        private BannerAdLayout layout = new BannerAdLayout();
+        private BannerAdLayout appliedLayout;
 
         public bool IsVisible => wantsVisible;
 #else
         public bool IsVisible => false;
 #endif
 
-        public void Show(string appKey, string unitId)
+        // A layout different from the current banner's recreates the banner, because LevelPlay
+        // fixes position and size when the banner is created.
+        public void Show(string appKey, string unitId, BannerAdLayout bannerLayout)
         {
 #if SAIGAME_LEVELPLAY_AVAILABLE && (UNITY_ANDROID || UNITY_IOS)
             wantsVisible = true;
+            layout = (bannerLayout ?? new BannerAdLayout()).Clone();
             if (initializing || loading)
                 return;
+
+            if (banner != null && !layout.SameAs(appliedLayout))
+                DestroyBanner();
 
             if (banner != null)
             {
@@ -86,11 +94,12 @@ namespace SaiGame.LevelPlaySample
             if (!wantsVisible)
                 return;
 
+            appliedLayout = layout.Clone();
             var config = new LevelPlayBannerAd.Config.Builder()
-                .SetSize(LevelPlayAdSize.BANNER)
-                .SetPosition(LevelPlayBannerPosition.BottomCenter)
+                .SetSize(ToAdSize(appliedLayout))
+                .SetPosition(ToPosition(appliedLayout))
                 .SetDisplayOnLoad(false)
-                .SetRespectSafeArea(true)
+                .SetRespectSafeArea(appliedLayout.RespectSafeArea)
                 .Build();
             banner = new LevelPlayBannerAd(adUnitId, config);
             banner.OnAdLoaded += HandleLoaded;
@@ -98,6 +107,49 @@ namespace SaiGame.LevelPlaySample
             banner.OnAdDisplayed += HandleDisplayed;
             banner.OnAdDisplayFailed += HandleDisplayFailed;
             Load();
+        }
+
+        private static LevelPlayAdSize ToAdSize(BannerAdLayout value)
+        {
+            switch (value.Size)
+            {
+                case SaiBannerSize.Large: return LevelPlayAdSize.LARGE;
+                case SaiBannerSize.MediumRectangle: return LevelPlayAdSize.MEDIUM_RECTANGLE;
+                case SaiBannerSize.Leaderboard: return LevelPlayAdSize.LEADERBOARD;
+                case SaiBannerSize.Adaptive: return LevelPlayAdSize.CreateAdaptiveAdSize(value.AdaptiveWidth);
+                case SaiBannerSize.Custom: return LevelPlayAdSize.CreateCustomBannerSize(value.CustomWidth, value.CustomHeight);
+                default: return LevelPlayAdSize.BANNER;
+            }
+        }
+
+        private static LevelPlayBannerPosition ToPosition(BannerAdLayout value)
+        {
+            switch (value.Position)
+            {
+                case SaiBannerPosition.TopLeft: return LevelPlayBannerPosition.TopLeft;
+                case SaiBannerPosition.TopCenter: return LevelPlayBannerPosition.TopCenter;
+                case SaiBannerPosition.TopRight: return LevelPlayBannerPosition.TopRight;
+                case SaiBannerPosition.CenterLeft: return LevelPlayBannerPosition.CenterLeft;
+                case SaiBannerPosition.Center: return LevelPlayBannerPosition.Center;
+                case SaiBannerPosition.CenterRight: return LevelPlayBannerPosition.CenterRight;
+                case SaiBannerPosition.BottomLeft: return LevelPlayBannerPosition.BottomLeft;
+                case SaiBannerPosition.BottomRight: return LevelPlayBannerPosition.BottomRight;
+                case SaiBannerPosition.Custom: return new LevelPlayBannerPosition(value.CustomPosition);
+                default: return LevelPlayBannerPosition.BottomCenter;
+            }
+        }
+
+        private void DestroyBanner()
+        {
+            banner.OnAdLoaded -= HandleLoaded;
+            banner.OnAdLoadFailed -= HandleLoadFailed;
+            banner.OnAdDisplayed -= HandleDisplayed;
+            banner.OnAdDisplayFailed -= HandleDisplayFailed;
+            banner.Dispose();
+            banner = null;
+            appliedLayout = null;
+            loaded = false;
+            showRequested = false;
         }
 
         private void Load()
@@ -153,15 +205,8 @@ namespace SaiGame.LevelPlaySample
         {
 #if SAIGAME_LEVELPLAY_AVAILABLE && (UNITY_ANDROID || UNITY_IOS)
             LevelPlayInitialization.Cancel(HandleInitialization);
-            if (banner == null)
-                return;
-
-            banner.OnAdLoaded -= HandleLoaded;
-            banner.OnAdLoadFailed -= HandleLoadFailed;
-            banner.OnAdDisplayed -= HandleDisplayed;
-            banner.OnAdDisplayFailed -= HandleDisplayFailed;
-            banner.Dispose();
-            banner = null;
+            if (banner != null)
+                DestroyBanner();
 #endif
         }
     }
