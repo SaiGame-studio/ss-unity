@@ -14,7 +14,7 @@ namespace SaiGame.LevelPlaySample
         private List<InstalledAdNetwork> networks = new List<InstalledAdNetwork>();
         private string adMobAndroidAppId = string.Empty;
         private string adMobIosAppId = string.Empty;
-        private bool showNetworks = true;
+        private bool showNetworks;
         private GUIStyle disabledLabelStyle;
         // Only one turned-on network shows its setup steps at a time.
         private string expandedNetwork;
