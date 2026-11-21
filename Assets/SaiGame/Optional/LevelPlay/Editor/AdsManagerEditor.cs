@@ -29,7 +29,7 @@ namespace SaiGame.LevelPlaySample
             var package = PackageInfo.FindForAssetPath("Packages/com.unity.services.levelplay/package.json");
             EditorGUILayout.LabelField("LevelPlay", package == null ? "Not installed" : $"Installed ({package.version})");
             EditorGUILayout.LabelField("Build target", EditorUserBuildSettings.activeBuildTarget.ToString());
-            if (!RewardedAdSession.HasCompatiblePackage)
+            if (!BannerAdSession.HasCompatiblePackage)
                 EditorGUILayout.HelpBox("Install a supported Ads Mediation 9.x package to enable ads.", MessageType.Warning);
             else if (string.IsNullOrWhiteSpace(manager.AppKey))
                 EditorGUILayout.HelpBox("Select Android or iOS and enter the App Key for that platform.", MessageType.Info);
@@ -64,6 +64,7 @@ namespace SaiGame.LevelPlaySample
                         EditorGUILayout.ObjectField(ad, typeof(UnityAds), true);
 
                     EditorGUILayout.LabelField(ad.Format.ToString(), GUILayout.Width(70));
+
                     using (new EditorGUI.DisabledScope(!Application.isPlaying))
                     {
                         if (GUILayout.Button(GetShowHideLabel(ad), GUILayout.Width(60)))

@@ -9,6 +9,18 @@ namespace SaiGame.LevelPlaySample
     {
         public string Status { get; private set; } = "Select Show banner to begin.";
 
+#if SAIGAME_LEVELPLAY_AVAILABLE
+        public static bool HasCompatiblePackage => true;
+#else
+        public static bool HasCompatiblePackage => false;
+#endif
+
+#if SAIGAME_LEVELPLAY_AVAILABLE && (UNITY_ANDROID || UNITY_IOS)
+        public bool IsAvailable => true;
+#else
+        public bool IsAvailable => false;
+#endif
+
 #if SAIGAME_LEVELPLAY_AVAILABLE && (UNITY_ANDROID || UNITY_IOS)
         private LevelPlayBannerAd banner;
         private string adUnitId;
