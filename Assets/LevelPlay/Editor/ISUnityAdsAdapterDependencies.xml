@@ -1,0 +1,17 @@
+<dependencies>
+  <unityversion>5.18.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:unityads-adapter:5.17.0">
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceUnityAdsAdapter" version="5.14.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-UnityAds-Adapter-Swift-Package" version="5.14.0">
+    <swiftPackage name="UnityAdsAdapter" replacesPod="IronSourceUnityAdsAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

@@ -1,0 +1,24 @@
+<dependencies>
+  <unityversion>9.8.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:mediation-sdk:9.8.0">
+    </androidPackage>
+  </androidPackages>
+  <androidPackages>
+    <androidPackage spec="com.google.android.gms:play-services-ads-identifier:18.1.0">
+      <repositories>
+        <repository>https://maven.google.com/</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceSDK" version="9.8.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-Swift-Package" version="9.8.0">
+    <swiftPackage name="UnityMediationSDK" replacesPod="IronSourceSDK" />
+  </remoteSwiftPackage>
+</dependencies>

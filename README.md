@@ -75,6 +75,8 @@ The SDK ships as the `Assets/SaiGame` folder. The game project needs:
 - `com.unity.nuget.newtonsoft-json` (used by Chain Quest). Add it in Package Manager by name, or add `"com.unity.nuget.newtonsoft-json": "3.2.2"` to `Packages/manifest.json`. Without it the SDK does not compile.
 - Optional: Steamworks.NET, only for Steam login and Steam achievements. See [Steam setup](Assets/SaiGame/Scripts/10_Steam/Login/README.md) and [Steam achievements](Assets/SaiGame/Scripts/10_Steam/Achievement/README.md).
 
+For Android or iOS games using rewarded ads, see the [optional LevelPlay sample and setup guide](Assets/SaiGame/Optional/LevelPlay/README.md).
+
 The demo scene uses URP and is for reference only; games use [SaiServer.prefab](Assets/SaiGame/Prefabs/SaiServer.prefab), which has no render-pipeline dependency.
 
 The prefab ships with an empty Game ID and with JSON request/response logging turned off. Set the Game ID before the first request. Keep JSON logging off in release builds.

@@ -1,0 +1,17 @@
+<dependencies>
+  <unityversion>5.23.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:fyber-adapter:5.13.0">
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceFyberAdapter" version="5.15.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-Fyber-Adapter-Swift-Package" version="5.15.0">
+    <swiftPackage name="FyberAdapter" replacesPod="IronSourceFyberAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

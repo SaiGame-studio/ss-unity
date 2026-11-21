@@ -1,0 +1,88 @@
+apply plugin: 'com.android.library'
+apply from: '../shared/keepUnitySymbols.gradle'
+apply from: '../shared/common.gradle'
+**APPLY_PLUGINS**
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+// Android Resolver Dependencies Start
+    implementation 'com.google.android.gms:play-services-ads-identifier:18.1.0' // Assets/LevelPlay/Editor/IronSourceSDKDependencies.xml:12
+    implementation 'com.unity3d.ads-mediation:admob-adapter:5.20.0' // Assets/LevelPlay/Editor/ISAdMobAdapterDependencies.xml:8
+    implementation 'com.unity3d.ads-mediation:applovin-adapter:5.11.0' // Assets/LevelPlay/Editor/ISAppLovinAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:aps-adapter:5.5.0' // Assets/LevelPlay/Editor/ISAPSAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:bidmachine-adapter:5.9.0' // Assets/LevelPlay/Editor/ISBidMachineAdapterDependencies.xml:8
+    implementation 'com.unity3d.ads-mediation:bigo-adapter:5.15.0' // Assets/LevelPlay/Editor/ISBigoAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:chartboost-adapter:5.12.0' // Assets/LevelPlay/Editor/ISChartboostAdapterDependencies.xml:8
+    implementation 'com.unity3d.ads-mediation:facebook-adapter:5.8.0' // Assets/LevelPlay/Editor/ISFacebookAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:fyber-adapter:5.13.0' // Assets/LevelPlay/Editor/ISFyberAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:hyprmx-adapter:5.6.0' // Assets/LevelPlay/Editor/ISHyprMXAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:inmobi-adapter:5.13.0' // Assets/LevelPlay/Editor/ISInMobiAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:line-adapter:5.6.0' // Assets/LevelPlay/Editor/ISLineAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:mediation-sdk:9.8.0' // Assets/LevelPlay/Editor/IronSourceSDKDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:mintegral-adapter:5.25.0' // Assets/LevelPlay/Editor/ISMintegralAdapterDependencies.xml:8
+    implementation 'com.unity3d.ads-mediation:mobilefuse-adapter:5.7.0' // Assets/LevelPlay/Editor/ISMobileFuseAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:moloco-adapter:5.22.0' // Assets/LevelPlay/Editor/ISMolocoAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:ogury-adapter:5.6.0' // Assets/LevelPlay/Editor/ISOguryAdapterDependencies.xml:8
+    implementation 'com.unity3d.ads-mediation:pangle-adapter:5.29.0' // Assets/LevelPlay/Editor/ISPangleAdapterDependencies.xml:8
+    implementation 'com.unity3d.ads-mediation:pubmatic-adapter:5.14.0' // Assets/LevelPlay/Editor/ISPubMaticAdapterDependencies.xml:8
+    implementation 'com.unity3d.ads-mediation:smaato-adapter:5.8.0' // Assets/LevelPlay/Editor/ISSmaatoAdapterDependencies.xml:8
+    implementation 'com.unity3d.ads-mediation:superawesome-adapter:5.9.0' // Assets/LevelPlay/Editor/ISSuperAwesomeAdapterDependencies.xml:8
+    implementation 'com.unity3d.ads-mediation:unityads-adapter:5.17.0' // Assets/LevelPlay/Editor/ISUnityAdsAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:verve-adapter:5.11.0' // Assets/LevelPlay/Editor/ISVerveAdapterDependencies.xml:8
+    implementation 'com.unity3d.ads-mediation:voodoo-adapter:5.11.0' // Assets/LevelPlay/Editor/ISVoodooAdapterDependencies.xml:8
+    implementation 'com.unity3d.ads-mediation:vungle-adapter:5.18.0' // Assets/LevelPlay/Editor/ISVungleAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:yandex-adapter:5.18.0' // Assets/LevelPlay/Editor/ISYandexAdapterDependencies.xml:5
+    implementation 'com.unity3d.ads-mediation:yso-adapter:5.10.0' // Assets/LevelPlay/Editor/ISYSOAdapterDependencies.xml:8
+// Android Resolver Dependencies End
+**DEPS**}
+
+// Android Resolver Exclusions Start
+android {
+  packaging {
+      exclude ('/lib/armeabi/*' + '*')
+      exclude ('/lib/armeabi-v7a/*' + '*')
+      exclude ('/lib/mips/*' + '*')
+      exclude ('/lib/mips64/*' + '*')
+      exclude ('/lib/x86/*' + '*')
+      exclude ('/lib/x86_64/*' + '*')
+  }
+}
+// Android Resolver Exclusions End
+android {
+    namespace "com.unity3d.player"
+    ndkPath "**NDKPATH**"
+    ndkVersion "**NDKVERSION**"
+
+    compileSdk **APIVERSION**
+    buildToolsVersion = "**BUILDTOOLS**"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    defaultConfig {
+        minSdk **MINSDK**
+        targetSdk **TARGETSDK**
+        ndk {
+            abiFilters **ABIFILTERS**
+            debugSymbolLevel **DEBUGSYMBOLLEVEL**
+        }
+        versionCode **VERSIONCODE**
+        versionName '**VERSIONNAME**'
+        consumerProguardFiles 'proguard-unity.txt'**USER_PROGUARD**
+**DEFAULT_CONFIG_SETUP**
+    }
+
+    lint {
+        abortOnError false
+    }
+
+    androidResources {
+        noCompress = **BUILTIN_NOCOMPRESS** + unityStreamingAssets.tokenize(', ')
+        ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~"
+    }**PACKAGING**
+}
+**IL_CPP_BUILD_SETUP**
+**SOURCE_BUILD_SETUP**
+**EXTERNAL_SOURCES**

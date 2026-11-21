@@ -1,0 +1,17 @@
+<dependencies>
+  <unityversion>5.10.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:mobilefuse-adapter:5.7.0">
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceMobileFuseAdapter" version="5.7.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-MobileFuse-Adapter-Swift-Package" version="5.7.0">
+    <swiftPackage name="MobileFuseAdapter" replacesPod="IronSourceMobileFuseAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

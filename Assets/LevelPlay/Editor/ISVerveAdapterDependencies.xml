@@ -1,0 +1,20 @@
+<dependencies>
+  <unityversion>5.16.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:verve-adapter:5.11.0">
+      <repositories>
+        <repository>https://verve.jfrog.io/artifactory/verve-gradle-release</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceVerveAdapter" version="5.7.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-Verve-Adapter-Swift-Package" version="5.7.0">
+    <swiftPackage name="VerveAdapter" replacesPod="IronSourceVerveAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

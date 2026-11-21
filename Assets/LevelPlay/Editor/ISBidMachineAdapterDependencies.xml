@@ -1,0 +1,20 @@
+<dependencies>
+  <unityversion>5.13.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:bidmachine-adapter:5.9.0">
+      <repositories>
+        <repository>https://artifactory.bidmachine.io/bidmachine</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceBidMachineAdapter" version="5.11.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-BidMachine-Adapter-Swift-Package" version="5.11.0">
+    <swiftPackage name="BidMachineAdapter" replacesPod="IronSourceBidMachineAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

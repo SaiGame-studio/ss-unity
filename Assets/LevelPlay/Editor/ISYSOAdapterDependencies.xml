@@ -1,0 +1,20 @@
+<dependencies>
+  <unityversion>5.12.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:yso-adapter:5.10.0">
+      <repositories>
+        <repository>https://ysonetwork.s3.eu-west-3.amazonaws.com/sdk/android</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceYSOAdapter" version="5.2.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-YSO-Adapter-Swift-Package" version="5.2.0">
+    <swiftPackage name="YSOAdapter" replacesPod="IronSourceYSOAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

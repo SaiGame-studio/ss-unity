@@ -1,0 +1,49 @@
+<dependencies>
+  <packages>
+    <package>com.google.android.gms:play-services-ads-identifier:18.1.0</package>
+    <package>com.unity3d.ads-mediation:admob-adapter:5.20.0</package>
+    <package>com.unity3d.ads-mediation:applovin-adapter:5.11.0</package>
+    <package>com.unity3d.ads-mediation:aps-adapter:5.5.0</package>
+    <package>com.unity3d.ads-mediation:bidmachine-adapter:5.9.0</package>
+    <package>com.unity3d.ads-mediation:bigo-adapter:5.15.0</package>
+    <package>com.unity3d.ads-mediation:chartboost-adapter:5.12.0</package>
+    <package>com.unity3d.ads-mediation:facebook-adapter:5.8.0</package>
+    <package>com.unity3d.ads-mediation:fyber-adapter:5.13.0</package>
+    <package>com.unity3d.ads-mediation:hyprmx-adapter:5.6.0</package>
+    <package>com.unity3d.ads-mediation:inmobi-adapter:5.13.0</package>
+    <package>com.unity3d.ads-mediation:line-adapter:5.6.0</package>
+    <package>com.unity3d.ads-mediation:mediation-sdk:9.8.0</package>
+    <package>com.unity3d.ads-mediation:mintegral-adapter:5.25.0</package>
+    <package>com.unity3d.ads-mediation:mobilefuse-adapter:5.7.0</package>
+    <package>com.unity3d.ads-mediation:moloco-adapter:5.22.0</package>
+    <package>com.unity3d.ads-mediation:ogury-adapter:5.6.0</package>
+    <package>com.unity3d.ads-mediation:pangle-adapter:5.29.0</package>
+    <package>com.unity3d.ads-mediation:pubmatic-adapter:5.14.0</package>
+    <package>com.unity3d.ads-mediation:smaato-adapter:5.8.0</package>
+    <package>com.unity3d.ads-mediation:superawesome-adapter:5.9.0</package>
+    <package>com.unity3d.ads-mediation:unityads-adapter:5.17.0</package>
+    <package>com.unity3d.ads-mediation:verve-adapter:5.11.0</package>
+    <package>com.unity3d.ads-mediation:voodoo-adapter:5.11.0</package>
+    <package>com.unity3d.ads-mediation:vungle-adapter:5.18.0</package>
+    <package>com.unity3d.ads-mediation:yandex-adapter:5.18.0</package>
+    <package>com.unity3d.ads-mediation:yso-adapter:5.10.0</package>
+  </packages>
+  <files />
+  <settings>
+    <setting name="androidAbis" value="arm64-v8a" />
+    <setting name="bundleId" value="com.UnityTechnologies.com.unity.template.urpblank" />
+    <setting name="explodeAars" value="True" />
+    <setting name="gradleBuildEnabled" value="True" />
+    <setting name="gradlePropertiesTemplateEnabled" value="True" />
+    <setting name="gradleTemplateEnabled" value="True" />
+    <setting name="installAndroidPackages" value="True" />
+    <setting name="localMavenRepoDir" value="Assets/GeneratedLocalRepo" />
+    <setting name="packageDir" value="Assets/Plugins/Android" />
+    <setting name="patchAndroidManifest" value="True" />
+    <setting name="patchMainTemplateGradle" value="True" />
+    <setting name="projectExportEnabled" value="False" />
+    <setting name="useFullCustomMavenRepoPathWhenExport" value="True" />
+    <setting name="useFullCustomMavenRepoPathWhenNotExport" value="False" />
+    <setting name="useJetifier" value="True" />
+  </settings>
+</dependencies>

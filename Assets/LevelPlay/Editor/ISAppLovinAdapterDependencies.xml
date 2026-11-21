@@ -1,0 +1,17 @@
+<dependencies>
+  <unityversion>5.14.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:applovin-adapter:5.11.0">
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceAppLovinAdapter" version="5.10.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-AppLovin-Adapter-Swift-Package" version="5.10.0">
+    <swiftPackage name="AppLovinAdapter" replacesPod="IronSourceAppLovinAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

@@ -1,0 +1,11 @@
+﻿{
+  "name": "SaiGame.LevelPlayAdapter",
+  "references": ["Unity.LevelPlay"],
+  "versionDefines": [
+    {
+      "name": "com.unity.services.levelplay",
+      "expression": "[9.6.0,10.0.0)",
+      "define": "SAIGAME_LEVELPLAY_AVAILABLE"
+    }
+  ]
+}

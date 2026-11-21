@@ -2,4 +2,5 @@
   <Project Path="asset-store-tools-editor.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="SaiGame.LevelPlayAdapter.csproj" />
 </Solution>
