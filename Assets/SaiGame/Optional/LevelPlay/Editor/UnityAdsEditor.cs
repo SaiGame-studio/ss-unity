@@ -25,7 +25,12 @@ namespace SaiGame.LevelPlaySample
             {
                 DrawPlatformFields("Android", "android");
                 DrawPlatformFields("iOS", "ios");
+                if (GUILayout.Button(new GUIContent("Get App Key", LevelPlayDashboardLinks.AppKeyTooltip)))
+                    LevelPlayDashboardLinks.OpenAppKeys();
             }
+
+            if (GUILayout.Button(new GUIContent("Get Unit ID", LevelPlayDashboardLinks.UnitIdTooltip)))
+                LevelPlayDashboardLinks.OpenAdUnits(ads.AppKey);
 
             bool layoutChanged = false;
             if (ads.Format == SaiAdFormat.Banner)

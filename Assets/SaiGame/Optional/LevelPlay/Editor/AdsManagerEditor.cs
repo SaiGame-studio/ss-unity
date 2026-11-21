@@ -24,6 +24,8 @@ namespace SaiGame.LevelPlaySample
             serializedObject.Update();
             DrawPropertiesExcluding(serializedObject, ScriptProperty, AdsProperty);
             serializedObject.ApplyModifiedProperties();
+            if (GUILayout.Button(new GUIContent("Get App Key", LevelPlayDashboardLinks.AppKeyTooltip)))
+                LevelPlayDashboardLinks.OpenAppKeys();
 
             var manager = (AdsManager)target;
             var package = PackageInfo.FindForAssetPath("Packages/com.unity.services.levelplay/package.json");

@@ -32,7 +32,8 @@ namespace SaiGame.LevelPlaySample
         public bool HasBannerConfiguration =>
             !string.IsNullOrWhiteSpace(AppKey) && !string.IsNullOrWhiteSpace(SelectedBannerUnitId);
 
-        private string AppKey => Manager == null ? LegacyAppKey : Manager.AppKey;
+        // App Key for the active build target, from the AdsManager when this ad has one.
+        public string AppKey => Manager == null ? LegacyAppKey : Manager.AppKey;
         private bool CanUseAds => isActiveAndEnabled && banner.IsAvailable && (Manager == null || Manager.isActiveAndEnabled);
         private string SelectedBannerUnitId => Manager == null ? BannerAdUnitId : UnitId;
 
