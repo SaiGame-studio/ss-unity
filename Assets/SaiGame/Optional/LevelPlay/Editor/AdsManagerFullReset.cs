@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using SaiGame.Services;
 using UnityEditor;
 using UnityEngine;
@@ -12,6 +13,7 @@ namespace SaiGame.LevelPlaySample
         private const string AndroidAppKeyField = "androidAppKey";
         private const string IosAppKeyField = "iosAppKey";
         private const string AdsField = "ads";
+        private const string AdsHolderField = "adsHolder";
 
         static AdsManagerFullReset()
         {
@@ -40,21 +42,39 @@ namespace SaiGame.LevelPlaySample
             }
         }
 
+        // Deletes the ads under the manager, the ads in its list, and the AdsHolder.
         private static void DeleteAds(AdsManager manager)
         {
+            var targets = new HashSet<GameObject>();
             foreach (var ad in manager.GetComponentsInChildren<UnityAds>(true))
             {
-                if (ad == null || ad.gameObject == manager.gameObject)
+                if (ad != null && ad.gameObject != manager.gameObject)
+                    targets.Add(ad.gameObject);
+            }
+
+            foreach (var ad in manager.Ads)
+            {
+                if (ad != null)
+                    targets.Add(ad.gameObject);
+            }
+
+            if (manager.AdsHolder != null)
+                targets.Add(manager.AdsHolder.gameObject);
+
+            foreach (var target in targets)
+            {
+                // Deleting the holder first can already remove ads inside it.
+                if (target == null)
                     continue;
 
                 // Objects that come from a prefab cannot be deleted from a prefab instance.
-                if (PrefabUtility.GetCorrespondingObjectFromSource(ad.gameObject) != null)
+                if (PrefabUtility.GetCorrespondingObjectFromSource(target) != null)
                 {
-                    Debug.LogWarning($"[AdsManager] '{ad.name}' is part of a prefab and was not deleted. Open the prefab and delete it there.", ad);
+                    Debug.LogWarning($"[AdsManager] '{target.name}' is part of a prefab and was not deleted. Open the prefab and delete it there.", target);
                     continue;
                 }
 
-                Undo.DestroyObjectImmediate(ad.gameObject);
+                Undo.DestroyObjectImmediate(target);
             }
         }
 
@@ -64,6 +84,7 @@ namespace SaiGame.LevelPlaySample
             settings.FindProperty(AndroidAppKeyField).stringValue = string.Empty;
             settings.FindProperty(IosAppKeyField).stringValue = string.Empty;
             settings.FindProperty(AdsField).ClearArray();
+            settings.FindProperty(AdsHolderField).objectReferenceValue = null;
             settings.ApplyModifiedProperties();
             EditorUtility.SetDirty(manager);
         }

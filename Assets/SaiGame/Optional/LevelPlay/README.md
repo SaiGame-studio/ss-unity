@@ -1,4 +1,4 @@
-# SaiGame LevelPlay banner ads
+﻿# SaiGame LevelPlay banner ads
 
 This optional module ships with the SaiGame SDK and supports banner ads on
 Android and iOS. Unity automatically detects Ads Mediation 9.6 or newer
@@ -15,9 +15,12 @@ and the scene keeps its component references.
    `UnityAds` initializes LevelPlay.
 2. Create a **Banner** ad unit for the Android or iOS app in LevelPlay.
 3. Select **SaiServer > AdsManager** and enter the App Key for each
-   platform. Click **Create UnityAds** and give the child a unique name
+   platform. Click **Create UnityAds** and give the new ad a unique name
    such as `login-loading`. Set its Banner Ad Unit ID for each platform
    you support. The manager lists every ad it created under **Ads**.
+   Ads are created under an `AdsHolder` object at the scene root, outside
+   the SaiServer prefab, so updating the SDK or reverting the prefab never
+   removes them. Each ad keeps a reference to its AdsManager.
 
 ## Preview a banner
 

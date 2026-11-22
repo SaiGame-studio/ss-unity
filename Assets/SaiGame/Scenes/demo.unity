@@ -445,6 +445,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1488241406118161127, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: adsHolder
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488241406118161127, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: androidAppKey
       value: 
       objectReference: {fileID: 0}

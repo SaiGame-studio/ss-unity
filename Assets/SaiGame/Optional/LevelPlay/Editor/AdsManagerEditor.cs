@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
 namespace SaiGame.LevelPlaySample
@@ -9,6 +11,11 @@ namespace SaiGame.LevelPlaySample
     public sealed class AdsManagerEditor : Editor
     {
         private const string AdsProperty = "ads";
+        private const string AdsHolderProperty = "adsHolder";
+        private const string AdsManagerProperty = "adsManager";
+        private const string AdsHolderName = "AdsHolder";
+        private const string HolderOwnerProperty = "owner";
+        private const string LevelPlayPackageName = "com.unity.services.levelplay";
         private const string ScriptProperty = "m_Script";
 
         private List<InstalledAdNetwork> networks = new List<InstalledAdNetwork>();
@@ -274,16 +281,30 @@ namespace SaiGame.LevelPlaySample
 
             var manager = (AdsManager)target;
             var package = PackageInfo.FindForAssetPath("Packages/com.unity.services.levelplay/package.json");
-            EditorGUILayout.LabelField("LevelPlay", package == null ? "Not installed" : $"Installed ({package.version})");
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("LevelPlay", package == null ? "Not installed" : $"Installed ({package.version})");
+                if (package != null)
+                {
+                    var tooltip = "Open Package Manager at Ads Mediation to see and install other versions (9.6 or later in 9.x).";
+                    if (GUILayout.Button(new GUIContent("Check version", tooltip), GUILayout.Width(110)))
+                        UnityEditor.PackageManager.UI.Window.Open(LevelPlayPackageName);
+                }
+            }
             EditorGUILayout.LabelField("Build target", EditorUserBuildSettings.activeBuildTarget.ToString());
             if (!BannerAdSession.HasCompatiblePackage)
+            {
                 EditorGUILayout.HelpBox("Install a supported Ads Mediation 9.x package to enable ads.", MessageType.Warning);
-            else if (string.IsNullOrWhiteSpace(manager.AppKey))
-                EditorGUILayout.HelpBox("Select Android or iOS and enter the App Key for that platform.", MessageType.Info);
+                var tooltip = $"Open Package Manager at Ads Mediation ({LevelPlayPackageName}). Install 9.6 or later in 9.x.";
+                if (package == null && GUILayout.Button(new GUIContent("Install Ads Mediation", tooltip)))
+                    UnityEditor.PackageManager.UI.Window.Open(LevelPlayPackageName);
+            }
 
             DrawAds(manager);
 
-            using (new EditorGUI.DisabledScope(Application.isPlaying || EditorUtility.IsPersistent(manager)))
+            // Ads are created in the scene, never inside the SaiServer prefab.
+            bool inPrefab = EditorUtility.IsPersistent(manager) || PrefabStageUtility.GetPrefabStage(manager.gameObject) != null;
+            using (new EditorGUI.DisabledScope(Application.isPlaying || inPrefab))
             {
                 if (GUILayout.Button("Create UnityAds"))
                     CreateAd(manager);
@@ -338,13 +359,50 @@ namespace SaiGame.LevelPlaySample
                     list.DeleteArrayElementAtIndex(i);
             }
 
-            foreach (Transform child in manager.transform)
+            AppendChildren(list, manager, manager.transform);
+            if (manager.AdsHolder != null)
             {
-                if (child.TryGetComponent<UnityAds>(out var ad) && !Contains(list, ad))
-                    Append(list, ad);
+                EnsureHolderComponent(manager, manager.AdsHolder);
+                AppendChildren(list, manager, manager.AdsHolder);
             }
 
             serialized.ApplyModifiedProperties();
+        }
+
+        // Keeps the holder alive across scene loads together with SaiServer.
+        private static void EnsureHolderComponent(AdsManager manager, Transform holder)
+        {
+            if (!holder.TryGetComponent<AdsHolder>(out var component))
+                component = Undo.AddComponent<AdsHolder>(holder.gameObject);
+
+            var settings = new SerializedObject(component);
+            var owner = settings.FindProperty(HolderOwnerProperty);
+            if (owner.objectReferenceValue == manager)
+                return;
+
+            owner.objectReferenceValue = manager;
+            settings.ApplyModifiedProperties();
+        }
+
+        private static void AppendChildren(SerializedProperty list, AdsManager manager, Transform parent)
+        {
+            foreach (Transform child in parent)
+            {
+                if (!child.TryGetComponent<UnityAds>(out var ad) || ad.Manager != manager)
+                    continue;
+
+                // Store the owner on older ads so they keep working after being moved to the AdsHolder.
+                var adSettings = new SerializedObject(ad);
+                var owner = adSettings.FindProperty(AdsManagerProperty);
+                if (owner.objectReferenceValue == null)
+                {
+                    owner.objectReferenceValue = manager;
+                    adSettings.ApplyModifiedProperties();
+                }
+
+                if (!Contains(list, ad))
+                    Append(list, ad);
+            }
         }
 
         private static bool Contains(SerializedProperty list, Object item)
@@ -366,16 +424,39 @@ namespace SaiGame.LevelPlaySample
 
         private static void CreateAd(AdsManager manager)
         {
-            var name = GameObjectUtility.GetUniqueNameForSibling(manager.transform, nameof(UnityAds));
+            Undo.SetCurrentGroupName("Create UnityAds");
+            var holder = GetOrCreateHolder(manager);
+            var name = GameObjectUtility.GetUniqueNameForSibling(holder, nameof(UnityAds));
             var child = new GameObject(name);
             Undo.RegisterCreatedObjectUndo(child, "Create UnityAds");
-            Undo.SetTransformParent(child.transform, manager.transform, false, "Parent UnityAds");
+            Undo.SetTransformParent(child.transform, holder, false, "Parent UnityAds");
             var ad = Undo.AddComponent<UnityAds>(child);
+
+            var adSettings = new SerializedObject(ad);
+            adSettings.FindProperty(AdsManagerProperty).objectReferenceValue = manager;
+            adSettings.ApplyModifiedProperties();
 
             var serialized = new SerializedObject(manager);
             Append(serialized.FindProperty(AdsProperty), ad);
             serialized.ApplyModifiedProperties();
             Selection.activeGameObject = child;
+        }
+
+        // The holder sits at the scene root, outside the SaiServer prefab.
+        private static Transform GetOrCreateHolder(AdsManager manager)
+        {
+            if (manager.AdsHolder != null)
+                return manager.AdsHolder;
+
+            var holder = new GameObject(AdsHolderName);
+            Undo.RegisterCreatedObjectUndo(holder, "Create AdsHolder");
+            SceneManager.MoveGameObjectToScene(holder, manager.gameObject.scene);
+            EnsureHolderComponent(manager, holder.transform);
+
+            var serialized = new SerializedObject(manager);
+            serialized.FindProperty(AdsHolderProperty).objectReferenceValue = holder.transform;
+            serialized.ApplyModifiedProperties();
+            return holder.transform;
         }
     }
 }

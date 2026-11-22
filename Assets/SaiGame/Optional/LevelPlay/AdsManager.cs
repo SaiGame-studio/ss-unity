@@ -13,9 +13,14 @@ namespace SaiGame.LevelPlaySample
         [SerializeField, Tooltip("UnityAds children created and managed by this manager.")]
         private List<UnityAds> ads = new List<UnityAds>();
 
+        [SerializeField, Tooltip("Scene object outside the SaiServer prefab that holds the UnityAds objects, " +
+            "so SDK updates and prefab reverts never remove them. Created by Create UnityAds.")]
+        private Transform adsHolder;
+
         private UnityAds visibleBanner;
 
         public IReadOnlyList<UnityAds> Ads => ads;
+        public Transform AdsHolder => adsHolder;
 
         public string AppKey
         {

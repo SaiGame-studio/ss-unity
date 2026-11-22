@@ -17,6 +17,9 @@ namespace SaiGame.LevelPlaySample
         [SerializeField, Tooltip("Position, size and safe area of the banner.")]
         private BannerAdLayout bannerLayout = new BannerAdLayout();
 
+        [SerializeField, Tooltip("The AdsManager that owns this ad. Set when the ad is created from the AdsManager.")]
+        private AdsManager adsManager;
+
         private readonly BannerAdSession banner = new BannerAdSession();
         private AdsManager manager;
 
@@ -53,8 +56,13 @@ namespace SaiGame.LevelPlaySample
 
         private void Awake() => manager = FindManager();
 
+        // Ads live in an AdsHolder outside the SaiServer prefab and point to their manager.
+        // An ad placed directly under an AdsManager still works without the reference.
         private AdsManager FindManager()
         {
+            if (adsManager != null)
+                return adsManager;
+
             return transform.parent != null && transform.parent.TryGetComponent<AdsManager>(out var parent) ? parent : null;
         }
 
