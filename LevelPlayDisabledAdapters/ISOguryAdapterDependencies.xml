@@ -1,0 +1,20 @@
+<dependencies>
+  <unityversion>5.15.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:ogury-adapter:5.6.0">
+      <repositories>
+        <repository>https://maven.ogury.co</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceOguryAdapter" version="5.10.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-Ogury-Adapter-Swift-Package" version="5.10.0">
+    <swiftPackage name="OguryAdapter" replacesPod="IronSourceOguryAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

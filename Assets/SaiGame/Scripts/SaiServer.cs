@@ -11,7 +11,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.60c";
+        public const string PACKAGE_VERSION = "0.2.62c";
         public const string PACKAGE_NAME = "Sai Server";
         // Optional headers that tell the server which client sent a request; the client ID is the game ID.
         public const string CLIENT_ID_HEADER = "X-Client-ID";
@@ -297,6 +297,7 @@ namespace SaiGame.Services
                     || path == SteamLogin.ClaimEndpoint
                     || path == gamePath + "/gamer-progress"))
                 || (method == "GET" && (path == "/api/v1/auth/me" || path == "/api/v1/time"
+                    || path == GamerProgress.TwoFactorStatusEndpoint
                     || path.StartsWith("/api/v1/client/auth/google/session/", StringComparison.Ordinal)
                     || path == gamePath + "/my-gamer-progress"));
 
@@ -459,11 +460,23 @@ namespace SaiGame.Services
 
         public IEnumerator DeleteRequest(string endpoint, Action<string> onSuccess, Action<string> onError)
         {
+            return this.DeleteRequest(endpoint, null, onSuccess, onError);
+        }
+
+        // jsonData is optional; its body is never logged because it can carry a 2FA code.
+        public IEnumerator DeleteRequest(string endpoint, string jsonData, Action<string> onSuccess, Action<string> onError)
+        {
             if (!this.ValidateGamerProgressRequest(endpoint, "DELETE", onError))
                 yield break;
 
             using (UnityWebRequest request = CreateAuthenticatedRequest(endpoint, "DELETE"))
             {
+                if (!string.IsNullOrEmpty(jsonData))
+                {
+                    request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonData));
+                    request.SetRequestHeader("Content-Type", "application/json");
+                }
+
                 if (this.showUrlRequest)
                     Debug.Log($"[SaiServer] DELETE {request.url}");
 

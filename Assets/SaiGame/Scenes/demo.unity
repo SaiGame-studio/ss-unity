@@ -440,13 +440,41 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 813458455079530658, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: autoLogin
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488241406118161127, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: adsHolder
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488241406118161127, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: androidAppKey
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488241406118161127, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: ads.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488241406118161127, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: 'ads.Array.data[0]'
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 5323172006139148077, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: endDate
+      value: 2026-11-22
+      objectReference: {fileID: 0}
+    - target: {fileID: 5323172006139148077, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+      propertyPath: startDate
+      value: 2026-11-16
+      objectReference: {fileID: 0}
     - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_Name
       value: SaiServer
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.84113
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalPosition.y
@@ -454,7 +482,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.91047
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8277413932139228352, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_LocalRotation.w
@@ -485,12 +513,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: envOverrideGameId
+      propertyPath: envOverrideCredentials
       value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8686393883881292769, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
-      propertyPath: envOverrideServerEndpoint
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

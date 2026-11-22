@@ -1,0 +1,13 @@
+<dependencies>
+  <unityversion>5.11.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:superawesome-adapter:5.9.0">
+      <repositories>
+        <repository>https://aa-sdk.s3-eu-west-1.amazonaws.com/android_repo/</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-SuperAwesome-Adapter-Swift-Package" version="5.3.0">
+    <swiftPackage name="SuperAwesomeAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

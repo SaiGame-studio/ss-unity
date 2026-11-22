@@ -1,0 +1,17 @@
+<dependencies>
+  <unityversion>5.24.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:bigo-adapter:5.15.0">
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceBigoAdapter" version="5.13.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-Bigo-Adapter-Swift-Package" version="5.13.0">
+    <swiftPackage name="BigoAdapter" replacesPod="IronSourceBigoAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

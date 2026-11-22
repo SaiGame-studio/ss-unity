@@ -1,0 +1,17 @@
+<dependencies>
+  <unityversion>5.31.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:moloco-adapter:5.22.0">
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceMolocoAdapter" version="5.21.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-Moloco-Adapter-Swift-Package" version="5.21.0">
+    <swiftPackage name="MolocoAdapter" replacesPod="IronSourceMolocoAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

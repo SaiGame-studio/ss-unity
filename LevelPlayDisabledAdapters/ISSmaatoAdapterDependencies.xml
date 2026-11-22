@@ -1,0 +1,20 @@
+<dependencies>
+  <unityversion>5.15.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:smaato-adapter:5.8.0">
+      <repositories>
+        <repository>https://s3.amazonaws.com/smaato-sdk-releases/</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceSmaatoAdapter" version="5.7.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-Smaato-Adapter-Swift-Package" version="5.7.0">
+    <swiftPackage name="SmaatoAdapter" replacesPod="IronSourceSmaatoAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

@@ -10,8 +10,6 @@ namespace SaiGame.Services
     public class PlayerItemEditor : Editor
     {
         private PlayerItem itemContainer;
-        private SerializedProperty autoLoadOnLogin;
-        private SerializedProperty autoLoadCategory;
         private SerializedProperty itemLimit;
         private SerializedProperty itemOffset;
         private SerializedProperty categoryFilter;
@@ -40,8 +38,6 @@ namespace SaiGame.Services
         private void OnEnable()
         {
             this.itemContainer = (PlayerItem)target;
-            this.autoLoadOnLogin = serializedObject.FindProperty("autoLoadOnLogin");
-            this.autoLoadCategory = serializedObject.FindProperty("autoLoadCategory");
             this.itemLimit = serializedObject.FindProperty("itemLimit");
             this.itemOffset = serializedObject.FindProperty("itemOffset");
             this.categoryFilter = serializedObject.FindProperty("categoryFilter");
@@ -101,16 +97,6 @@ namespace SaiGame.Services
             EditorGUILayout.LabelField("Item Container Configuration", EditorStyles.boldLabel);
             EditorGUILayout.Space();
 
-            // Auto Load Settings
-            EditorGUILayout.PropertyField(this.autoLoadOnLogin, new GUIContent("Auto Load on Login", "Automatically load inventory when user logs in"));
-            if (this.autoLoadOnLogin.boolValue)
-            {
-                EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(this.autoLoadCategory, new GUIContent("Auto Load Category", "Category filter applied on auto-load (leave empty for all)"));
-                EditorGUI.indentLevel--;
-            }
-
-            EditorGUILayout.Space();
             EditorGUILayout.LabelField("Query Parameters", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(this.itemLimit, new GUIContent("Item Limit", "Number of items to load per request"));
             EditorGUILayout.PropertyField(this.itemOffset, new GUIContent("Item Offset", "Offset for pagination"));

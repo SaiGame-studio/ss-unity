@@ -1,0 +1,17 @@
+<dependencies>
+  <unityversion>5.12.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:facebook-adapter:5.8.0">
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceFacebookAdapter" version="5.6.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-Facebook-Adapter-Swift-Package" version="5.6.0">
+    <swiftPackage name="FacebookAdapter" replacesPod="IronSourceFacebookAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

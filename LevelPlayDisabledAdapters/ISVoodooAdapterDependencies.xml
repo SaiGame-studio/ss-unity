@@ -1,0 +1,20 @@
+<dependencies>
+  <unityversion>5.15.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:voodoo-adapter:5.11.0">
+      <repositories>
+        <repository>https://framework.voodoo-adn.com/android/release/apps</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceVoodooAdapter" version="5.8.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-Voodoo-Adapter-Swift-Package" version="5.8.0">
+    <swiftPackage name="VoodooAdapter" replacesPod="IronSourceVoodooAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

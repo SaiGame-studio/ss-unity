@@ -1,0 +1,17 @@
+<dependencies>
+  <unityversion>5.16.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:aps-adapter:5.5.0">
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceAPSAdapter" version="5.14.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-APS-Adapter-Swift-Package" version="5.14.0">
+    <swiftPackage name="APSAdapter" replacesPod="IronSourceAPSAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

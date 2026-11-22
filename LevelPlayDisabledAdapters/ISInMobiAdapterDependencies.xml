@@ -1,0 +1,17 @@
+<dependencies>
+  <unityversion>5.19.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:inmobi-adapter:5.13.0">
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceInMobiAdapter" version="5.11.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-InMobi-Adapter-Swift-Package" version="5.11.0">
+    <swiftPackage name="InMobiAdapter" replacesPod="IronSourceInMobiAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

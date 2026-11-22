@@ -1,0 +1,17 @@
+<dependencies>
+  <unityversion>5.28.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:vungle-adapter:5.18.0">
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceVungleAdapter" version="5.17.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-Vungle-Adapter-Swift-Package" version="5.17.0">
+    <swiftPackage name="VungleAdapter" replacesPod="IronSourceVungleAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

@@ -1,0 +1,20 @@
+<dependencies>
+  <unityversion>5.50.0.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:pangle-adapter:5.29.0">
+      <repositories>
+        <repository>https://artifact.bytedance.com/repository/pangle/</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourcePangleAdapter" version="5.42.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+  <remoteSwiftPackage url="https://github.com/ironsource-mobile/LevelPlay-Pangle-Adapter-Swift-Package" version="5.42.0">
+    <swiftPackage name="PangleAdapter" replacesPod="IronSourcePangleAdapter" />
+  </remoteSwiftPackage>
+</dependencies>

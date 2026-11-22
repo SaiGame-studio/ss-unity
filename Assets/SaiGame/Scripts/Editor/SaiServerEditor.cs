@@ -9,6 +9,13 @@ namespace SaiGame.Services
     [CustomEditor(typeof(SaiServer))]
     public class SaiServerEditor : Editor
     {
+        // Raised during Full Reset so optional modules (for example Ads) can reset their own objects
+        // without SaiServer depending on them.
+        public static event Action<SaiServer> FullResetting;
+
+        // Raised at the end of Service References so optional modules can list their own objects.
+        public static event Action<SaiServer> ServiceReferencesDrawing;
+
         private bool showServiceReferences = false;
         private bool showServerTime = false;
         private bool showDebugSettings = false;
@@ -151,6 +158,9 @@ namespace SaiGame.Services
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("steamLogin"),           new GUIContent("Steam Login"));
                 EditorGUILayout.PropertyField(this.serializedObject.FindProperty("steamAchievements"),    new GUIContent("Steam Achievements"));
 
+                // ── Optional modules (for example Ads) ───────────────────────
+                ServiceReferencesDrawing?.Invoke((SaiServer)this.target);
+
                 EditorGUI.indentLevel--;
             }
 
@@ -286,6 +296,7 @@ namespace SaiGame.Services
                         "All settings in every Sai Server class on this object and its child objects " +
                         "(SaiServer, SaiAuth, Shop, Mailbox, Quest, Item, Battle, ...) will be reset to their default configuration.\n\n" +
                         "Values you set in the Inspector (Game Id, auto-load options, limits, references, ...) will be lost.\n\n" +
+                        "Optional modules are reset too: Ads Manager App Keys are cleared and its UnityAds objects are deleted.\n\n" +
                         "Do you want to continue?",
                         "Reset All",
                         "Cancel");
@@ -326,6 +337,8 @@ namespace SaiGame.Services
                             saiServer.ManualInvokeLoadComponents(component);
                             EditorUtility.SetDirty(component);
                         }
+
+                        FullResetting?.Invoke(saiServer);
 
                         EditorSceneManager.MarkSceneDirty(saiServer.gameObject.scene);
                         EditorUtility.DisplayDialog("Full Reset Complete", $"Reset executed on {resetCount}/{totalCount} SaiBehaviour component(s).", "OK");
