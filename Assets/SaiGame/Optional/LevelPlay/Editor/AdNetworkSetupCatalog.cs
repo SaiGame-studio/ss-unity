@@ -97,6 +97,7 @@ namespace SaiGame.LevelPlaySample
                 "App Token, Zone Reference ID",
                 null,
                 "mailto:ironsourcebidding@verve.com"),
+            ["Voodoo"] = Unknown,
             ["Vungle"] = new AdNetworkSetupInfo(
                 "App ID, Placement Reference ID, Reporting API ID and Key",
                 null,
@@ -118,6 +119,8 @@ namespace SaiGame.LevelPlaySample
         };
 
         public static bool SupportsAutoSetup(string networkName) => AutoSetupNetworks.Contains(networkName);
+
+        internal static IEnumerable<string> NetworkNames => Networks.Keys;
 
         public static AdNetworkSetupInfo Get(string networkName)
         {

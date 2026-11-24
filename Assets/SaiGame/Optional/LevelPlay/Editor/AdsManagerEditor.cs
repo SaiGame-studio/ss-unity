@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -16,12 +17,14 @@ namespace SaiGame.LevelPlaySample
         private const string AdsHolderName = "AdsHolder";
         private const string HolderOwnerProperty = "owner";
         private const string LevelPlayPackageName = "com.unity.services.levelplay";
+        private const string LevelPlayNetworkManagerMenu = "Ads Mediation/Network Manager";
         private const string ScriptProperty = "m_Script";
 
         private List<InstalledAdNetwork> networks = new List<InstalledAdNetwork>();
+        private string[] missingNetworks = System.Array.Empty<string>();
         private string adMobAndroidAppId = string.Empty;
         private string adMobIosAppId = string.Empty;
-        private bool showNetworks;
+        private bool showNetworks = true;
         private GUIStyle disabledLabelStyle;
         // Only one turned-on network shows its setup steps at a time.
         private string expandedNetwork;
@@ -45,11 +48,29 @@ namespace SaiGame.LevelPlaySample
             if (!Application.isPlaying && !EditorUtility.IsPersistent(manager))
                 SyncAds(manager);
             RefreshNetworks();
+            EditorApplication.projectChanged += OnProjectChanged;
+        }
+
+        private void OnDisable()
+        {
+            EditorApplication.projectChanged -= OnProjectChanged;
+        }
+
+        private void OnProjectChanged()
+        {
+            RefreshNetworks();
+            Repaint();
         }
 
         private void RefreshNetworks()
         {
             networks = InstalledAdNetworkScanner.Scan();
+            var installedNames = new HashSet<string>(networks.Select(network => network.Name),
+                System.StringComparer.OrdinalIgnoreCase);
+            missingNetworks = AdNetworkSetupCatalog.NetworkNames
+                .Where(name => !installedNames.Contains(name))
+                .OrderBy(name => name, System.StringComparer.OrdinalIgnoreCase)
+                .ToArray();
             InstalledAdNetworkScanner.ReadAdMobAppIds(out adMobAndroidAppId, out adMobIosAppId);
         }
 
@@ -58,7 +79,7 @@ namespace SaiGame.LevelPlaySample
             EditorGUILayout.Space();
             using (new EditorGUILayout.HorizontalScope())
             {
-                var title = new GUIContent($"Installed ad networks ({networks.Count})");
+                var title = new GUIContent($"Ad networks ({networks.Count + missingNetworks.Length})");
                 float width = EditorStyles.foldout.CalcSize(title).x + 4f;
                 var rect = GUILayoutUtility.GetRect(width, EditorGUIUtility.singleLineHeight, GUILayout.Width(width));
                 showNetworks = EditorGUI.Foldout(rect, showNetworks, title, true);
@@ -71,8 +92,11 @@ namespace SaiGame.LevelPlaySample
             if (!showNetworks)
                 return;
 
-            if (networks.Count == 0)
-                EditorGUILayout.LabelField("No adapters installed. LevelPlay serves ironSource ads only.");
+            using (new EditorGUI.DisabledScope(Application.isPlaying || !BannerAdSession.HasCompatiblePackage))
+            {
+                if (GUILayout.Button("Install network adapters"))
+                    RunAfterGui(OpenNetworkManager);
+            }
 
             if (disabledLabelStyle == null)
                 disabledLabelStyle = new GUIStyle(EditorStyles.label) { normal = { textColor = Color.gray } };
@@ -145,7 +169,10 @@ namespace SaiGame.LevelPlaySample
                     DrawAdMobSettings();
             }
 
-            using (new EditorGUI.DisabledScope(Application.isPlaying))
+            foreach (var name in missingNetworks)
+                EditorGUILayout.LabelField($"{name} (not installed)", disabledLabelStyle);
+
+            using (new EditorGUI.DisabledScope(Application.isPlaying || networks.Count == 0))
             {
                 var tooltip = "Keep only " + string.Join(", ", InstalledAdNetworkScanner.RecommendedNetworks) +
                     ". These need no extra App ID setup in Unity, so builds have the fewest errors.";
@@ -158,6 +185,13 @@ namespace SaiGame.LevelPlaySample
 
             if (GUILayout.Button("Refresh ad networks"))
                 RefreshNetworks();
+        }
+
+        private static void OpenNetworkManager()
+        {
+            if (!EditorApplication.ExecuteMenuItem(LevelPlayNetworkManagerMenu))
+                EditorUtility.DisplayDialog("LevelPlay Network Manager",
+                    "The LevelPlay Network Manager is unavailable. Make sure Ads Mediation and its Mobile Dependency Resolver are imported.", "OK");
         }
 
         private void DrawSetupInfo(InstalledAdNetwork network)
