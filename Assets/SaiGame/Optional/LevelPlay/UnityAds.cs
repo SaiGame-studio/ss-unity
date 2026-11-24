@@ -16,28 +16,34 @@ namespace SaiGame.LevelPlaySample
         [SerializeField] private string iosUnitId;
         [SerializeField, Tooltip("Position, size and safe area of the banner.")]
         private BannerAdLayout bannerLayout = new BannerAdLayout();
+        [SerializeField, Tooltip("Show the fallback banner when LevelPlay cannot provide an ad.")]
+        private bool enableSaiServerBannerFallback = true;
 
         [SerializeField, Tooltip("The AdsManager that owns this ad. Set when the ad is created from the AdsManager.")]
         private AdsManager adsManager;
 
         private readonly BannerAdSession banner = new BannerAdSession();
+        private readonly SaiServerFallbackBanner fallbackBanner = new SaiServerFallbackBanner();
         private AdsManager manager;
+        private bool fallbackRequested;
 
         public AdsManager Manager => Application.isPlaying ? manager : FindManager();
         public SaiAdFormat Format => format;
 
         public static bool IsFormatSupported(SaiAdFormat value) => value == SaiAdFormat.Banner;
 
-        public bool IsBannerAvailable => CanUseAds && HasBannerConfiguration;
-        public string BannerStatus => banner.Status;
-        public bool IsBannerVisible => banner.IsVisible;
+        public bool IsBannerAvailable => CanUseLevelPlayBanner || CanUseSaiServerFallback;
+        public bool CanUseSaiServerFallback => CanShowBanner && enableSaiServerBannerFallback;
+        public string BannerStatus => fallbackBanner.IsVisible ? "Fallback banner displayed." : banner.Status;
+        public bool IsBannerVisible => banner.IsVisible || fallbackBanner.IsVisible;
 
         public bool HasBannerConfiguration =>
             !string.IsNullOrWhiteSpace(AppKey) && !string.IsNullOrWhiteSpace(SelectedBannerUnitId);
 
         // App Key for the active build target, from the AdsManager when this ad has one.
         public string AppKey => Manager == null ? LegacyAppKey : Manager.AppKey;
-        private bool CanUseAds => isActiveAndEnabled && banner.IsAvailable && (Manager == null || Manager.isActiveAndEnabled);
+        private bool CanShowBanner => isActiveAndEnabled && (Manager == null || Manager.isActiveAndEnabled);
+        private bool CanUseLevelPlayBanner => CanShowBanner && banner.IsAvailable && HasBannerConfiguration;
         private string SelectedBannerUnitId => Manager == null ? BannerAdUnitId : UnitId;
 
 #if UNITY_ANDROID
@@ -54,7 +60,12 @@ namespace SaiGame.LevelPlaySample
         private string BannerAdUnitId => null;
 #endif
 
-        private void Awake() => manager = FindManager();
+        private void Awake()
+        {
+            manager = FindManager();
+            banner.AdUnavailable += ShowSaiServerFallback;
+            banner.AdDisplayed += HideSaiServerFallback;
+        }
 
         // Ads live in an AdsHolder outside the SaiServer prefab and point to their manager.
         // An ad placed directly under an AdsManager still works without the reference.
@@ -78,7 +89,59 @@ namespace SaiGame.LevelPlaySample
                 ShowBannerDirectly();
         }
 
-        internal void ShowBannerDirectly() => banner.Show(AppKey, SelectedBannerUnitId, bannerLayout);
+        internal void ShowBannerDirectly(bool previewFallback = false)
+        {
+            if (previewFallback || !CanUseLevelPlayBanner)
+            {
+                banner.Hide();
+                ShowSaiServerFallback();
+                return;
+            }
+
+            // Keep the Sai Server fallback visible during a retry until LevelPlay displays an ad.
+            banner.Show(AppKey, SelectedBannerUnitId, bannerLayout);
+        }
+
+#if UNITY_EDITOR
+        private void OnGUI() => fallbackBanner.DrawEditorPreview(bannerLayout);
+
+        public void TestSaiServerFallbackBanner()
+        {
+            if (!Application.isPlaying || !CanUseSaiServerFallback)
+                return;
+
+            if (Manager != null)
+                Manager.ShowBanner(this, previewFallback: true);
+            else
+                ShowBannerDirectly(previewFallback: true);
+        }
+#endif
+
+        private void ShowSaiServerFallback()
+        {
+            fallbackRequested = true;
+            UpdateSaiServerFallback();
+        }
+
+        private void HideSaiServerFallback()
+        {
+            fallbackRequested = false;
+            fallbackBanner.Hide();
+        }
+
+        private void LateUpdate()
+        {
+            if (fallbackRequested)
+                UpdateSaiServerFallback();
+        }
+
+        private void UpdateSaiServerFallback()
+        {
+            if (CanUseSaiServerFallback)
+                fallbackBanner.Show(bannerLayout, gameObject.scene);
+            else
+                fallbackBanner.Hide();
+        }
 
         // Returns a copy; use the Set methods to apply changes.
         public BannerAdLayout BannerLayout => bannerLayout.Clone();
@@ -108,13 +171,16 @@ namespace SaiGame.LevelPlaySample
 
         private void RefreshVisibleBanner()
         {
-            if (IsBannerVisible)
+            if (banner.IsVisible)
                 ShowBanner();
+            if (fallbackRequested)
+                UpdateSaiServerFallback();
         }
 
         public void HideBanner()
         {
             banner.Hide();
+            HideSaiServerFallback();
             if (Manager != null)
                 Manager.ReleaseBanner(this);
         }
@@ -141,7 +207,7 @@ namespace SaiGame.LevelPlaySample
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(SelectedBannerUnitId))
+            if (!CanUseSaiServerFallback && string.IsNullOrWhiteSpace(SelectedBannerUnitId))
             {
                 Debug.LogError($"[UnityAds] Missing unit ID for '{name}' ({format}) on the active build target.", this);
                 return;
@@ -152,6 +218,10 @@ namespace SaiGame.LevelPlaySample
 
         private void OnDisable() => HideBanner();
 
-        private void OnDestroy() => banner.Dispose();
+        private void OnDestroy()
+        {
+            banner.Dispose();
+            fallbackBanner.Dispose();
+        }
     }
 }
