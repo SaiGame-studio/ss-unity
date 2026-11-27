@@ -38,12 +38,13 @@ namespace SaiGame.LevelPlaySample
                 EditorGUI.BeginChangeCheck();
                 DrawBannerLayout(serializedObject.FindProperty("bannerLayout"));
                 layoutChanged = EditorGUI.EndChangeCheck();
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("enableSaiServerBannerFallback"),
+                    new GUIContent("Use Banner fallback", "Show the fallback banner when LevelPlay cannot provide an ad."));
             }
             serializedObject.ApplyModifiedProperties();
 
-            // Re-show a visible banner so layout edits apply live in Play Mode.
-            if (layoutChanged && Application.isPlaying && ads.IsBannerVisible)
-                ads.ShowBanner();
+            if (layoutChanged && Application.isPlaying)
+                ads.SetBannerLayout(ads.BannerLayout);
 
             var package = PackageInfo.FindForAssetPath(LevelPlayPackagePath);
             EditorGUILayout.Space();
@@ -51,10 +52,7 @@ namespace SaiGame.LevelPlaySample
             EditorGUILayout.LabelField("Build target", EditorUserBuildSettings.activeBuildTarget.ToString());
             string blocker = GetBlocker(ads, package);
             if (blocker != null)
-            {
                 EditorGUILayout.HelpBox(blocker, MessageType.Warning);
-                return;
-            }
 
             if (ads.Format == SaiAdFormat.Banner)
                 DrawBanner(ads);
@@ -63,10 +61,19 @@ namespace SaiGame.LevelPlaySample
         private static void DrawBanner(UnityAds ads)
         {
             EditorGUILayout.LabelField("Banner", EditorStyles.boldLabel);
-            string bannerStatus = ads.HasBannerConfiguration
-                ? Application.isPlaying ? ads.BannerStatus : "Enter Play Mode and select Show banner to preview."
-                : "Set the App Key and Banner Ad Unit ID for the active build target.";
+            string bannerStatus = Application.isPlaying
+                ? ads.BannerStatus
+                : "Enter Play Mode to show the banner or test the fallback.";
             EditorGUILayout.HelpBox(bannerStatus, ads.IsBannerAvailable ? MessageType.Info : MessageType.Warning);
+            if (!ads.HasBannerConfiguration)
+                EditorGUILayout.HelpBox("Set the App Key and Banner Ad Unit ID to serve LevelPlay ads.", MessageType.Warning);
+
+            using (new EditorGUI.DisabledScope(!Application.isPlaying || !ads.CanUseSaiServerFallback))
+            {
+                if (GUILayout.Button("Test fallback banner"))
+                    ads.TestSaiServerFallbackBanner();
+            }
+
             if (!Application.isPlaying)
                 return;
 
@@ -154,12 +161,12 @@ namespace SaiGame.LevelPlaySample
             if (!ads.isActiveAndEnabled || (ads.Manager != null && !ads.Manager.isActiveAndEnabled))
                 return "Ads are disabled on this object.";
             if (package == null)
-                return "Ads unavailable. Install Ads Mediation to enable LevelPlay.";
+                return "LevelPlay ads unavailable. Install Ads Mediation to enable LevelPlay.";
             if (!BannerAdSession.HasCompatiblePackage)
-                return "Ads unavailable. Install Ads Mediation 9.6 or later in the 9.x series.";
+                return "LevelPlay ads unavailable. Install Ads Mediation 9.6 or later in the 9.x series.";
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android &&
                 EditorUserBuildSettings.activeBuildTarget != BuildTarget.iOS)
-                return "Ads unavailable on this build target. Select Android or iOS.";
+                return "LevelPlay ads unavailable on this build target. Select Android or iOS.";
             return null;
         }
     }

@@ -8,6 +8,37 @@ namespace SaiGame.LevelPlaySample
     public sealed class BannerAdSession : IDisposable
     {
         public string Status { get; private set; } = "Select Show banner to begin.";
+        public event Action AdUnavailable;
+        public event Action AdDisplayed;
+
+#if UNITY_EDITOR
+        public static bool TryGetEditorBannerSize(BannerAdLayout layout, out UnityEngine.Vector2 size)
+        {
+#if SAIGAME_LEVELPLAY_AVAILABLE && (UNITY_ANDROID || UNITY_IOS)
+            float scale = UnityEngine.Screen.dpi / 160f;
+            if (scale > 0f)
+            {
+                var adSize = ToAdSize(layout);
+                size = new UnityEngine.Vector2(adSize.Width * scale, adSize.Height * scale);
+                return true;
+            }
+#endif
+            size = default;
+            return false;
+        }
+#endif
+
+        private void ReportAdUnavailable(string status)
+        {
+            Status = status;
+            AdUnavailable?.Invoke();
+        }
+
+        private void ReportAdDisplayed()
+        {
+            Status = "Banner displayed.";
+            AdDisplayed?.Invoke();
+        }
 
 #if SAIGAME_LEVELPLAY_AVAILABLE
         public static bool HasCompatiblePackage => true;
@@ -87,13 +118,22 @@ namespace SaiGame.LevelPlaySample
             initializing = false;
             if (error != null)
             {
-                Status = $"LevelPlay initialization failed. ({error})";
+                string status = $"LevelPlay initialization failed. ({error})";
+                if (wantsVisible)
+                    ReportAdUnavailable(status);
+                else
+                    Status = status;
                 return;
             }
 
             if (!wantsVisible)
                 return;
 
+            CreateBanner();
+        }
+
+        private void CreateBanner()
+        {
             appliedLayout = layout.Clone();
             var config = new LevelPlayBannerAd.Config.Builder()
                 .SetSize(ToAdSize(appliedLayout))
@@ -174,6 +214,13 @@ namespace SaiGame.LevelPlaySample
         {
             loading = false;
             loaded = true;
+            if (wantsVisible && !layout.SameAs(appliedLayout))
+            {
+                DestroyBanner();
+                CreateBanner();
+                return;
+            }
+
             if (wantsVisible)
                 ShowLoadedBanner();
             else
@@ -184,20 +231,20 @@ namespace SaiGame.LevelPlaySample
         {
             loading = false;
             if (!loaded && wantsVisible)
-                Status = $"Banner load failed. Select Show banner to retry. ({error.ErrorMessage})";
+                ReportAdUnavailable($"Banner load failed. Select Show banner to retry. ({error.ErrorMessage})");
         }
 
         private void HandleDisplayed(LevelPlayAdInfo info)
         {
             if (wantsVisible)
-                Status = "Banner displayed.";
+                ReportAdDisplayed();
         }
 
         private void HandleDisplayFailed(LevelPlayAdInfo info, LevelPlayAdError error)
         {
             showRequested = false;
             if (wantsVisible)
-                Status = $"Banner display failed. Select Show banner to retry. ({error.ErrorMessage})";
+                ReportAdUnavailable($"Banner display failed. Select Show banner to retry. ({error.ErrorMessage})");
         }
 #endif
 
@@ -208,6 +255,8 @@ namespace SaiGame.LevelPlaySample
             if (banner != null)
                 DestroyBanner();
 #endif
+            AdUnavailable = null;
+            AdDisplayed = null;
         }
     }
 }

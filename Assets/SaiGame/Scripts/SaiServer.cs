@@ -11,7 +11,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.62c";
+        public const string PACKAGE_VERSION = "0.2.62e";
         public const string PACKAGE_NAME = "Sai Server";
         // Optional headers that tell the server which client sent a request; the client ID is the game ID.
         public const string CLIENT_ID_HEADER = "X-Client-ID";

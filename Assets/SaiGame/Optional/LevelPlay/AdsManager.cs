@@ -104,16 +104,16 @@ namespace SaiGame.LevelPlaySample
                 ad.HideBanner();
         }
 
-        internal bool ShowBanner(UnityAds ad)
+        internal bool ShowBanner(UnityAds ad, bool previewFallback = false)
         {
-            if (!isActiveAndEnabled || !ad.IsBannerAvailable)
+            if (!isActiveAndEnabled || !(previewFallback ? ad.CanUseSaiServerFallback : ad.IsBannerAvailable))
                 return false;
 
             if (visibleBanner != null && visibleBanner != ad)
                 visibleBanner.HideBanner();
 
             visibleBanner = ad;
-            ad.ShowBannerDirectly();
+            ad.ShowBannerDirectly(previewFallback);
             return true;
         }
 

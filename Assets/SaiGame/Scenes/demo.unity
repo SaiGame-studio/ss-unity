@@ -432,6 +432,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &842476721
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 842476723}
+  - component: {fileID: 842476722}
+  m_Layer: 0
+  m_Name: AdsHolder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &842476722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 842476721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6cdef1535c3e464eba10f1c9549769a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.LevelPlaySample.AdsHolder
+  owner: {fileID: 1921172095}
+--- !u!4 &842476723
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 842476721}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1954226232}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1921172094
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -447,26 +493,26 @@ PrefabInstance:
     - target: {fileID: 1488241406118161127, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: adsHolder
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 842476723}
     - target: {fileID: 1488241406118161127, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: androidAppKey
-      value: 
+      value: 29c238d75
       objectReference: {fileID: 0}
     - target: {fileID: 1488241406118161127, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: ads.Array.size
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1488241406118161127, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: 'ads.Array.data[0]'
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1954226231}
     - target: {fileID: 5323172006139148077, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: endDate
-      value: 2026-11-22
+      value: 2026-11-29
       objectReference: {fileID: 0}
     - target: {fileID: 5323172006139148077, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: startDate
-      value: 2026-11-16
+      value: 2026-11-23
       objectReference: {fileID: 0}
     - target: {fileID: 6971719431293405431, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
       propertyPath: m_Name
@@ -521,6 +567,78 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+--- !u!114 &1921172095 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1488241406118161127, guid: 3cd71439f244afb48a8cc771f5246221, type: 3}
+  m_PrefabInstance: {fileID: 1921172094}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9dedc7a3ce4754b469a3fb1553e482b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.LevelPlaySample.AdsManager
+--- !u!1 &1954226230
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1954226232}
+  - component: {fileID: 1954226231}
+  m_Layer: 0
+  m_Name: UnityAds
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1954226231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1954226230}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a31016e8dea3493ca9f69c25fee7c4e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaiGame.LevelPlaySample.UnityAds
+  androidAppKey: 
+  androidBannerAdUnitId: 
+  iosAppKey: 
+  iosBannerAdUnitId: 
+  format: 0
+  androidUnitId: h1708mvnc13iodzz
+  iosUnitId: 
+  bannerLayout:
+    position: 7
+    customPosition: {x: 0, y: 0}
+    size: 0
+    adaptiveWidth: -1
+    customWidth: 320
+    customHeight: 50
+    respectSafeArea: 1
+  enableSaiServerBannerFallback: 1
+  adsManager: {fileID: 1921172095}
+--- !u!4 &1954226232
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1954226230}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 842476723}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -529,3 +647,4 @@ SceneRoots:
   - {fileID: 410087041}
   - {fileID: 832575519}
   - {fileID: 1921172094}
+  - {fileID: 842476723}
