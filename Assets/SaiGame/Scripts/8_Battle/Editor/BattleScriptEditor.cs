@@ -18,7 +18,7 @@ namespace SaiGame.Services
         private Vector2 responseScroll  = Vector2.zero;
         private Vector2 requestScroll   = Vector2.zero;
 
-        private void OnEnable()
+        protected void OnEnable()
         {
             this.battleScript  = (BattleScript)target;
             this.scriptName    = serializedObject.FindProperty("scriptName");

@@ -13,6 +13,7 @@ namespace SaiGame.LevelPlaySample
 
         public AdsManager Owner => owner;
 
+#if !SAIGAME_DISABLE_ADS
         private void Awake()
         {
             if (transform.parent != null)
@@ -26,5 +27,6 @@ namespace SaiGame.LevelPlaySample
             if (owner == null || !owner.gameObject.activeInHierarchy)
                 Destroy(gameObject);
         }
+#endif
     }
 }

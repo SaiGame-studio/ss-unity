@@ -3636,6 +3636,17 @@
       "dependencyXmlFileName": "ISMolocoAdapterDependencies.xml",
       "SKAdNetworkIdXmlURL": "https://s3.amazonaws.com/ssa.public/Unity/SKAdNetwork-IDs/All/skadnetworks.moloco.plist.xml",
       "versions": {
+        "5.32.0.0": {
+          "ironSourceSdkVersion": "[9.0.0, 10.0[",
+          "android": {
+            "adapterVersion": "5.23.0",
+            "adNetworkVersion": "4.15.0"
+          },
+          "ios": {
+            "adapterVersion": "5.22.0.0",
+            "adNetworkVersion": "4.13.0"
+          }
+        },
         "5.31.0.0": {
           "ironSourceSdkVersion": "[9.0.0, 10.0[",
           "android": {
@@ -4967,6 +4978,17 @@
       "dependencyXmlFileName": "ISSmaatoAdapterDependencies.xml",
       "SKAdNetworkIdXmlURL": "https://s3.amazonaws.com/ssa.public/Unity/SKAdNetwork-IDs/All/skadnetworks.smaato.plist.xml",
       "versions": {
+        "5.16.0.0": {
+          "ironSourceSdkVersion": "[9.0.0, 10.0[",
+          "android": {
+            "adapterVersion": "5.9.0",
+            "adNetworkVersion": "23.3.0"
+          },
+          "ios": {
+            "adapterVersion": "5.7.0.0",
+            "adNetworkVersion": "23.2.3"
+          }
+        },
         "5.15.0.0": {
           "ironSourceSdkVersion": "[9.0.0, 10.0[",
           "android": {
@@ -5486,6 +5508,17 @@
       "dependencyXmlFileName": "ISYandexAdapterDependencies.xml",
       "SKAdNetworkIdXmlURL": "https://s3.amazonaws.com/ssa.public/Unity/SKAdNetwork-IDs/All/skadnetworks.yandex.plist.xml",
       "versions": {
+        "5.29.0.0": {
+          "ironSourceSdkVersion": "[9.0.0, 10.0[",
+          "android": {
+            "adapterVersion": "5.18.0",
+            "adNetworkVersion": "8.6.0"
+          },
+          "ios": {
+            "adapterVersion": "5.18.0.0",
+            "adNetworkVersion": "8.7.1"
+          }
+        },
         "5.28.0.0": {
           "ironSourceSdkVersion": "[9.0.0, 10.0[",
           "android": {
@@ -5965,6 +5998,17 @@
       "dependencyXmlFileName": "ISVoodooAdapterDependencies.xml",
       "SKAdNetworkIdXmlURL": "https://s3.amazonaws.com/ssa.public/Unity/SKAdNetwork-IDs/All/skadnetworks.voodoo.plist.xml",
       "versions": {
+        "5.16.0.0": {
+          "ironSourceSdkVersion": "[9.0.0, 10.0[",
+          "android": {
+            "adapterVersion": "5.12.0",
+            "adNetworkVersion": "4.31.0"
+          },
+          "ios": {
+            "adapterVersion": "5.9.0.0",
+            "adNetworkVersion": "4.31.0"
+          }
+        },
         "5.15.0.0": {
           "ironSourceSdkVersion": "[9.0.0, 10.0[",
           "android": {

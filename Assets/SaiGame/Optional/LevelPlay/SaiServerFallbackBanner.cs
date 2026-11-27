@@ -3,6 +3,12 @@ using System;
 using System.Runtime.InteropServices;
 #endif
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
+#if !UNITY_EDITOR && !SAIGAME_DISABLE_ADS
+using UnityEngine.Networking;
+#endif
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Application = UnityEngine.Device.Application;
@@ -13,7 +19,11 @@ namespace SaiGame.LevelPlaySample
 {
     internal sealed class SaiServerFallbackBanner : IDisposable
     {
-        private const string ResourceFolder = "SaiServerFallbackBanners/";
+        internal const string ArtworkFolder = "SaiServerFallbackBanners";
+#if UNITY_EDITOR
+        internal const string ArtworkFolderGuid = "98c78307d10545ba93f766894b635dbd";
+#endif
+        private const string DestinationUrl = "https://server.saigame.studio/why-sai-server";
         private const float AndroidBaseDpi = 160f;
         private const float PreviewPhoneShortSide = 390f;
         // Keep the central 62% of the Leaderboard artwork, which contains the text and icon.
@@ -35,6 +45,12 @@ namespace SaiGame.LevelPlaySample
         private RawImage image;
         private Texture2D artwork;
         private SaiBannerSize artworkSize;
+        private bool artworkRequested;
+#if !UNITY_EDITOR && !SAIGAME_DISABLE_ADS
+        private UnityWebRequest artworkRequest;
+#endif
+        private bool mousePressedOnBanner;
+        private bool touchPressedOnBanner;
 
 #if UNITY_EDITOR
         private bool editorPreviewVisible;
@@ -45,6 +61,15 @@ namespace SaiGame.LevelPlaySample
             if (!editorPreviewVisible || Event.current.type != EventType.Repaint)
                 return;
 
+            int previousDepth = GUI.depth;
+            GUI.depth = 0;
+            Rect rect = GetEditorPreviewRect(layout);
+            GUI.DrawTextureWithTexCoords(rect, artwork, GetArtworkUv(layout.Size, rect.size));
+            GUI.depth = previousDepth;
+        }
+
+        private Rect GetEditorPreviewRect(BannerAdLayout layout)
+        {
             // LevelPlay's Editor mock uses the full Game View and integer screen midpoints.
             int width = UnityEngine.Screen.width;
             int height = UnityEngine.Screen.height;
@@ -58,10 +83,7 @@ namespace SaiGame.LevelPlaySample
             if (size.x < editorPreviewSize.x && layout.Position != SaiBannerPosition.Custom)
                 offset.x = 0f;
 
-            int previousDepth = GUI.depth;
-            GUI.depth = 0;
-            GUI.DrawTextureWithTexCoords(new Rect(offset, size), artwork, GetArtworkUv(layout.Size, size));
-            GUI.depth = previousDepth;
+            return new Rect(offset, size);
         }
 #endif
 
@@ -73,15 +95,14 @@ namespace SaiGame.LevelPlaySample
 
         public void Show(BannerAdLayout layout, Scene scene)
         {
-            if (artwork == null || artworkSize != layout.Size)
-            {
-                artworkSize = layout.Size;
-                artwork = Resources.Load<Texture2D>(ResourceFolder + GetArtworkName(artworkSize));
-            }
+            UpdateArtwork(layout.Size);
 
             if (artwork == null)
             {
-                Hide();
+#if UNITY_EDITOR
+                editorPreviewVisible = false;
+#endif
+                HideCanvas();
                 return;
             }
 
@@ -117,10 +138,141 @@ namespace SaiGame.LevelPlaySample
 
         public void Hide()
         {
+            mousePressedOnBanner = false;
+            touchPressedOnBanner = false;
 #if UNITY_EDITOR
             editorPreviewVisible = false;
 #endif
             HideCanvas();
+            if (artwork == null)
+                ReleaseArtwork();
+        }
+
+        private void UpdateArtwork(SaiBannerSize size)
+        {
+            if (!artworkRequested || artworkSize != size)
+            {
+                ReleaseArtwork();
+                artworkSize = size;
+                artworkRequested = true;
+
+#if UNITY_EDITOR
+                string folder = UnityEditor.AssetDatabase.GUIDToAssetPath(ArtworkFolderGuid);
+                artwork = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(
+                    $"{folder}/{GetArtworkName(size)}.png");
+#elif !SAIGAME_DISABLE_ADS
+                string path = $"{UnityEngine.Application.streamingAssetsPath}/{ArtworkFolder}/{GetArtworkName(size)}.png";
+                if (!path.Contains("://"))
+                    path = new Uri(path).AbsoluteUri;
+
+                artworkRequest = UnityWebRequestTexture.GetTexture(path, nonReadable: true);
+                artworkRequest.SendWebRequest();
+#endif
+            }
+
+#if !UNITY_EDITOR && !SAIGAME_DISABLE_ADS
+            if (artworkRequest == null || !artworkRequest.isDone)
+                return;
+
+            if (artworkRequest.result == UnityWebRequest.Result.Success)
+                artwork = DownloadHandlerTexture.GetContent(artworkRequest);
+            else
+                Debug.LogWarning($"[UnityAds] Could not load fallback banner artwork: {artworkRequest.error}");
+
+            artworkRequest.Dispose();
+            artworkRequest = null;
+#endif
+        }
+
+        private void ReleaseArtwork()
+        {
+#if !UNITY_EDITOR && !SAIGAME_DISABLE_ADS
+            if (artworkRequest != null)
+            {
+                artworkRequest.Abort();
+                artworkRequest.Dispose();
+                artworkRequest = null;
+            }
+
+            if (artwork != null)
+                Object.Destroy(artwork);
+#endif
+            artwork = null;
+            artworkRequested = false;
+            mousePressedOnBanner = false;
+            touchPressedOnBanner = false;
+        }
+
+        public void UpdateClick(BannerAdLayout layout)
+        {
+            if (!IsVisible)
+                return;
+
+            // Keep the fallback independent of the host game's EventSystem.
+#if ENABLE_INPUT_SYSTEM
+            var touch = Touchscreen.current?.primaryTouch;
+            if (touch != null && (touch.press.isPressed || touch.press.wasReleasedThisFrame))
+            {
+                if (touch.phase.ReadValue() == UnityEngine.InputSystem.TouchPhase.Canceled)
+                    touchPressedOnBanner = false;
+                else
+                    HandleClick(layout, touch.position.ReadValue(), touch.press.wasPressedThisFrame,
+                        touch.press.wasReleasedThisFrame, ref touchPressedOnBanner);
+                return;
+            }
+
+            var mouse = Mouse.current;
+            if (mouse != null)
+                HandleClick(layout, mouse.position.ReadValue(), mouse.leftButton.wasPressedThisFrame,
+                    mouse.leftButton.wasReleasedThisFrame, ref mousePressedOnBanner);
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            if (Input.touchCount > 1)
+            {
+                touchPressedOnBanner = false;
+                return;
+            }
+
+            if (Input.touchCount == 1)
+            {
+                Touch touch = Input.GetTouch(0);
+                if (touch.phase == TouchPhase.Canceled)
+                    touchPressedOnBanner = false;
+                else
+                    HandleClick(layout, touch.position, touch.phase == TouchPhase.Began,
+                        touch.phase == TouchPhase.Ended, ref touchPressedOnBanner);
+                return;
+            }
+
+            HandleClick(layout, Input.mousePosition, Input.GetMouseButtonDown(0), Input.GetMouseButtonUp(0),
+                ref mousePressedOnBanner);
+#endif
+        }
+
+        private void HandleClick(BannerAdLayout layout, Vector2 position, bool pressed, bool released,
+            ref bool pressedOnBanner)
+        {
+            if (pressed)
+                pressedOnBanner = ContainsScreenPoint(layout, position);
+
+            if (!released)
+                return;
+
+            bool openLink = pressedOnBanner && ContainsScreenPoint(layout, position);
+            pressedOnBanner = false;
+            if (openLink)
+                UnityEngine.Application.OpenURL(DestinationUrl);
+        }
+
+        private bool ContainsScreenPoint(BannerAdLayout layout, Vector2 position)
+        {
+#if UNITY_EDITOR
+            if (editorPreviewVisible)
+            {
+                position.y = UnityEngine.Screen.height - position.y;
+                return GetEditorPreviewRect(layout).Contains(position);
+            }
+#endif
+            return RectTransformUtility.RectangleContainsScreenPoint(image.rectTransform, position);
         }
 
         private void HideCanvas()
@@ -132,6 +284,7 @@ namespace SaiGame.LevelPlaySample
         public void Dispose()
         {
             Hide();
+            ReleaseArtwork();
             if (canvas != null)
                 Object.Destroy(canvas.gameObject);
         }

@@ -11,7 +11,7 @@ namespace SaiGame.Services
     [DefaultExecutionOrder(-100)]
     public class SaiServer : SaiSingleton<SaiServer>
     {
-        public const string PACKAGE_VERSION = "0.2.62e";
+        public const string PACKAGE_VERSION = "0.2.62d";
         public const string PACKAGE_NAME = "Sai Server";
         // Optional headers that tell the server which client sent a request; the client ID is the game ID.
         public const string CLIENT_ID_HEADER = "X-Client-ID";
@@ -867,7 +867,12 @@ namespace SaiGame.Services
         protected virtual void LoadBattleScript()
         {
             if (this.battleScript != null) return;
-            this.battleScript = GetComponentInChildren<BattleScript>();
+            foreach (var candidate in GetComponentsInChildren<BattleScript>())
+            {
+                if (candidate is LuaScriptRunner) continue;
+                this.battleScript = candidate;
+                break;
+            }
             if (this.showDebugLog)
                 Debug.Log(transform.name + ": LoadBattleScript", gameObject);
         }

@@ -61,7 +61,7 @@ namespace SaiGame.LevelPlaySample
 
         public void ShowHide(string name)
         {
-            if (TryGetAd(name, out var ad))
+            if (UnityAds.IsEnabledForBuild && TryGetAd(name, out var ad))
                 ad.ShowHide();
         }
 
@@ -95,12 +95,12 @@ namespace SaiGame.LevelPlaySample
 
         public bool ShowBanner(string name)
         {
-            return TryGetAd(name, out var ad) && ShowBanner(ad);
+            return UnityAds.IsEnabledForBuild && TryGetAd(name, out var ad) && ShowBanner(ad);
         }
 
         public void HideBanner(string name)
         {
-            if (TryGetAd(name, out var ad))
+            if (UnityAds.IsEnabledForBuild && TryGetAd(name, out var ad))
                 ad.HideBanner();
         }
 

@@ -1,9 +1,9 @@
 ﻿# SaiGame LevelPlay banner ads
 
-This optional module ships with the SaiGame SDK and supports banner ads on
-Android and iOS. Unity automatically detects Ads Mediation 9.6 or newer
-within the 9.x series. Without a compatible package, banners stay hidden
-and the scene keeps its component references.
+This optional module ships with the SaiGame SDK. LevelPlay banner ads run
+on Android and iOS with Ads Mediation 9.6 or newer within the 9.x series.
+The Sai Server fallback is available on other build targets too when its
+fallback setting is enabled.
 
 ## Set up
 
@@ -22,7 +22,18 @@ and the scene keeps its component references.
    the SaiServer prefab, so updating the SDK or reverting the prefab never
    removes them. Each ad keeps a reference to its AdsManager.
 
+## Disable ads for a build
+
+Ads are available by default. To disable them for a specific game build, add
+`SAIGAME_DISABLE_ADS` to the build profile's **Scripting Defines** or the
+target's **Scripting Define Symbols** in Player Settings. Build scripts can
+pass it through `BuildPlayerOptions.extraScriptingDefines` instead. The SDK
+skips ad initialization and fallback artwork packaging for that build.
+
 ## Preview a banner
+
+Select Android or iOS as the active build target to preview LevelPlay.
+The Sai Server fallback can also be previewed on other targets.
 
 In Play Mode, click **Show** or **Hide** next to the ad in the AdsManager
 **Ads** list. If the ad has no unit ID for the active build target, an

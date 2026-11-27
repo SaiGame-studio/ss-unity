@@ -22,8 +22,9 @@ namespace SaiGame.LevelPlaySample
         [SerializeField, Tooltip("The AdsManager that owns this ad. Set when the ad is created from the AdsManager.")]
         private AdsManager adsManager;
 
-        private readonly BannerAdSession banner = new BannerAdSession();
-        private readonly SaiServerFallbackBanner fallbackBanner = new SaiServerFallbackBanner();
+        private readonly BannerAdSession banner = IsEnabledForBuild ? new BannerAdSession() : null;
+        private readonly SaiServerFallbackBanner fallbackBanner =
+            IsEnabledForBuild ? new SaiServerFallbackBanner() : null;
         private AdsManager manager;
         private bool fallbackRequested;
 
@@ -32,17 +33,26 @@ namespace SaiGame.LevelPlaySample
 
         public static bool IsFormatSupported(SaiAdFormat value) => value == SaiAdFormat.Banner;
 
+        internal static bool IsEnabledForBuild =>
+#if SAIGAME_DISABLE_ADS
+            false;
+#else
+            true;
+#endif
+
         public bool IsBannerAvailable => CanUseLevelPlayBanner || CanUseSaiServerFallback;
         public bool CanUseSaiServerFallback => CanShowBanner && enableSaiServerBannerFallback;
-        public string BannerStatus => fallbackBanner.IsVisible ? "Fallback banner displayed." : banner.Status;
-        public bool IsBannerVisible => banner.IsVisible || fallbackBanner.IsVisible;
+        public string BannerStatus => !IsEnabledForBuild ? "Banner ads are disabled for this build." :
+            fallbackBanner.IsVisible ? "Fallback banner displayed." : banner.Status;
+        public bool IsBannerVisible => IsEnabledForBuild && (banner.IsVisible || fallbackBanner.IsVisible);
 
         public bool HasBannerConfiguration =>
             !string.IsNullOrWhiteSpace(AppKey) && !string.IsNullOrWhiteSpace(SelectedBannerUnitId);
 
         // App Key for the active build target, from the AdsManager when this ad has one.
         public string AppKey => Manager == null ? LegacyAppKey : Manager.AppKey;
-        private bool CanShowBanner => isActiveAndEnabled && (Manager == null || Manager.isActiveAndEnabled);
+        private bool CanShowBanner => IsEnabledForBuild && isActiveAndEnabled &&
+                                      (Manager == null || Manager.isActiveAndEnabled);
         private bool CanUseLevelPlayBanner => CanShowBanner && banner.IsAvailable && HasBannerConfiguration;
         private string SelectedBannerUnitId => Manager == null ? BannerAdUnitId : UnitId;
 
@@ -62,6 +72,9 @@ namespace SaiGame.LevelPlaySample
 
         private void Awake()
         {
+            if (!IsEnabledForBuild)
+                return;
+
             manager = FindManager();
             banner.AdUnavailable += ShowSaiServerFallback;
             banner.AdDisplayed += HideSaiServerFallback;
@@ -91,6 +104,9 @@ namespace SaiGame.LevelPlaySample
 
         internal void ShowBannerDirectly(bool previewFallback = false)
         {
+            if (!CanShowBanner)
+                return;
+
             if (previewFallback || !CanUseLevelPlayBanner)
             {
                 banner.Hide();
@@ -103,7 +119,9 @@ namespace SaiGame.LevelPlaySample
         }
 
 #if UNITY_EDITOR
+#if !SAIGAME_DISABLE_ADS
         private void OnGUI() => fallbackBanner.DrawEditorPreview(bannerLayout);
+#endif
 
         public void TestSaiServerFallbackBanner()
         {
@@ -129,11 +147,16 @@ namespace SaiGame.LevelPlaySample
             fallbackBanner.Hide();
         }
 
+#if !SAIGAME_DISABLE_ADS
         private void LateUpdate()
         {
-            if (fallbackRequested)
-                UpdateSaiServerFallback();
+            if (!fallbackRequested)
+                return;
+
+            UpdateSaiServerFallback();
+            fallbackBanner.UpdateClick(bannerLayout);
         }
+#endif
 
         private void UpdateSaiServerFallback()
         {
@@ -171,6 +194,9 @@ namespace SaiGame.LevelPlaySample
 
         private void RefreshVisibleBanner()
         {
+            if (!IsEnabledForBuild)
+                return;
+
             if (banner.IsVisible)
                 ShowBanner();
             if (fallbackRequested)
@@ -179,6 +205,9 @@ namespace SaiGame.LevelPlaySample
 
         public void HideBanner()
         {
+            if (!IsEnabledForBuild)
+                return;
+
             banner.Hide();
             HideSaiServerFallback();
             if (Manager != null)
@@ -188,6 +217,9 @@ namespace SaiGame.LevelPlaySample
         // Toggles the ad according to its format.
         public void ShowHide()
         {
+            if (!IsEnabledForBuild)
+                return;
+
             switch (format)
             {
                 case SaiAdFormat.Banner:
@@ -220,6 +252,9 @@ namespace SaiGame.LevelPlaySample
 
         private void OnDestroy()
         {
+            if (!IsEnabledForBuild)
+                return;
+
             banner.Dispose();
             fallbackBanner.Dispose();
         }
